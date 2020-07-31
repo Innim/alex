@@ -17,3 +17,6 @@ dev_dependencies:
 
 executables:
   alex:
+
+assets:
+  -assets/commands/release/change_log.html
