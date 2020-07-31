@@ -5,22 +5,22 @@
         <entry key="args">
           <value>
             <list>
-              <option value="$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/args-1.6.0/lib" />
+              <option value="$PROJECT_DIR$/../../SDKs/flutter/.pub-cache/hosted/pub.dartlang.org/args-1.6.0/lib" />
             </list>
           </value>
         </entry>
         <entry key="pedantic">
           <value>
             <list>
-              <option value="$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/pedantic-1.9.0/lib" />
+              <option value="$PROJECT_DIR$/../../SDKs/flutter/.pub-cache/hosted/pub.dartlang.org/pedantic-1.9.0/lib" />
             </list>
           </value>
         </entry>
       </option>
     </properties>
     <CLASSES>
-      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/args-1.6.0/lib" />
-      <root url="file://$USER_HOME$/AppData/Local/Pub/Cache/hosted/pub.dartlang.org/pedantic-1.9.0/lib" />
+      <root url="file://$PROJECT_DIR$/../../SDKs/flutter/.pub-cache/hosted/pub.dartlang.org/args-1.6.0/lib" />
+      <root url="file://$PROJECT_DIR$/../../SDKs/flutter/.pub-cache/hosted/pub.dartlang.org/pedantic-1.9.0/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
