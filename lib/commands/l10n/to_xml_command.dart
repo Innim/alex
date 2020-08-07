@@ -1,3 +1,4 @@
+import 'package:alex/alex.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -16,29 +17,25 @@ class ToXmlCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    // TODO: get from args or config
-    final projectPath = '/Users/GreyMag/projects/flutter/Notes/';
-    final l10nSubpath = 'lib/application/l10n';
-    final baseLocale = 'en';
+    final config = AlexConfig.instance.l10n;
+    final l10nSubpath = config.outputDir;
+    final baseLocale = config.baseLocaleForXml;
 
-    final l10nPath = path.join(projectPath, l10nSubpath);
+    final l10nPath = path.join(path.current, l10nSubpath);
     final l10nDir = Directory(l10nPath);
 
-    await for (final file in l10nDir.list()) {
-      final filename = path.basename(file.path);
-      final ext = path.extension(filename);
+    final sourceFileName =
+        L10nUtils.getArbFile(config, config.baseLocaleForXml);
+    final file = File(path.join(l10nDir.path, sourceFileName));
 
-      if (ext == '.arb') {
-        // TODO: check if this is needed file, without harcoded name
-        if (filename == 'intl_${baseLocale}.arb') {
-          return _proccessArb(File(file.path));
-        }
-      }
+    final exists = await file.exists();
+    if (!exists) {
+      // TODO: how to return error?
+      print('ABR file for locale ${baseLocale} is not found');
+      return 1;
     }
 
-    // TODO: how to return error?
-    print('ABR file for locale ${baseLocale} is not found');
-    return 1;
+    return _proccessArb(file);
   }
 
   Future<int> _proccessArb(File file) async {
