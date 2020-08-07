@@ -11,7 +11,13 @@ class AlexConfig {
   static AlexConfig _instance;
 
   /// Returns instance of loaded configuration.
-  static AlexConfig get instance => _instance;
+  static AlexConfig get instance {
+    if (_instance == null) {
+      load();
+    }
+
+    return _instance;
+  }
 
   /// Load configuration.
   static void load([String configFile]) {
