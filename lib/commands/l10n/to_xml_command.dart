@@ -1,5 +1,4 @@
 import 'package:alex/alex.dart';
-import 'package:alex/runner/alex_command.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,17 +6,19 @@ import 'package:path/path.dart' as path;
 import 'package:intl_translation/src/icu_parser.dart';
 import 'package:intl_translation/src/intl_message.dart';
 
+import 'src/l10n_command_base.dart';
+
 const _jsonDecoder = JsonCodec();
 final _pluralAndGenderParser = IcuParser().message;
 final _plainParser = IcuParser().nonIcuMessage;
 
-/// Команда релизной сборки.
-class ToXmlCommand extends AlexCommand {
+/// Command to put localization from arb to xml.
+class ToXmlCommand extends L10nCommandBase {
   ToXmlCommand() : super('to_xml', 'Put localization from arb to xml');
 
   @override
   Future<int> run() async {
-    final config = AlexConfig.instance.l10n;
+    final config = l10nConfig;
     final l10nSubpath = config.outputDir;
     final baseLocale = config.baseLocaleForXml;
 
