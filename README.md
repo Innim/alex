@@ -1,7 +1,8 @@
-A simple command-line application.
+# alex
 
-Created from templates made available by Stagehand under a BSD-style
-[license](https://github.com/dart-lang/stagehand/blob/master/LICENSE).
+[![pub package](https://img.shields.io/pub/v/alex)](https://pub.dev/packages/alex)
+
+**alex** - command line tool for working with Flutter projects.
 
 
 ## Commands
