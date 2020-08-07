@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
+import 'package:alex/src/pub_spec.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
@@ -10,6 +11,12 @@ class StartReleaseCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
+    final spec = PubSpec.read();
+    final version = spec.version;
+
+    print("Pub spec version: " + version.toString());
+
+    return 0;
     insureCleanStatus();
 
     gitCheckout("develop");
@@ -20,8 +27,8 @@ class StartReleaseCommand extends AlexCommand {
 
     insureCleanStatus();
 
-    final version = _getAppVersion();
-    print('Start new release <$version>');
+    //final version = _getAppVersion();
+    //print('Start new release <$version>');
     print('Creating release branch...');
     await _delay();
     print('completed');
