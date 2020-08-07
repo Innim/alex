@@ -10,3 +10,9 @@
 ### l10n
 
 Work with localization files.
+
+#### Generate xml for translation
+
+```
+alex l10n to_xml
+```
