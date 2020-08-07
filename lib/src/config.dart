@@ -52,11 +52,16 @@ class AlexConfig {
     }
 
     if (section != null) {
+      if (!yamlMap.containsKey(section)) {
+        throw Exception(
+            "Can't find section $section in config file ${file.path}");
+      }
+
       yamlMap = yamlMap[section] as YamlMap;
 
       if (yamlMap == null) {
         throw Exception(
-            "Can't find section $section in config file ${file.path}");
+            'Section $section is empty in config file ${file.path}');
       }
     }
 
