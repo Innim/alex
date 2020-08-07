@@ -1,14 +1,25 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
-  StartReleaseCommand() : super('start', 'Start new release');
+  StartReleaseCommand() : super("start", "Start new release");
 
   @override
   Future<int> run() async {
+    insureCleanStatus();
+
+    gitCheckout("develop");
+
+    insureRemoteUrl();
+
+    gitPull();
+
+    insureCleanStatus();
+
     final version = _getAppVersion();
     print('Start new release <$version>');
     print('Creating release branch...');
