@@ -11,6 +11,12 @@
 
 Work with localization files.
 
+#### Extract string to ARB
+
+```
+alex l10n extract
+```
+
 #### Generate xml for translation
 
 ```

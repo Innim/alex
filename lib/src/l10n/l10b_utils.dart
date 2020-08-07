@@ -7,7 +7,7 @@ class L10nUtils {
       l10nConfig.translationFilesPattern.replaceFirst('{locale}', locale);
 
   /// Returns ARB file name for base locale.
-  static String getBaseArbFile(L10nConfig l10nConfig, String locale) =>
+  static String getBaseArbFile(L10nConfig l10nConfig) =>
       getArbFile(l10nConfig, l10nConfig.baseLocaleForArb);
 
   L10nUtils._();
