@@ -11,7 +11,7 @@ class StartReleaseCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    final spec = PubSpec.read();
+    final spec = Spec.pub();
     final version = spec.version;
 
     print("Pub spec version: " + version.toString());
