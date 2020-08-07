@@ -1,0 +1,10 @@
+# Example of configuration. 
+# If you define it in pubspec.yaml,
+# you should add it in section alex:
+
+# Localization 
+l10n:
+  output_dir: lib/application/l10n
+  source_file: lib/application/localization.dart
+  translation_files_mask: intl_??.arb
+  base_locale_file: intl_ru.arb
