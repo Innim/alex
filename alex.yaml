@@ -9,3 +9,4 @@ l10n:
   translation_files_pattern: intl_{locale}.arb
   base_locale_for_abr: ru
   base_locale_for_xml: en
+  xml_output_dir: lib/application/l10n/xml

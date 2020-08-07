@@ -35,10 +35,10 @@ class ToXmlCommand extends AlexCommand {
       return 1;
     }
 
-    return _proccessArb(file);
+    return _proccessArb(file, config.xmlOutputDir);
   }
 
-  Future<int> _proccessArb(File file) async {
+  Future<int> _proccessArb(File file, String outputDir) async {
     final src = await file.readAsString();
     final data = _jsonDecoder.decode(src) as Map<String, Object>;
     final res = <String, _StrData>{};
@@ -60,8 +60,14 @@ class ToXmlCommand extends AlexCommand {
     });
     xml.writeln('</resources>');
 
-    // TODO: write to the file?
-    print(xml.toString());
+    final outputFileName =
+        path.setExtension(path.basenameWithoutExtension(file.path), '.xml');
+    final output = File(path.join(outputDir, outputFileName));
+    await output.writeAsString(xml.toString());
+
+    // TODO: how to print success message?
+    final relativePath = path.relative(output.path);
+    print('Success! Strings written in $relativePath');
     return 0;
   }
 }

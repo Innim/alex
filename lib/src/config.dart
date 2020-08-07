@@ -79,8 +79,9 @@ class L10nConfig {
   static const String _defaultTranslationFilesPattern = 'intl_{locale}.arb';
   static const String _defaultBaseLocaleForArb = 'ru';
   static const String _defaultBaseLocaleForXml = 'en';
+  static const String _defaultXmlOutputDir = 'lib/application/l10n/xml';
 
-  /// Path to the outpur directory of arb files.
+  /// Path to the outpur directory for arb files.
   final String outputDir;
 
   /// Path to the source dart file.
@@ -102,7 +103,14 @@ class L10nConfig {
   /// Base locale for generate xml files by arb.
   ///
   /// Should be a locale code: ru, en, etc.
+  ///
+  /// See [xmlOutputDir].
   final String baseLocaleForXml;
+
+  /// Path to the outpur directory for xml files.
+  ///
+  /// See [baseLocaleForXml].
+  final String xmlOutputDir;
 
   L10nConfig({
     this.outputDir = _defaultOutputDir,
@@ -110,11 +118,13 @@ class L10nConfig {
     this.translationFilesPattern = _defaultTranslationFilesPattern,
     this.baseLocaleForArb = _defaultBaseLocaleForArb,
     this.baseLocaleForXml = _defaultBaseLocaleForXml,
+    this.xmlOutputDir = _defaultXmlOutputDir,
   })  : assert(outputDir != null),
         assert(sourceFile != null),
         assert(translationFilesPattern != null),
         assert(baseLocaleForArb != null),
-        assert(baseLocaleForXml != null);
+        assert(baseLocaleForXml != null),
+        assert(xmlOutputDir != null);
 
   factory L10nConfig.fromYaml(YamlMap data) {
     assert(data != null);
@@ -127,6 +137,7 @@ class L10nConfig {
           data['base_locale_for_abr'] as String ?? _defaultBaseLocaleForArb,
       baseLocaleForXml:
           data['base_locale_for_xml'] as String ?? _defaultBaseLocaleForXml,
+      xmlOutputDir: data['xml_output_dir'] as String ?? _defaultXmlOutputDir,
     );
   }
 
