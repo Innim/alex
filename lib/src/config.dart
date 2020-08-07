@@ -76,10 +76,12 @@ class AlexConfig {
 class L10nConfig {
   static const String _defaultOutputDir = 'lib/application/l10n';
   static const String _defaultSourceFile = 'lib/application/localization.dart';
-  static const String _defaultTranslationFilesMask = 'intl_??.arb';
-  static const String _defaultBaseLocaleFile = 'intl_ru.arb';
+  static const String _defaultTranslationFilesPattern = 'intl_{locale}.arb';
+  static const String _defaultBaseLocaleForArb = 'ru';
+  static const String _defaultBaseLocaleForXml = 'en';
+  static const String _defaultXmlOutputDir = 'lib/application/l10n/xml';
 
-  /// Path to the outpur directory of arb files.
+  /// Path to the outpur directory for arb files.
   final String outputDir;
 
   /// Path to the source dart file.
@@ -87,38 +89,63 @@ class L10nConfig {
   /// The file contains keys for resources generation.
   final String sourceFile;
 
-  /// Mask for translation abr files.
-  final String translationFilesMask;
+  /// Pattern for translation abr files names.
+  ///
+  /// Should contains `{locale}`, which will be replaced with
+  /// a locale code (ru, en, etc).
+  final String translationFilesPattern;
 
-  /// Name of the abr file for a base locale.
-  final String baseLocaleFile;
+  /// Base locale for abr files.
+  ///
+  /// Should be a locale code: ru, en, etc.
+  final String baseLocaleForArb;
+
+  /// Base locale for generate xml files by arb.
+  ///
+  /// Should be a locale code: ru, en, etc.
+  ///
+  /// See [xmlOutputDir].
+  final String baseLocaleForXml;
+
+  /// Path to the outpur directory for xml files.
+  ///
+  /// See [baseLocaleForXml].
+  final String xmlOutputDir;
 
   L10nConfig({
     this.outputDir = _defaultOutputDir,
     this.sourceFile = _defaultSourceFile,
-    this.translationFilesMask = _defaultTranslationFilesMask,
-    this.baseLocaleFile = _defaultBaseLocaleFile,
+    this.translationFilesPattern = _defaultTranslationFilesPattern,
+    this.baseLocaleForArb = _defaultBaseLocaleForArb,
+    this.baseLocaleForXml = _defaultBaseLocaleForXml,
+    this.xmlOutputDir = _defaultXmlOutputDir,
   })  : assert(outputDir != null),
         assert(sourceFile != null),
-        assert(translationFilesMask != null),
-        assert(baseLocaleFile != null);
+        assert(translationFilesPattern != null),
+        assert(baseLocaleForArb != null),
+        assert(baseLocaleForXml != null),
+        assert(xmlOutputDir != null);
 
   factory L10nConfig.fromYaml(YamlMap data) {
     assert(data != null);
     return L10nConfig(
       outputDir: data['output_dir'] as String ?? _defaultOutputDir,
       sourceFile: data['source_file'] as String ?? _defaultSourceFile,
-      translationFilesMask: data['translation_files_mask'] as String ??
-          _defaultTranslationFilesMask,
-      baseLocaleFile:
-          data['base_locale_file'] as String ?? _defaultBaseLocaleFile,
+      translationFilesPattern: data['translation_files_pattern'] as String ??
+          _defaultTranslationFilesPattern,
+      baseLocaleForArb:
+          data['base_locale_for_abr'] as String ?? _defaultBaseLocaleForArb,
+      baseLocaleForXml:
+          data['base_locale_for_xml'] as String ?? _defaultBaseLocaleForXml,
+      xmlOutputDir: data['xml_output_dir'] as String ?? _defaultXmlOutputDir,
     );
   }
 
   @override
   String toString() {
     return 'L10nConfig{outputDir: $outputDir, sourceFile: $sourceFile, '
-        'translationFilesMask: $translationFilesMask, '
-        'baseLocaleFile: $baseLocaleFile}';
+        'translationFilesPattern: $translationFilesPattern, '
+        'baseLocaleForArb: $baseLocaleForArb, '
+        'baseLocaleForXml: $baseLocaleForXml}';
   }
 }

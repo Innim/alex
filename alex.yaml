@@ -6,5 +6,7 @@
 l10n:
   output_dir: lib/application/l10n
   source_file: lib/application/localization.dart
-  translation_files_mask: intl_??.arb
-  base_locale_file: intl_ru.arb
+  translation_files_pattern: intl_{locale}.arb
+  base_locale_for_abr: ru
+  base_locale_for_xml: en
+  xml_output_dir: lib/application/l10n/xml
