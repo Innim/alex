@@ -65,10 +65,8 @@ class ToXmlCommand extends L10nCommandBase {
     final output = File(path.join(outputDir, outputFileName));
     await output.writeAsString(xml.toString());
 
-    // TODO: how to print success message?
     final relativePath = path.relative(output.path);
-    printInfo('Success! Strings written in $relativePath');
-    return 0;
+    return success(message: 'Success! Strings written in $relativePath');
   }
 }
 

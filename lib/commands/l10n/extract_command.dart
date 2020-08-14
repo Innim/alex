@@ -33,10 +33,9 @@ class ExtractCommand extends L10nCommandBase {
 
     await mainFile.copy(localeFile.path);
 
-    // TOOD: how to pring success message
-    print('Strings extracted to ARB file. '
-        'You can send ${mainFile} to the translators');
-    return 0;
+    return success(
+        message: 'Strings extracted to ARB file. '
+            'You can send ${mainFile} to the translators');
   }
 
   File _arb(String fileName) => File(path.join(l10nConfig.outputDir, fileName));
