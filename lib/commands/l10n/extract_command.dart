@@ -20,13 +20,10 @@ class ExtractCommand extends L10nCommandBase {
     ]);
 
     if (res.exitCode != 0) {
-      // TODO: how to print error
-      print(res.stderr);
-      return res.exitCode;
+      return error(res.exitCode, message: res.stderr.toString());
     } else {
-      // TODO: how to print info
       final runOut = res.stdout?.toString();
-      if (runOut != null && runOut.isNotEmpty) print(res.stdout);
+      if (runOut != null && runOut.isNotEmpty) printInfo(res.stdout.toString());
     }
 
     final mainFile = _arb(L10nUtils.getArbFile(l10nConfig, 'messages'));

@@ -31,9 +31,8 @@ class ToXmlCommand extends L10nCommandBase {
 
     final exists = await file.exists();
     if (!exists) {
-      // TODO: how to return error?
-      print('ABR file for locale ${baseLocale} is not found');
-      return 1;
+      return error(1,
+          message: 'ABR file for locale ${baseLocale} is not found');
     }
 
     return _proccessArb(file, config.xmlOutputDir);
@@ -68,7 +67,7 @@ class ToXmlCommand extends L10nCommandBase {
 
     // TODO: how to print success message?
     final relativePath = path.relative(output.path);
-    print('Success! Strings written in $relativePath');
+    printInfo('Success! Strings written in $relativePath');
     return 0;
   }
 }
