@@ -24,7 +24,7 @@ class ExtractCommand extends L10nCommandBase {
       return errorBy(e);
     }
 
-    final mainFile = _arb(L10nUtils.getArbFile(l10nConfig, 'messages'));
+    final mainFile = _arb(L10nUtils.getArbMessagesFile(l10nConfig));
     final localeFile = _arb(L10nUtils.getBaseArbFile(l10nConfig));
 
     if (await localeFile.exists()) await localeFile.delete();
