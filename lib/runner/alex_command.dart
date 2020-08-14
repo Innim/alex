@@ -59,7 +59,7 @@ abstract class AlexCommand extends Command<int> {
     return error(exception.exitCode, message: exception.message);
   }
 
-  // Run `flutter pub run` command.
+  /// Runs `flutter pub run` command.
   @protected
   Future<ProcessResult> runPub(String cmd, List<String> arguments) async {
     final executable = 'flutter';
@@ -68,5 +68,28 @@ abstract class AlexCommand extends Command<int> {
     printVerbose('Run: $executable ${args.join(" ")}');
 
     return Process.run(executable, args);
+  }
+
+  @protected
+  Future<ProcessResult> runPubOrFail(String cmd, List<String> arguments,
+      {bool printStdOut = true}) async {
+    return runOrFail(() => runPub(cmd, arguments), printStdOut: printStdOut);
+  }
+
+  @protected
+  Future<ProcessResult> runOrFail(Future<ProcessResult> Function() run,
+      {bool printStdOut = true}) async {
+    final res = await run();
+
+    if (res.exitCode != 0) {
+      throw RunException(res.exitCode, res.stderr.toString());
+    }
+
+    final runOut = res.stdout?.toString();
+    if (printStdOut && runOut != null && runOut.isNotEmpty) {
+      printInfo(res.stdout.toString());
+    }
+
+    return res;
   }
 }
