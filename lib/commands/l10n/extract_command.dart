@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:alex/alex.dart';
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:path/path.dart' as path;
 
 import 'src/l10n_command_base.dart';
@@ -14,16 +15,13 @@ class ExtractCommand extends L10nCommandBase {
   Future<int> run() async {
     final config = l10nConfig;
 
-    final res = await runIntl('extract_to_arb', [
-      '--output-dir=${config.outputDir}',
-      config.sourceFile,
-    ]);
-
-    if (res.exitCode != 0) {
-      return error(res.exitCode, message: res.stderr.toString());
-    } else {
-      final runOut = res.stdout?.toString();
-      if (runOut != null && runOut.isNotEmpty) printInfo(res.stdout.toString());
+    try {
+      await runIntlOrFail('extract_to_arb', [
+        '--output-dir=${config.outputDir}',
+        config.sourceFile,
+      ]);
+    } on RunException catch (e) {
+      return errorBy(e);
     }
 
     final mainFile = _arb(L10nUtils.getArbFile(l10nConfig, 'messages'));
