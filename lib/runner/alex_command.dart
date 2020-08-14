@@ -37,7 +37,14 @@ abstract class AlexCommand extends Command<int> {
   @protected
   void printError(String message) => stderr.writeln(message);
 
-  /// Returns error code and prints a message if provided.
+  /// Prints 0 code and prints a success message if provided.
+  @protected
+  int success({String message}) {
+    if (message != null) printInfo(message);
+    return 0;
+  }
+
+  /// Returns error code and prints a error message if provided.
   @protected
   int error(int code, {String message}) {
     if (message != null) printError(message);
