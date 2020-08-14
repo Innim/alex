@@ -58,4 +58,15 @@ abstract class AlexCommand extends Command<int> {
     assert(exception != null);
     return error(exception.exitCode, message: exception.message);
   }
+
+  // Run `flutter pub run` command.
+  @protected
+  Future<ProcessResult> runPub(String cmd, List<String> arguments) async {
+    final executable = 'flutter';
+    final args = ['pub', 'run', cmd, ...arguments];
+
+    printVerbose('Run: $executable ${args.join(" ")}');
+
+    return Process.run(executable, args);
+  }
 }
