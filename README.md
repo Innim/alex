@@ -17,6 +17,12 @@ Work with localization files.
 alex l10n extract
 ```
 
+#### Generate Dart code by ARB
+
+```
+alex l10n generate
+```
+
 #### Generate xml for translation
 
 ```
