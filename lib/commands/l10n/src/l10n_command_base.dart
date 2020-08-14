@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:alex/alex.dart';
 import 'package:alex/runner/alex_command.dart';
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:meta/meta.dart';
 
 /// Base command for localization feature.
@@ -15,5 +16,22 @@ abstract class L10nCommandBase extends AlexCommand {
   Future<ProcessResult> runIntl(String cmd, List<String> arguments) async {
     return Process.run(
         'flutter', ['pub', 'run', 'intl_translation:$cmd', ...arguments]);
+  }
+
+  @protected
+  Future<ProcessResult> runIntlOrFail(String cmd, List<String> arguments,
+      {bool printStdOut = true}) async {
+    final res = await runIntl(cmd, arguments);
+
+    if (res.exitCode != 0) {
+      throw RunException(res.exitCode, res.stderr.toString());
+    }
+
+    final runOut = res.stdout?.toString();
+    if (printStdOut && runOut != null && runOut.isNotEmpty) {
+      printInfo(res.stdout.toString());
+    }
+
+    return res;
   }
 }

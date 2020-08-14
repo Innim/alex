@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:meta/meta.dart';
@@ -49,5 +50,12 @@ abstract class AlexCommand extends Command<int> {
   int error(int code, {String message}) {
     if (message != null) printError(message);
     return code;
+  }
+
+  /// Returns error code by exception.
+  @protected
+  int errorBy(RunException exception) {
+    assert(exception != null);
+    return error(exception.exitCode, message: exception.message);
   }
 }
