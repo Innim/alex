@@ -14,8 +14,12 @@ abstract class L10nCommandBase extends AlexCommand {
   // TODO: move run "flutter pub run" in common utils
   @protected
   Future<ProcessResult> runIntl(String cmd, List<String> arguments) async {
-    return Process.run(
-        'flutter', ['pub', 'run', 'intl_translation:$cmd', ...arguments]);
+    final executable = 'flutter';
+    final args = ['pub', 'run', 'intl_translation:$cmd', ...arguments];
+
+    printVerbose('Run: $executable ${args.join(" ")}');
+
+    return Process.run(executable, args);
   }
 
   @protected
