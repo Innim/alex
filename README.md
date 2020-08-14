@@ -28,3 +28,15 @@ alex l10n generate
 ```
 alex l10n to_xml
 ```
+
+### Code 
+
+Work with code.
+
+#### Generate code
+
+Generate `JsonSerializable` and other.
+
+```
+alex code gen
+```
