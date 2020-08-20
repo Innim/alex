@@ -62,6 +62,12 @@ class ToXmlCommand extends L10nCommandBase {
 
     final outputFileName =
         path.setExtension(path.basenameWithoutExtension(file.path), '.xml');
+
+    final dir = Directory(outputDir);
+    if (!await dir.exists()) {
+      await dir.create();
+    }
+
     final output = File(path.join(outputDir, outputFileName));
     await output.writeAsString(xml.toString());
 
