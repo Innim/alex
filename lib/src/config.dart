@@ -123,6 +123,14 @@ class L10nConfig {
   /// See [baseLocaleForXml].
   final String xmlOutputDir;
 
+  /// Prefix for the outpur xml filename.
+  ///
+  /// Result filename is `prefix_locale.xml`.
+  /// If empty - than name of original arb file will used.
+  ///
+  /// See [baseLocaleForXml].
+  final String xmlOutputNamePrefix;
+
   L10nConfig({
     this.outputDir = _defaultOutputDir,
     this.sourceFile = _defaultSourceFile,
@@ -130,6 +138,7 @@ class L10nConfig {
     this.baseLocaleForArb = _defaultBaseLocaleForArb,
     this.baseLocaleForXml = _defaultBaseLocaleForXml,
     this.xmlOutputDir = _defaultXmlOutputDir,
+    this.xmlOutputNamePrefix,
   })  : assert(outputDir != null),
         assert(sourceFile != null),
         assert(translationFilesPattern != null),
@@ -149,6 +158,7 @@ class L10nConfig {
       baseLocaleForXml:
           data['base_locale_for_xml'] as String ?? _defaultBaseLocaleForXml,
       xmlOutputDir: data['xml_output_dir'] as String ?? _defaultXmlOutputDir,
+      xmlOutputNamePrefix: data['xml_output_name_prefix'] as String,
     );
   }
 
@@ -157,6 +167,8 @@ class L10nConfig {
     return 'L10nConfig{outputDir: $outputDir, sourceFile: $sourceFile, '
         'translationFilesPattern: $translationFilesPattern, '
         'baseLocaleForArb: $baseLocaleForArb, '
-        'baseLocaleForXml: $baseLocaleForXml}';
+        'baseLocaleForXml: $baseLocaleForXml, '
+        'xmlOutputDir: $xmlOutputDir, '
+        'xmlOutputNamePrefix: $xmlOutputNamePrefix}';
   }
 }

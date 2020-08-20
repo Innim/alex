@@ -10,3 +10,4 @@ l10n:
   base_locale_for_abr: ru
   base_locale_for_xml: en
   xml_output_dir: lib/application/l10n/xml
+  xml_output_name_prefix: 

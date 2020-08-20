@@ -25,8 +25,8 @@ class ToXmlCommand extends L10nCommandBase {
     final l10nPath = path.join(path.current, l10nSubpath);
     final l10nDir = Directory(l10nPath);
 
-    final sourceFileName =
-        L10nUtils.getArbFile(config, config.baseLocaleForXml);
+    final locale = config.baseLocaleForXml;
+    final sourceFileName = L10nUtils.getArbFile(config, locale);
     final file = File(path.join(l10nDir.path, sourceFileName));
 
     final exists = await file.exists();
@@ -35,10 +35,10 @@ class ToXmlCommand extends L10nCommandBase {
           message: 'ABR file for locale ${baseLocale} is not found');
     }
 
-    return _proccessArb(file, config.xmlOutputDir);
+    return _proccessArb(file, config.xmlOutputDir, locale);
   }
 
-  Future<int> _proccessArb(File file, String outputDir) async {
+  Future<int> _proccessArb(File file, String outputDir, String locale) async {
     final src = await file.readAsString();
     final data = _jsonDecoder.decode(src) as Map<String, Object>;
     final res = <String, _StrData>{};
@@ -60,8 +60,10 @@ class ToXmlCommand extends L10nCommandBase {
     });
     xml.writeln('</resources>');
 
-    final outputFileName =
-        path.setExtension(path.basenameWithoutExtension(file.path), '.xml');
+    var outputFileName = l10nConfig.xmlOutputNamePrefix?.isNotEmpty ?? false
+        ? l10nConfig.xmlOutputNamePrefix + '_' + locale
+        : path.basenameWithoutExtension(file.path);
+    outputFileName = path.setExtension(outputFileName, '.xml');
 
     final dir = Directory(outputDir);
     if (!await dir.exists()) {
