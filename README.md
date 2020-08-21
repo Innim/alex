@@ -53,7 +53,7 @@ To provide more convinient way to work with project, `alex` can use some configu
 You can define configuration in your project's `pubspec.yaml`, section  `alex`,
 or in separate file `alex.yaml`.
 
-You can see all configuration options and it's default values in the example config [`/alex.xml`](./alex.xml).
+You can see all configuration options and it's default values in the example config [`/alex.yaml`](./alex.yaml).
 
 More about specified configuration parameters - in modules descriptions in the [Commands](#commands) section.
 
