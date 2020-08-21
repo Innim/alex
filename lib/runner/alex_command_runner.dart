@@ -6,7 +6,9 @@ import 'package:alex/runner/alex_command.dart';
 import 'package:args/command_runner.dart';
 
 class AlexCommandRunner extends CommandRunner<int> {
-  AlexCommandRunner() : super('alex', 'A simple command-line application.') {
+  AlexCommandRunner()
+      : super(
+            'alex', 'A command line tool for working with Flutter projects.') {
     <AlexCommand>[
       HelloWorldCommand(),
       ReleaseCommand(),
