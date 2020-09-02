@@ -19,6 +19,7 @@ class FromXmlCommand extends L10nCommandBase {
   static const _argTo = 'to';
   static const _targetArb = 'arb';
   static const _targetGoogleDocs = 'google_docs';
+  static const _targetAndroid = 'android';
 
   static const _argLocale = 'locale';
 
@@ -31,12 +32,14 @@ class FromXmlCommand extends L10nCommandBase {
         valueHelp: 'TARGET',
         allowed: [
           _targetArb,
-          // TODO: uncomment then complete
+          _targetAndroid,
+          // TODO: uncomment when implement
           // _targetGoogleDocs,
         ],
         allowedHelp: {
           _targetArb: 'Import to project arb files.',
-          // TODO: uncomment then complete
+          _targetAndroid: 'Import to android localization.',
+          // TODO: uncomment when implement
           // _targetGoogleDocs:
           // 'Import to google docs. It\'s for assets translations.',
         },
@@ -68,6 +71,8 @@ class FromXmlCommand extends L10nCommandBase {
       switch (target) {
         case _targetArb:
           return _importToArb(locales);
+        case _targetAndroid:
+          return _importToAndroid(locales);
         case _targetGoogleDocs:
           // TODO: parameter for filename
           return _importToGoogleDocs('screenshot1', locales);
@@ -103,6 +108,35 @@ class FromXmlCommand extends L10nCommandBase {
     return success(
         message: 'Locales ${locales.join(', ')} exported to arb. '
             'You can "alex l10n generate" to generate dart code.');
+  }
+
+  Future<int> _importToAndroid(List<String> locales) async {
+    final config = l10nConfig;
+    final resPath = 'android/app/src/main/res/';
+    final dirName = 'values';
+    final filename = 'strings.xml';
+
+    // Here file already in required format, just copy it
+    for (final locale in locales) {
+      printVerbose('Export locale: $locale');
+      final targetDirPath = path.join(resPath, dirName + '-$locale');
+
+      final targetDir = Directory(targetDirPath);
+      if (!(await targetDir.exists())) await targetDir.create(recursive: true);
+
+      final xmlPath = path.join(config.getXmlFilesPath(locale), filename);
+      final targetPath = path.join(targetDirPath, filename);
+
+      printVerbose('Copy $xmlPath to $targetPath');
+
+      final file = File(xmlPath);
+      await file.copy(targetPath);
+
+      printVerbose('Success');
+    }
+
+    return success(
+        message: 'Locales ${locales.join(', ')} copied to android resources.');
   }
 
   Future<int> _importToGoogleDocs(

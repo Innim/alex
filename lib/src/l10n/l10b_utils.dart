@@ -68,4 +68,7 @@ extension L10nConfigExtension on L10nConfig {
   /// Returns arb file path for the [locale].
   String getArbFilePath(String locale) =>
       path.join(L10nUtils.getDirPath(this), L10nUtils.getArbFile(this, locale));
+
+  /// Returns path of directory with localization files.
+  String getOutputDirPath() => L10nUtils.getDirPath(this);
 }
