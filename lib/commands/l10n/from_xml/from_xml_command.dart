@@ -6,6 +6,7 @@ import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/exporters/arb_exporter.dart';
 import 'package:alex/src/l10n/exporters/google_docs_exporter.dart';
+import 'package:alex/src/l10n/exporters/ios_strings_exporter.dart';
 import 'package:alex/src/l10n/l10n_entry.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
@@ -20,6 +21,7 @@ class FromXmlCommand extends L10nCommandBase {
   static const _targetArb = 'arb';
   static const _targetGoogleDocs = 'google_docs';
   static const _targetAndroid = 'android';
+  static const _targetIos = 'ios';
 
   static const _argLocale = 'locale';
 
@@ -33,12 +35,14 @@ class FromXmlCommand extends L10nCommandBase {
         allowed: [
           _targetArb,
           _targetAndroid,
+          _targetIos,
           // TODO: uncomment when implement
           // _targetGoogleDocs,
         ],
         allowedHelp: {
           _targetArb: 'Import to project arb files.',
-          _targetAndroid: 'Import to android localization.',
+          _targetAndroid: 'Import to Android localization.',
+          _targetIos: 'Import to iOS localization.',
           // TODO: uncomment when implement
           // _targetGoogleDocs:
           // 'Import to google docs. It\'s for assets translations.',
@@ -73,6 +77,8 @@ class FromXmlCommand extends L10nCommandBase {
           return _importToArb(locales);
         case _targetAndroid:
           return _importToAndroid(locales);
+        case _targetIos:
+          return _importToIos(locales);
         case _targetGoogleDocs:
           // TODO: parameter for filename
           return _importToGoogleDocs('screenshot1', locales);
@@ -137,6 +143,24 @@ class FromXmlCommand extends L10nCommandBase {
 
     return success(
         message: 'Locales ${locales.join(', ')} copied to android resources.');
+  }
+
+  Future<int> _importToIos(List<String> locales) async {
+    final config = l10nConfig;
+
+    final iosProjectPath = path.join(path.current, 'ios');
+    final fileName = 'info_plist';
+
+    for (final locale in locales) {
+      printVerbose('Export locale: $locale');
+      final exporter = IosStringsExporter(iosProjectPath, fileName, locale,
+          await _loadMap(config, fileName, locale));
+      await exporter.execute();
+      printVerbose('Success');
+    }
+
+    return success(
+        message: 'Locales ${locales.join(', ')} exported to iOS strings.');
   }
 
   Future<int> _importToGoogleDocs(
