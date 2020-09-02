@@ -1,5 +1,5 @@
 import '../l10n_entry.dart';
-import 'l10n_importer.dart';
+import 'l10n_exporter.dart';
 
 class GoogleDocsExporter extends L10nExporter {
   final List<String> keys;

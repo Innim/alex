@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../l10n_entry.dart';
-import 'l10n_importer.dart';
+import 'l10n_exporter.dart';
 
 class ArbExporter extends L10nExporter {
   static final _paramRegExp = RegExp(r'\{([a-z][a-z0-9_]*)\}',
