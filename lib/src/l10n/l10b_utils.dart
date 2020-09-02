@@ -64,4 +64,8 @@ extension L10nConfigExtension on L10nConfig {
   /// Returns dir path with xml translations files for [locale].
   String getXmlFilesPath(String locale) =>
       L10nUtils.getXmlFilesPath(this, locale);
+
+  /// Returns arb file path for the [locale].
+  String getArbFilePath(String locale) =>
+      path.join(L10nUtils.getDirPath(this), L10nUtils.getArbFile(this, locale));
 }
