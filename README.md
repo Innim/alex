@@ -75,10 +75,32 @@ alex l10n extract
 alex l10n generate
 ```
 
-#### Generate xml for translation
+#### Generate XML for translation
 
 ```
 alex l10n to_xml
+```
+
+#### Import translations from XML
+
+It's for working with translations from Google Play.
+
+You can export xml translations to the project arb translations:
+
+```
+alex l10n from_xml
+```
+
+Also you can export to the Android localization:
+
+```
+alex l10n from_xml --to=anroid
+```
+
+And to the iOS localization:
+
+```
+alex l10n from_xml --to=ios
 ```
 
 ### Code 
