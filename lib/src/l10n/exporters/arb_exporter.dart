@@ -24,6 +24,7 @@ class ArbExporter extends L10nExporter {
     data.forEach((key, value) {
       final metaKey = '@$key';
       final baseMeta = baseArb[metaKey] as Map<String, Object>;
+      if (baseMeta == null) throw Exception("Can't find meta for $key");
       final parameters =
           (baseMeta['placeholders'] as Map<String, Object>).keys.toSet();
 
