@@ -1,17 +1,31 @@
 import 'dart:core';
 import 'dart:io';
 
-void insureCleanStatus() {
-  insure(() => gitStatus("check status of current branch"), (r) => r != "",
-      "Git repository isn't clean. You are to clean it before continuing.");
+const String branchDevelop = "develop";
+
+void ensureCleanStatus() {
+  ensure(() => gitStatus("check status of current branch", porcelain: true),
+      (r) {
+    // print("r: " + r);
+    return r != "";
+  }, "Git repository isn't clean. You are to clean it before continuing.");
 }
 
-void insureRemoteUrl() {
+void ensureRemoteUrl() {
   // TODO: not sure that's correct
-  insure(
-      () => gitRemoteGetUrl("insure that upstream remote is valid"),
-      (r) => r.startsWith("http") && r.length > 8,
-      "Current directory has no valid upstream setting.");
+  ensure(() => gitRemoteGetUrl("ensure that upstream remote is valid"), (r) {
+    // print("r: " + r);
+    return !(r.startsWith("http") && r.length > 8);
+  }, "Current directory has no valid upstream setting.");
+}
+
+void gitflowReleaseStart(String name, [String desc]) {
+  gitflowRelease(
+      "start '$name' $branchDevelop", desc ?? "git flow release $name");
+}
+
+void gitflowReleaseFinish(String name, [String desc]) {
+  gitflowRelease("finish '$name'", desc ?? "git flow finish $name");
 }
 
 String gitRemoteGetUrl(String desc) {
@@ -29,35 +43,48 @@ String gitPull([String origin = "origin"]) {
 
 String gitStatus(String desc, {bool porcelain = false, String errorMsg}) {
   // TODO: join -> split((
-  return git(["status", if (porcelain) " --porcelain"].join(" "), desc);
+  return git(["status", if (porcelain) "--porcelain"].join(" "), desc);
 }
 
 String gitCheckout(String branch) {
   return git("checkout $branch", "check out $branch branch");
 }
 
-void insure(
+String gitGetCurrentBranch([String desc]) {
+  return git("branch --show-current", desc ?? "get current branch");
+}
+
+void ensure(
     String Function() action, bool Function(String) isFailed, String message) {
   if (isFailed(action())) {
-    print(message);
+    fail<void>(message);
   }
+}
+
+String gitflowRelease(String args, String desc) {
+  return gitflow("release $args", desc);
+}
+
+String gitflow(String args, String desc) {
+  return git("flow $args", desc);
 }
 
 /// Runs git process and returns result.
 ///
 /// If run fails, it will print an error and exit the process.
 String git(String args, String desc) {
-  final result = Process.runSync("git", args.split(' '));
+  final arguments = args.split(' ');
+  final result = Process.runSync("git", arguments);
 
   final out = result.stdout as String;
   final code = result.exitCode;
   final error = result.stderr as String;
 
-  if (error.isEmpty && code == 0) {
+  if (code == 0) {
     return out.trim();
   }
 
-  print("Failed to $desc. Git exit code: $code.");
+  print("\"$desc\" failed. Git exit code: $code. Error: $error");
 
   if (out.isNotEmpty) {
     print("git stdout:\n$out\n");
@@ -70,7 +97,11 @@ String git(String args, String desc) {
   return fail();
 }
 
-T fail<T>() {
+T fail<T>([String message]) {
+  if (message != null) {
+    print(message);
+  }
+
   exit(1);
   return null;
 }

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
+import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
@@ -11,24 +12,26 @@ class StartReleaseCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    final spec = Spec.pub();
-    final version = spec.version;
+    ensureCleanStatus();
 
-    print("Pub spec version: " + version.toString());
+    final currentBranch = gitGetCurrentBranch();
 
-    return 0;
-    insureCleanStatus();
+    if (currentBranch != branchDevelop) {
+      gitCheckout(branchDevelop);
+    }
 
-    gitCheckout("develop");
-
-    insureRemoteUrl();
+    ensureRemoteUrl();
 
     gitPull();
 
-    insureCleanStatus();
+    ensureCleanStatus();
 
-    //final version = _getAppVersion();
-    //print('Start new release <$version>');
+    final version = Spec.pub().version;
+    final ver = v(version);
+
+    print('Start new release <$ver>');
+    gitflowReleaseStart(ver);
+
     print('Creating release branch...');
     await _delay();
     print('completed');
@@ -137,4 +140,8 @@ class StartReleaseCommand extends AlexCommand {
 
     return completer.future;
   }
+}
+
+String v(Version version) {
+  return "v$version";
 }
