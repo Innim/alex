@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
+import 'package:alex/src/pub_spec.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
+  String _packageDir;
+
   StartReleaseCommand() : super("start", "Start new release");
 
   @override
@@ -23,8 +28,9 @@ class StartReleaseCommand extends AlexCommand {
     //
     // ensureCleanStatus();
     //
-    // final version = Spec.pub().version;
-    // final ver = v(version);
+    final version = Spec.pub().version;
+    final ver = v(version);
+
     //
     // print('Start new release <$ver>');
     // gitflowReleaseStart(ver);
@@ -34,6 +40,10 @@ class StartReleaseCommand extends AlexCommand {
     print('completed');
 
     print('Upgrading CHANGELOG.md...');
+
+    await upgradeChangeLog(ver);
+    return 0;
+
     // await _delay();
     print('completed');
     print('Waiting for change log...');
@@ -54,8 +64,24 @@ class StartReleaseCommand extends AlexCommand {
     return 0;
   }
 
-  String _getAppVersion() {
-    return '1.0.3';
+  Future<void> upgradeChangeLog(String ver) async {
+    final file = File("CHANGELOG.MD");
+    var contents = await file.readAsString();
+    if (contents.startsWith("## Next release")) {
+      // up to date
+      if (contents.contains(ver)) {
+        return;
+      }
+
+      final now = DateFormat("yyyy-MM-dd").format(DateTime.now());
+      contents = contents.replaceFirst(
+          "## Next release", "## Next release\n\n## $ver - $now");
+
+      await file.writeAsString(contents);
+    } else {
+      return fail(
+          "Unable to upgrade CHANGELOG.md file due to unknown structure");
+    }
   }
 
   Future<void> _delay([int timeout = 1]) {
@@ -96,29 +122,8 @@ class StartReleaseCommand extends AlexCommand {
     print('Listening on $host');
 
     final completer = Completer<String>();
-
-    final scriptDir = Directory.fromUri(Platform.script).parent.parent;
-
-    final changeLogTemplatePath =
-        join(scriptDir.path, "lib/assets/commands/release/change_log.html");
-    ;
-    final file = File(changeLogTemplatePath);
-
-    final fileExists = await file.exists();
-
-    print("cw: " + Directory.current.toString());
-    print("sp: " + scriptDir.toString());
-    print("File: <${file.path}> exists = " + fileExists.toString());
-
-    final changeLogTemplate = await file.readAsString();
-
-//    final uri = await Isolate.resolvePackageUri(
-//        Uri(path: 'package:alex/commands/release/templates/change_log.html'));
-//
-//    print('cd: ' + Directory.current.toString());
-//
-//    print('Uri: $uri');
-//    print('Uri: ${uri.toFilePath()}');
+    final changeLogTemplate =
+        await readPackageFile("lib/assets/commands/release/change_log.html");
 
     var text = changeLogTemplate.replaceAll('%action%', host);
 
@@ -148,8 +153,19 @@ class StartReleaseCommand extends AlexCommand {
 
     return completer.future;
   }
-}
 
-String v(Version version) {
-  return "v$version";
+  Future<String> readPackageFile(String fileName) async {
+    final packageDir = getPackageDir();
+    final filePath = join(packageDir, fileName);
+    return File(filePath).readAsString();
+  }
+
+  String getPackageDir() {
+    return _packageDir ??=
+        Directory.fromUri(Platform.script).parent.parent.path;
+  }
+
+  String v(Version version) {
+    return "v$version";
+  }
 }
