@@ -52,11 +52,16 @@ class AlexConfig {
     }
 
     if (section != null) {
+      if (!yamlMap.containsKey(section)) {
+        throw Exception(
+            "Can't find section $section in config file ${file.path}");
+      }
+
       yamlMap = yamlMap[section] as YamlMap;
 
       if (yamlMap == null) {
         throw Exception(
-            "Can't find section $section in config file ${file.path}");
+            'Section $section is empty in config file ${file.path}');
       }
     }
 
@@ -118,6 +123,13 @@ class L10nConfig {
   /// See [baseLocaleForXml].
   final String xmlOutputDir;
 
+  /// Filename for the output xml.
+  ///
+  /// If empty - than name of original arb file without locale suffix will used.
+  ///
+  /// See [baseLocaleForXml].
+  final String xmlOutputName;
+
   L10nConfig({
     this.outputDir = _defaultOutputDir,
     this.sourceFile = _defaultSourceFile,
@@ -125,6 +137,7 @@ class L10nConfig {
     this.baseLocaleForArb = _defaultBaseLocaleForArb,
     this.baseLocaleForXml = _defaultBaseLocaleForXml,
     this.xmlOutputDir = _defaultXmlOutputDir,
+    this.xmlOutputName,
   })  : assert(outputDir != null),
         assert(sourceFile != null),
         assert(translationFilesPattern != null),
@@ -144,6 +157,7 @@ class L10nConfig {
       baseLocaleForXml:
           data['base_locale_for_xml'] as String ?? _defaultBaseLocaleForXml,
       xmlOutputDir: data['xml_output_dir'] as String ?? _defaultXmlOutputDir,
+      xmlOutputName: data['xml_output_name'] as String,
     );
   }
 
@@ -152,6 +166,8 @@ class L10nConfig {
     return 'L10nConfig{outputDir: $outputDir, sourceFile: $sourceFile, '
         'translationFilesPattern: $translationFilesPattern, '
         'baseLocaleForArb: $baseLocaleForArb, '
-        'baseLocaleForXml: $baseLocaleForXml}';
+        'baseLocaleForXml: $baseLocaleForXml, '
+        'xmlOutputDir: $xmlOutputDir, '
+        'xmlOutputName: $xmlOutputName}';
   }
 }

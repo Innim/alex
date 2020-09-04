@@ -1,5 +1,4 @@
 import 'package:alex/alex.dart';
-import 'package:alex/runner/alex_command.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,38 +6,39 @@ import 'package:path/path.dart' as path;
 import 'package:intl_translation/src/icu_parser.dart';
 import 'package:intl_translation/src/intl_message.dart';
 
+import 'src/l10n_command_base.dart';
+
 const _jsonDecoder = JsonCodec();
 final _pluralAndGenderParser = IcuParser().message;
 final _plainParser = IcuParser().nonIcuMessage;
 
-/// Команда релизной сборки.
-class ToXmlCommand extends AlexCommand {
+/// Command to put localization from arb to xml.
+class ToXmlCommand extends L10nCommandBase {
   ToXmlCommand() : super('to_xml', 'Put localization from arb to xml');
 
   @override
   Future<int> run() async {
-    final config = AlexConfig.instance.l10n;
+    final config = l10nConfig;
     final l10nSubpath = config.outputDir;
     final baseLocale = config.baseLocaleForXml;
 
     final l10nPath = path.join(path.current, l10nSubpath);
     final l10nDir = Directory(l10nPath);
 
-    final sourceFileName =
-        L10nUtils.getArbFile(config, config.baseLocaleForXml);
+    final locale = config.baseLocaleForXml;
+    final sourceFileName = L10nUtils.getArbFile(config, locale);
     final file = File(path.join(l10nDir.path, sourceFileName));
 
     final exists = await file.exists();
     if (!exists) {
-      // TODO: how to return error?
-      print('ABR file for locale ${baseLocale} is not found');
-      return 1;
+      return error(1,
+          message: 'ABR file for locale ${baseLocale} is not found');
     }
 
-    return _proccessArb(file, config.xmlOutputDir);
+    return _proccessArb(file, config.getXmlFilesPath(locale), locale);
   }
 
-  Future<int> _proccessArb(File file, String outputDir) async {
+  Future<int> _proccessArb(File file, String outputDir, String locale) async {
     final src = await file.readAsString();
     final data = _jsonDecoder.decode(src) as Map<String, Object>;
     final res = <String, _StrData>{};
@@ -60,15 +60,17 @@ class ToXmlCommand extends AlexCommand {
     });
     xml.writeln('</resources>');
 
-    final outputFileName =
-        path.setExtension(path.basenameWithoutExtension(file.path), '.xml');
+    final outputFileName = l10nConfig.getMainXmlFileName();
+    final dir = Directory(outputDir);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+
     final output = File(path.join(outputDir, outputFileName));
     await output.writeAsString(xml.toString());
 
-    // TODO: how to print success message?
     final relativePath = path.relative(output.path);
-    print('Success! Strings written in $relativePath');
-    return 0;
+    return success(message: 'Success! Strings written in $relativePath');
   }
 }
 
