@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
-import 'package:alex/src/pub_spec.dart';
+import 'package:path/path.dart';
 import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
@@ -12,32 +11,30 @@ class StartReleaseCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    ensureCleanStatus();
-
-    final currentBranch = gitGetCurrentBranch();
-
-    if (currentBranch != branchDevelop) {
-      gitCheckout(branchDevelop);
-    }
-
-    ensureRemoteUrl();
-
-    gitPull();
-
-    ensureCleanStatus();
-
-    final version = Spec.pub().version;
-    final ver = v(version);
-
-    print('Start new release <$ver>');
-    gitflowReleaseStart(ver);
+    // ensureCleanStatus();
+    //
+    // if (gitGetCurrentBranch() != branchDevelop) {
+    //   gitCheckout(branchDevelop);
+    // }
+    //
+    // ensureRemoteUrl();
+    //
+    // gitPull();
+    //
+    // ensureCleanStatus();
+    //
+    // final version = Spec.pub().version;
+    // final ver = v(version);
+    //
+    // print('Start new release <$ver>');
+    // gitflowReleaseStart(ver);
 
     print('Creating release branch...');
-    await _delay();
+    // await _delay();
     print('completed');
 
     print('Upgrading CHANGELOG.md...');
-    await _delay();
+    // await _delay();
     print('completed');
     print('Waiting for change log...');
 
@@ -100,8 +97,19 @@ class StartReleaseCommand extends AlexCommand {
 
     final completer = Completer<String>();
 
-    final changeLogTemplatePath = 'lib/assets/commands/release/change_log.html';
+    final scriptDir = Directory.fromUri(Platform.script).parent.parent;
+
+    final changeLogTemplatePath =
+        join(scriptDir.path, "lib/assets/commands/release/change_log.html");
+    ;
     final file = File(changeLogTemplatePath);
+
+    final fileExists = await file.exists();
+
+    print("cw: " + Directory.current.toString());
+    print("sp: " + scriptDir.toString());
+    print("File: <${file.path}> exists = " + fileExists.toString());
+
     final changeLogTemplate = await file.readAsString();
 
 //    final uri = await Isolate.resolvePackageUri(
