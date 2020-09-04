@@ -62,7 +62,7 @@ abstract class AlexCommand extends Command<int> {
   /// Runs `flutter pub run` command.
   @protected
   Future<ProcessResult> runPub(String cmd, List<String> arguments) async {
-    final executable = 'flutter';
+    final executable = _getPlatformSpecificExecutableName('flutter');
     final args = ['pub', 'run', cmd, ...arguments];
 
     printVerbose('Run: $executable ${args.join(" ")}');
@@ -93,5 +93,13 @@ abstract class AlexCommand extends Command<int> {
     }
 
     return res;
+  }
+
+  String _getPlatformSpecificExecutableName(String name) {
+    if (Platform.isWindows) {
+      return '$name.bat';
+    }
+
+    return name;
   }
 }

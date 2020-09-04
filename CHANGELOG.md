@@ -1,3 +1,7 @@
+## 0.2.0-dev.2 - 2020-09-04
+
+- Fixed fail to run l10n commands on Windows.
+
 ## 0.2.0-dev.1 - 2020-09-03
 
 - Import translations from xml.
