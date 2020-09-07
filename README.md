@@ -81,6 +81,13 @@ alex l10n generate
 alex l10n to_xml
 ```
 
+Also you can export json localization to xml.
+Json localization can be used for a backend localization.
+
+```
+alex l10n --from=json --source=/path/to/json/localization/dir
+```
+
 #### Import translations from XML
 
 It's for working with translations from Google Play.
