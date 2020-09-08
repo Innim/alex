@@ -1,4 +1,4 @@
-## 0.2.2-dev.2 - 2020-09-08
+## 0.2.2-dev.1 - 2020-09-08
 
 - Run pub commands prints output immediate (during invocation).
 - Run pub commands prints std output even if it's failed.
