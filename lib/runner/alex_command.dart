@@ -83,13 +83,13 @@ abstract class AlexCommand extends Command<int> {
 
     // TODO: prints out during invocation
 
-    if (res.exitCode != 0) {
-      throw RunException(res.exitCode, res.stderr.toString());
-    }
-
     final runOut = res.stdout?.toString();
     if (printStdOut && runOut != null && runOut.isNotEmpty) {
       printInfo(res.stdout.toString());
+    }
+
+    if (res.exitCode != 0) {
+      throw RunException(res.exitCode, res.stderr.toString());
     }
 
     return res;

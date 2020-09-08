@@ -1,3 +1,5 @@
+- Run pub commands prints std output even if it's failed.
+
 ## 0.2.1-dev.1 - 2020-09-07
 
 - Export json localization (for backend) to xml.
