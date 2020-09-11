@@ -45,26 +45,22 @@ class StartReleaseCommand extends AlexCommand {
 
     print("Change log: \n" + changeLog);
 
-    return 0;
+    // await _delay();
+    print('completed');
+    print('Waiting for change log...');
 
-    // // await _delay();
-    // print('completed');
-    // print('Waiting for change log...');
-    //
-    // //final changeLog = await getChangeLog();
-    //
-    // print('Change log: ' + changeLog);
-    //
-    // await _delay(15);
-    // print('completed');
-    // print('Finishing release branch...');
-    // await _delay();
-    // print('completed');
-    // print('Upgrading version...');
-    // await _delay();
-    // print('completed');
-    //
-    // return 0;
+    await getReleaseNotes(changeLog);
+
+    await _delay(15);
+    print('completed');
+    print('Finishing release branch...');
+    await _delay();
+    print('completed');
+    print('Upgrading version...');
+    await _delay();
+    print('completed');
+
+    return 0;
   }
 
   Future<String> upgradeChangeLog(String ver) async {
@@ -123,26 +119,21 @@ class StartReleaseCommand extends AlexCommand {
     }
   }
 
-  Future<String> getChangeLog() async {
+  Future<void> getReleaseNotes(String changeLog) async {
     final port = 4024;
-    final host = 'http://localhost:$port';
+    final data = getRawReleaseNotes(port, changeLog);
 
-    final data = getRawChangeLog(host, port);
-
-    runBrowser(host);
+    runBrowser("http://localhost:$port");
 
     return await data;
   }
 
-  Future<String> getRawChangeLog(String host, int port) async {
+  Future<void> getRawReleaseNotes(int port, String changeLog) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-    print('Listening on $host');
+    final langs = ["ru", "en", "ge"];
+    final map = {for (final ln in langs) ln: ""};
 
     final completer = Completer<String>();
-    final changeLogTemplate =
-        await readPackageFile("lib/assets/commands/release/change_log.html");
-
-    var text = changeLogTemplate.replaceAll('%action%', host);
 
     await for (HttpRequest request in server) {
       try {
@@ -150,25 +141,54 @@ class StartReleaseCommand extends AlexCommand {
 
         print("Request [${request.uri.toString()}]");
 
-        var changeLog = request.uri.queryParameters['changelog'];
+        var numStrings = 0;
 
-        if (changeLog != null && changeLog.isNotEmpty) {
+        for (final kv in request.uri.queryParameters.entries) {
+          if (map.containsKey(kv.key) &&
+              kv.value != null &&
+              kv.value.isNotEmpty) {
+            map[kv.key] = kv.value;
+            ++numStrings;
+          }
+        }
+
+        if (map.length == numStrings) {
           completer.complete(changeLog);
+          map.forEach((key, value) {
+            print("key: $key; value: $value");
+          });
           response.writeln("Succeed");
           await response.close();
           break;
         } else {
+          final itemTemplate = await readTemplate("release_note");
+          final formTemplate = await readTemplate("release_notes");
+
+          final items = map.entries
+              .map((kv) => itemTemplate
+                  .replaceAll("%name%", kv.key)
+                  .replaceAll("%text%", kv.value))
+              .join("\n");
+
+          var text = formTemplate
+              .replaceAll("%change-log%", changeLog)
+              .replaceAll("%items%", items);
+
           response.headers.contentType = ContentType.html;
           response.statusCode = HttpStatus.ok;
           response.writeln(text);
           await response.close();
         }
-      } catch (e) {
-        print('Handle request error: $e');
+      } catch (e, s) {
+        print('Handle request error: $e\n$s');
       }
     }
 
     return completer.future;
+  }
+
+  Future<String> readTemplate(String fileName) {
+    return readPackageFile("lib/assets/commands/release/$fileName.html");
   }
 
   Future<String> readPackageFile(String fileName) async {

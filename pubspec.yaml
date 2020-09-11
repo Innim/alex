@@ -28,4 +28,6 @@ executables:
   alex:
 
 assets:
-  -assets/commands/release/change_log.html
+  # handle whether this lines are required or not
+  -assets/commands/release/release_note.html
+  -assets/commands/release/release_notes.html
