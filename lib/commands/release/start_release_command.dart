@@ -65,7 +65,7 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   Future<void> upgradeChangeLog(String ver) async {
-    final file = File("CHANGELOG.MD");
+    final file = File("CHANGELOG.md");
     var contents = await file.readAsString();
     if (contents.startsWith("## Next release")) {
       // up to date
