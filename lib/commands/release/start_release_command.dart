@@ -41,36 +41,39 @@ class StartReleaseCommand extends AlexCommand {
 
     print('Upgrading CHANGELOG.md...');
 
-    await upgradeChangeLog(ver);
+    final changeLog = await upgradeChangeLog(ver);
+
+    print("Change log: \n" + changeLog);
+
     return 0;
 
+    // // await _delay();
+    // print('completed');
+    // print('Waiting for change log...');
+    //
+    // //final changeLog = await getChangeLog();
+    //
+    // print('Change log: ' + changeLog);
+    //
+    // await _delay(15);
+    // print('completed');
+    // print('Finishing release branch...');
     // await _delay();
-    print('completed');
-    print('Waiting for change log...');
-
-    final changeLog = await getChangeLog();
-
-    print('Change log: ' + changeLog);
-
-    await _delay(15);
-    print('completed');
-    print('Finishing release branch...');
-    await _delay();
-    print('completed');
-    print('Upgrading version...');
-    await _delay();
-    print('completed');
-
-    return 0;
+    // print('completed');
+    // print('Upgrading version...');
+    // await _delay();
+    // print('completed');
+    //
+    // return 0;
   }
 
-  Future<void> upgradeChangeLog(String ver) async {
+  Future<String> upgradeChangeLog(String ver) async {
     final file = File("CHANGELOG.md");
     var contents = await file.readAsString();
     if (contents.startsWith("## Next release")) {
       // up to date
       if (contents.contains(ver)) {
-        return;
+        return getCurrentChangeLog(contents);
       }
 
       final now = DateFormat("yyyy-MM-dd").format(DateTime.now());
@@ -78,10 +81,24 @@ class StartReleaseCommand extends AlexCommand {
           "## Next release", "## Next release\n\n## $ver - $now");
 
       await file.writeAsString(contents);
+
+      return getCurrentChangeLog(contents);
     } else {
       return fail(
           "Unable to upgrade CHANGELOG.md file due to unknown structure");
     }
+  }
+
+  String getCurrentChangeLog(String contents) {
+    final marker = "## v";
+    final curIndex = contents.indexOf(marker);
+    final lastIndex = contents.indexOf(marker, curIndex + 1);
+
+    if (lastIndex != -1) {
+      return contents.substring(curIndex, lastIndex);
+    }
+
+    return contents.substring(curIndex);
   }
 
   Future<void> _delay([int timeout = 1]) {
