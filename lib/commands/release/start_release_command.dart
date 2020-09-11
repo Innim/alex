@@ -143,6 +143,8 @@ class StartReleaseCommand extends AlexCommand {
 
         var numStrings = 0;
 
+        // TODO: check for max length
+
         for (final kv in request.uri.queryParameters.entries) {
           if (map.containsKey(kv.key) &&
               kv.value != null &&
