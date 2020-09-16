@@ -227,14 +227,14 @@ class FromXmlCommand extends L10nCommandBase {
 
         switch (element) {
           case 'string':
-            handle(name, L10nEntry.text(child.text));
+            handle(name, L10nEntry.text(_textFromXml(child.text)));
             break;
           case 'plurals':
             final map = child.children
                 .whereType<XmlElement>()
                 .toMap<String, String>(
                     (dynamic el) => (el as XmlElement).getAttribute('quantity'),
-                    (dynamic el) => (el as XmlElement).text);
+                    (dynamic el) => _textFromXml((el as XmlElement).text));
             handle(name, L10nEntry.pluralFromMap(map));
             break;
           default:
@@ -242,6 +242,11 @@ class FromXmlCommand extends L10nCommandBase {
         }
       }
     }
+  }
+
+  String _textFromXml(String val) {
+    // Translates add escape slashes for ' in xml
+    return val.replaceAll(r"\'", "'");
   }
 
   Future<XmlDocument> _loadXml(

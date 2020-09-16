@@ -1,3 +1,7 @@
+## 0.2.3-dev.1 - 2020-09-16
+
+- L10n: Remove escape slashes for strings from xml.
+
 ## 0.2.2-dev.1 - 2020-09-08
 
 - Run pub commands prints output immediate (during invocation).
