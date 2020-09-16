@@ -1,3 +1,7 @@
+## 0.2.4-dev.1 - 2020-09-16
+
+- L10n: handled Android restricted locale names.
+
 ## 0.2.3-dev.1 - 2020-09-16
 
 - L10n: Remove escape slashes for strings from xml.
