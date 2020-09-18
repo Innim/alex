@@ -30,10 +30,9 @@
         }
     </style>
     <script>
-        (function () {
-            console.log("ready");
+        document.addEventListener('DOMContentLoaded', function () {
             updateState(true);
-        })();
+        });
 
         function updateState(isDefault) {
             let items = document.querySelectorAll('.item');
