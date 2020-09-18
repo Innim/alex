@@ -169,7 +169,8 @@ class StartReleaseCommand extends AlexCommand {
 
           final items = map.entries.map((kv) {
             return buildNote(noteTemplate, ItemType.values.map((type) {
-              return buildEntry(entryTemplate, kv.value, kv.key, type);
+              final id = "${type.id}-${kv.key}";
+              return buildEntry(entryTemplate, id, kv.value, kv.key, type);
             }));
           }).join("\n");
 
@@ -194,7 +195,8 @@ class StartReleaseCommand extends AlexCommand {
     return template.replaceAll("%entries%", entries.join("\n"));
   }
 
-  String buildEntry(String template, String text, String name, ItemType type) {
+  String buildEntry(
+      String template, String id, String text, String name, ItemType type) {
     if (type != ItemType.Default) {
       name = (type == ItemType.AppStore ? "[App Store] " : "[Google Play] ") +
           name;
@@ -203,6 +205,7 @@ class StartReleaseCommand extends AlexCommand {
     final display = type == ItemType.Default ? "block" : "none";
 
     return template
+        .replaceAll("%id%", id)
         .replaceAll("%name%", name)
         .replaceAll("%text%", text)
         .replaceAll("%display%", display)

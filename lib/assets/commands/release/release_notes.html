@@ -30,12 +30,33 @@
         }
     </style>
     <script>
-        function checkboxChanged(cb) {
+        (function () {
+            console.log("ready");
+            updateState(true);
+        })();
+
+        function updateState(isDefault) {
             let items = document.querySelectorAll('.item');
             for (const item of items) {
                 console.log(item.dataset.type);
-                item.style.display = (item.dataset.type === "default") === !cb.checked ?
-                    "block" : "none";
+
+                if ((item.dataset.type === "default") === isDefault) {
+                    item.style.display = "block";
+                    disableChildren(item.children, false);
+                } else {
+                    item.style.display = "none";
+                    disableChildren(item.children, true);
+                }
+            }
+        }
+
+        function checkboxChanged(cb) {
+            updateState(!cb.checked);
+        }
+
+        function disableChildren(children, value) {
+            for (const child of children) {
+                child.disabled = value;
             }
         }
     </script>
