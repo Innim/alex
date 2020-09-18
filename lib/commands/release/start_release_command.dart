@@ -131,7 +131,7 @@ class StartReleaseCommand extends AlexCommand {
   Future<void> getRawReleaseNotes(int port, String changeLog) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
     final langs = ["ru", "en", "ge"];
-    final map = {for (final ln in langs) ln: ""};
+    final entries = {for (final ln in langs) ln: Entry(ln)};
 
     final completer = Completer<String>();
 
@@ -146,17 +146,17 @@ class StartReleaseCommand extends AlexCommand {
         // TODO: check for max length
 
         for (final kv in request.uri.queryParameters.entries) {
-          if (map.containsKey(kv.key) &&
-              kv.value != null &&
-              kv.value.isNotEmpty) {
-            map[kv.key] = kv.value;
+          final id = kv.key;
+          final value = kv.value;
+
+          if (entries.values.any((entry) => entry.update(id, value))) {
             ++numStrings;
           }
         }
 
-        if (map.length == numStrings) {
+        if (entries.length == numStrings) {
           completer.complete(changeLog);
-          map.forEach((key, value) {
+          entries.forEach((key, value) {
             print("key: $key; value: $value");
           });
           response.writeln("Succeed");
@@ -167,11 +167,11 @@ class StartReleaseCommand extends AlexCommand {
           final entryTemplate = await readTemplate("release_note_entry");
           final formTemplate = await readTemplate("release_notes");
 
-          final items = map.entries.map((kv) {
-            return buildNote(noteTemplate, ItemType.values.map((type) {
-              final id = "${type.id}-${kv.key}";
-              return buildEntry(entryTemplate, id, kv.value, kv.key, type);
-            }));
+          final items = entries.values.map((entry) {
+            return buildNote(
+                noteTemplate,
+                entry.map((type, id, value) =>
+                    buildEntry(entryTemplate, id, value, entry.lang, type)));
           }).join("\n");
 
           var text = formTemplate
@@ -229,6 +229,38 @@ class StartReleaseCommand extends AlexCommand {
 
   String v(Version version) {
     return "v$version";
+  }
+}
+
+class Entry {
+  static String getId(ItemType type, String lang) {
+    final typeId = type.id;
+    return "$typeId-$lang";
+  }
+
+  final String lang;
+  final Map<ItemType, String> values = {
+    for (final type in ItemType.values) type: ""
+  };
+
+  Entry(this.lang);
+
+  bool update(String id, String value) {
+    if (value != null && value.isNotEmpty) {
+      for (final type in values.keys) {
+        if (id == getId(type, lang)) {
+          values[type] = value;
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  Iterable<String> map(
+      String Function(ItemType type, String id, String value) f) {
+    return values.entries.map((kv) => f(kv.key, getId(kv.key, lang), kv.value));
   }
 }
 
