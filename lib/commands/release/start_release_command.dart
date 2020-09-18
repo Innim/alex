@@ -163,14 +163,15 @@ class StartReleaseCommand extends AlexCommand {
           await response.close();
           break;
         } else {
-          final itemTemplate = await readTemplate("release_note");
+          final noteTemplate = await readTemplate("release_note");
+          final entryTemplate = await readTemplate("release_note_entry");
           final formTemplate = await readTemplate("release_notes");
 
-          final items = map.entries
-              .map((kv) => itemTemplate
-                  .replaceAll("%name%", kv.key)
-                  .replaceAll("%text%", kv.value))
-              .join("\n");
+          final items = map.entries.map((kv) {
+            return buildNote(noteTemplate, ItemType.values.map((type) {
+              return buildEntry(entryTemplate, kv.value, kv.key, type);
+            }));
+          }).join("\n");
 
           var text = formTemplate
               .replaceAll("%change-log%", changeLog)
@@ -187,6 +188,25 @@ class StartReleaseCommand extends AlexCommand {
     }
 
     return completer.future;
+  }
+
+  String buildNote(String template, Iterable<String> entries) {
+    return template.replaceAll("%entries%", entries.join("\n"));
+  }
+
+  String buildEntry(String template, String text, String name, ItemType type) {
+    if (type != ItemType.Default) {
+      name = (type == ItemType.AppStore ? "[App Store] " : "[Google Play] ") +
+          name;
+    }
+
+    final display = type == ItemType.Default ? "block" : "none";
+
+    return template
+        .replaceAll("%name%", name)
+        .replaceAll("%text%", text)
+        .replaceAll("%display%", display)
+        .replaceAll("%type%", type.id);
   }
 
   Future<String> readTemplate(String fileName) {
@@ -207,4 +227,16 @@ class StartReleaseCommand extends AlexCommand {
   String v(Version version) {
     return "v$version";
   }
+}
+
+class ItemType {
+  static const ItemType Default = ItemType._("default");
+  static const ItemType AppStore = ItemType._("app-store");
+  static const ItemType GooglePlay = ItemType._("google-play");
+
+  static List<ItemType> values = [Default, AppStore, GooglePlay];
+
+  final String id;
+
+  const ItemType._(this.id) : assert(id != null);
 }

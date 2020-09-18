@@ -8,20 +8,48 @@
         pre {
             background-color: #eee;
         }
-        label textarea {
+
+        body label {
+            user-select: none;
+        }
+
+        .item-bg:nth-child(even) {
+            background-color: #eee;
+        }
+
+        .item {
+            margin-left: 10px;
+            margin-right: 10px;
+            padding-bottom: 15px;
+        }
+
+        .item textarea {
             width: 100%;
-            margin-bottom: 15px;
             line-height: 2;
+            box-sizing: border-box;
         }
     </style>
+    <script>
+        function checkboxChanged(cb) {
+            let items = document.querySelectorAll('.item');
+            for (const item of items) {
+                console.log(item.dataset.type);
+                item.style.display = (item.dataset.type === "default") === !cb.checked ?
+                    "block" : "none";
+            }
+        }
+    </script>
 </head>
 <body>
-    <h3>Change log:</h3>
-    <pre>%change-log%</pre>
-    <h3>Enter release notes:</h3>
-    <form method="get">
-        %items%
-        <input type="submit">
-    </form>
+<h3>Change log:</h3>
+<pre>%change-log%</pre>
+<h3>Enter release notes:</h3>
+<div style="margin-bottom: 15px; background-color: #eee">
+    <label><input type="checkbox" onclick="checkboxChanged(this);">App Store/Google Play</label>
+</div>
+<form method="get">
+    %items%
+    <input type="submit">
+</form>
 </body>
 </html>
