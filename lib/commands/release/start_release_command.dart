@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:alex/commands/release/ci_config.dart';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
@@ -130,7 +131,7 @@ class StartReleaseCommand extends AlexCommand {
 
   Future<void> getRawReleaseNotes(int port, String changeLog) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-    final langs = ["ru", "en", "ge"];
+    final langs = await ciConfigGetLocalizationLanguageList();
     final entries = {for (final ln in langs) ln: Entry(ln)};
 
     final completer = Completer<String>();
