@@ -131,7 +131,8 @@ class StartReleaseCommand extends AlexCommand {
 
   Future<void> getRawReleaseNotes(int port, String changeLog) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-    final langs = await ciConfigGetLocalizationLanguageList();
+    final ciConfig = await CiConfig.getConfig("ci/config.ini");
+    final langs = ciConfig.localizationLanguageList;
     final entries = {for (final ln in langs) ln: Entry(ln)};
 
     final completer = Completer<String>();
