@@ -50,7 +50,7 @@ class StartReleaseCommand extends AlexCommand {
     print('completed');
     print('Waiting for change log...');
 
-    await getReleaseNotes(changeLog);
+    await getReleaseNotes(version, changeLog);
 
     await _delay(15);
     print('completed');
@@ -120,22 +120,42 @@ class StartReleaseCommand extends AlexCommand {
     }
   }
 
-  Future<void> getReleaseNotes(String changeLog) async {
+  Future<void> getReleaseNotes(Version version, String changeLog) async {
     final port = 4024;
     final data = getRawReleaseNotes(port, changeLog);
 
     runBrowser("http://localhost:$port");
 
-    return await data;
+    final entries = await data;
+
+    final major = version.major;
+    final minor = version.minor;
+    final patch = version.patch;
+    final v = ("$major.$minor.$patch");
+
+    for (final entry in entries) {
+      final ln = entry.lang;
+
+      for (final kv in entry.values.entries) {
+        final type = kv.key.id;
+        final content = kv.value;
+
+        if (content.isNotEmpty) {
+          final file = await File("ci/changelog/$v/${type}_$ln.txt")
+              .create(recursive: true);
+          await file.writeAsString(content);
+        }
+      }
+    }
   }
 
-  Future<void> getRawReleaseNotes(int port, String changeLog) async {
+  Future<Iterable<Entry>> getRawReleaseNotes(int port, String changeLog) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
     final ciConfig = await CiConfig.getConfig("ci/config.ini");
     final langs = ciConfig.localizationLanguageList;
     final entries = {for (final ln in langs) ln: Entry(ln)};
 
-    final completer = Completer<String>();
+    final completer = Completer<Iterable<Entry>>();
 
     await for (HttpRequest request in server) {
       try {
@@ -157,7 +177,7 @@ class StartReleaseCommand extends AlexCommand {
         }
 
         if (entries.length == numStrings) {
-          completer.complete(changeLog);
+          completer.complete(entries.values);
           entries.forEach((key, value) {
             print("key: $key; value: $value");
           });
@@ -268,8 +288,8 @@ class Entry {
 
 class ItemType {
   static const ItemType Default = ItemType._("default");
-  static const ItemType AppStore = ItemType._("app-store");
-  static const ItemType GooglePlay = ItemType._("google-play");
+  static const ItemType AppStore = ItemType._("appstore");
+  static const ItemType GooglePlay = ItemType._("googleplay");
 
   static List<ItemType> values = [Default, AppStore, GooglePlay];
 
