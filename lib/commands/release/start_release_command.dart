@@ -17,24 +17,24 @@ class StartReleaseCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    // ensureCleanStatus();
-    //
-    // if (gitGetCurrentBranch() != branchDevelop) {
-    //   gitCheckout(branchDevelop);
-    // }
-    //
-    // ensureRemoteUrl();
-    //
-    // gitPull();
-    //
-    // ensureCleanStatus();
-    //
-    final version = Spec.pub().version;
+    ensureCleanStatus();
+
+    if (gitGetCurrentBranch() != branchDevelop) {
+      gitCheckout(branchDevelop);
+    }
+
+    ensureRemoteUrl();
+
+    gitPull();
+
+    ensureCleanStatus();
+
+    final spec = Spec.pub();
+    final version = spec.version;
     final ver = v(version);
 
-    //
-    // print('Start new release <$ver>');
-    // gitflowReleaseStart(ver);
+    print('Start new release <$ver>');
+    gitflowReleaseStart(ver);
 
     print('Creating release branch...');
     // await _delay();
@@ -52,13 +52,22 @@ class StartReleaseCommand extends AlexCommand {
 
     await getReleaseNotes(version, changeLog);
 
-    await _delay(15);
-    print('completed');
-    print('Finishing release branch...');
-    await _delay();
-    print('completed');
-    print('Upgrading version...');
-    await _delay();
+    // committing changes
+    gitAddAll();
+    gitCommit("Changelog and release notes");
+
+    // finishing release
+    gitflowReleaseFinish(ver);
+
+    // increment version
+    incrementVersion(spec, version);
+
+    gitAddAll();
+    gitCommit("Version increment");
+
+    gitPush(branchDevelop);
+    gitPush(branchMaster);
+
     print('completed');
 
     return 0;
@@ -249,6 +258,12 @@ class StartReleaseCommand extends AlexCommand {
         Directory.fromUri(Platform.script).parent.parent.path;
   }
 
+  void incrementVersion(Spec spec, Version value) {
+    final version = value.incrementPatchAndBuild();
+    final newSpec = spec.setVersion(version);
+    newSpec.save();
+  }
+
   String v(Version version) {
     return "v$version";
   }
@@ -296,4 +311,12 @@ class ItemType {
   final String id;
 
   const ItemType._(this.id) : assert(id != null);
+}
+
+extension VersionExtension on Version {
+  Version incrementPatchAndBuild() {
+    final build = int.parse(this.build) + 1;
+    return Version(major, minor, patch + 1,
+        preRelease: preRelease, build: "$build");
+  }
 }

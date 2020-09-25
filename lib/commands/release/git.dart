@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'dart:io';
 
+const String branchMaster = "master";
 const String branchDevelop = "develop";
 
 void ensureCleanStatus() {
@@ -41,6 +42,18 @@ String gitPull([String origin = "origin"]) {
   return git("pull $origin", "pull $origin");
 }
 
+void gitPush(String branch) {
+  git("push -v --tags origin $branch:$branch", "pushing $branch");
+}
+
+void gitAddAll() {
+  git("add -A", "adding all changes");
+}
+
+void gitCommit(String message) {
+  _git(["commit", "-m", "\"$message\""], "committing changes");
+}
+
 String gitStatus(String desc, {bool porcelain = false, String errorMsg}) {
   // TODO: join -> split((
   return git(["status", if (porcelain) "--porcelain"].join(" "), desc);
@@ -74,7 +87,14 @@ String gitflow(String args, String desc) {
 /// If run fails, it will print an error and exit the process.
 String git(String args, String desc) {
   final arguments = args.split(' ');
-  final result = Process.runSync("git", arguments);
+  return _git(arguments, desc);
+}
+
+/// Runs git process and returns result.
+///
+/// If run fails, it will print an error and exit the process.
+String _git(List<String> args, String desc) {
+  final result = Process.runSync("git", args);
 
   final out = result.stdout as String;
   final code = result.exitCode;
@@ -84,6 +104,7 @@ String git(String args, String desc) {
     return out.trim();
   }
 
+  print("git ${args.join(" ")}");
   print("\"$desc\" failed. Git exit code: $code. Error: $error");
 
   if (out.isNotEmpty) {

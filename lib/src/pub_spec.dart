@@ -1,7 +1,8 @@
 import 'dart:io';
 
+import 'package:plain_optional/plain_optional.dart';
+import 'package:pubspec_yaml/pubspec_yaml.dart';
 import 'package:version/version.dart';
-import 'package:yaml/yaml.dart';
 
 /// Some specifiaction.
 class Spec {
@@ -9,19 +10,28 @@ class Spec {
 
   /// Returns specification of a project in current directory.
   static Spec pub() {
-    var yamlMap = loadYaml(File(_pubspec).readAsStringSync()) as YamlMap;
+    var yamlMap = File(_pubspec).readAsStringSync().toPubspecYaml();
     return Spec(yamlMap);
   }
 
-  final YamlMap _yamlMap;
+  final PubspecYaml _yamlMap;
 
   Spec(this._yamlMap) : assert(_yamlMap != null);
 
   /// Returns version.
   ///
   /// Throws exception if no version found.
-  Version get version => Version.parse(getString("version"));
+  Version get version =>
+      _yamlMap.version.iif(some: (v) => Version.parse(v), none: () => null);
 
-  /// Returns string value of specification by its' key.
-  String getString(String key) => _yamlMap[key] as String;
+  /// Updates version.
+  Spec setVersion(Version value) {
+    return Spec(_yamlMap.copyWith(version: Optional("$value")));
+  }
+
+  /// Saves to `_pubspec` file.
+  void save() {
+    final file = File(_pubspec);
+    file.writeAsString(_yamlMap.toYamlString());
+  }
 }
