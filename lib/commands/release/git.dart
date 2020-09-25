@@ -30,9 +30,14 @@ void gitflowReleaseFinish(String name, [String desc]) {
   final branch = "release/$name";
   gitCheckout(branchMaster);
   gitMerge(branch);
+  gitTag(name);
   gitCheckout(branchDevelop);
   gitMerge(branch);
   gitBranchDelete(branch);
+}
+
+void gitTag(String tag) {
+  git("tag -m \"$tag\" -a $tag", "set tag $tag");
 }
 
 String gitRemoteGetUrl(String desc) {

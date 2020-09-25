@@ -36,19 +36,13 @@ class StartReleaseCommand extends AlexCommand {
     print('Start new release <$ver>');
     gitflowReleaseStart(ver);
 
-    print('Creating release branch...');
-    // await _delay();
-    print('completed');
-
     print('Upgrading CHANGELOG.md...');
 
     final changeLog = await upgradeChangeLog(ver);
 
     print("Change log: \n" + changeLog);
 
-    // await _delay();
-    print('completed');
-    print('Waiting for change log...');
+    print('Waiting for release notes...');
 
     await getReleaseNotes(version, changeLog);
 
