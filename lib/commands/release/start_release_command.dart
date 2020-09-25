@@ -59,6 +59,10 @@ class StartReleaseCommand extends AlexCommand {
     // finishing release
     gitflowReleaseFinish(ver);
 
+    if (gitGetCurrentBranch() != branchDevelop) {
+      gitCheckout(branchDevelop);
+    }
+
     // increment version
     incrementVersion(spec, version);
 

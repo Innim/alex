@@ -26,7 +26,13 @@ void gitflowReleaseStart(String name, [String desc]) {
 }
 
 void gitflowReleaseFinish(String name, [String desc]) {
-  gitflowRelease("finish '$name'", desc ?? "git flow finish $name");
+  // gitflowRelease("finish -m \"merge\" '$name'", desc ?? "git flow finish $name");
+  final branch = "release/$name";
+  gitCheckout(branchMaster);
+  gitMerge(branch);
+  gitCheckout(branchDevelop);
+  gitMerge(branch);
+  gitBranchDelete(branch);
 }
 
 String gitRemoteGetUrl(String desc) {
@@ -35,6 +41,15 @@ String gitRemoteGetUrl(String desc) {
 
 String gitFetch(String branch, [String origin = "origin"]) {
   return git("fetch $origin", "fetch $origin");
+}
+
+void gitBranchDelete(String branch) {
+  git("branch -d $branch", "delete $branch");
+}
+
+void gitMerge(String branch) {
+  _git(["merge", "-m", "Merge branch '$branch'", "--no-edit", branch],
+      "merge $branch");
 }
 
 String gitPull([String origin = "origin"]) {

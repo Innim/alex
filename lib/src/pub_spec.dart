@@ -32,6 +32,6 @@ class Spec {
   /// Saves to `_pubspec` file.
   void save() {
     final file = File(_pubspec);
-    file.writeAsString(_yamlMap.toYamlString());
+    file.writeAsStringSync(_yamlMap.toYamlString());
   }
 }
