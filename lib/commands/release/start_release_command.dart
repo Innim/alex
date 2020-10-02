@@ -190,7 +190,8 @@ class StartReleaseCommand extends AlexCommand {
           entries.forEach((key, value) {
             print("key: $key; value: $value");
           });
-          response.writeln("Succeed");
+          response
+              .writeln("Succeed. Close the page and return to the console.");
           await response.close();
           break;
         } else {
