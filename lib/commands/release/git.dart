@@ -9,7 +9,7 @@ void ensureCleanStatus() {
       (r) {
     // print("r: " + r);
     return r != "";
-  }, "Git repository isn't clean. You are to clean it before continuing.");
+  }, "There are unstaged changes. Commit or reset them to proceed.");
 }
 
 void ensureRemoteUrl() {
