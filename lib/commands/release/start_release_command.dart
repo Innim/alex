@@ -187,9 +187,6 @@ class StartReleaseCommand extends AlexCommand {
 
         if (entries.values.every((entry) => entry.isAllValuesSet())) {
           completer.complete(entries.values);
-          entries.forEach((key, value) {
-            print("key: $key; value: $value");
-          });
           response
               .writeln("Succeed. Close the page and return to the console.");
           await response.close();
