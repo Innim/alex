@@ -32,10 +32,11 @@ class StartReleaseCommand extends AlexCommand {
 
     final spec = Spec.pub();
     final version = spec.version;
-    final ver = v(version);
+    final ver = "v$version";
+    final v = "v${version.short}";
 
-    print('Start new release <$ver>');
-    gitflowReleaseStart(ver);
+    print('Start new release <$v>');
+    gitflowReleaseStart(v);
 
     print('Upgrading CHANGELOG.md...');
 
@@ -52,7 +53,7 @@ class StartReleaseCommand extends AlexCommand {
     gitCommit("Changelog and release notes");
 
     // finishing release
-    gitflowReleaseFinish(ver);
+    gitflowReleaseFinish(v);
 
     if (gitGetCurrentBranch() != branchDevelop) {
       gitCheckout(branchDevelop);
@@ -331,6 +332,10 @@ class ItemType {
 }
 
 extension VersionExtension on Version {
+  String get short {
+    return "$major.$minor.$patch";
+  }
+
   Version incrementPatchAndBuild() {
     final build = int.parse(this.build) + 1;
     return Version(major, minor, patch + 1,
