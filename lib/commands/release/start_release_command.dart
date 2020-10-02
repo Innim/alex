@@ -48,6 +48,8 @@ class StartReleaseCommand extends AlexCommand {
 
     await getReleaseNotes(version, changeLog);
 
+    print("Finishing release...");
+
     // committing changes
     gitAddAll();
     gitCommit("Changelog and release notes");
@@ -156,6 +158,8 @@ class StartReleaseCommand extends AlexCommand {
         }
       }
     }
+
+    print("Release notes written successfully");
   }
 
   Future<Iterable<Entry>> getRawReleaseNotes(int port, String changeLog) async {
@@ -282,7 +286,7 @@ class Entry {
     if (value != null && value.isNotEmpty) {
       for (final type in values.keys) {
         if (id == getId(type, lang)) {
-          values[type] = value;
+          values[type] = value != null ? value.trim() : "";
           return true;
         }
       }
