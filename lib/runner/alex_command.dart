@@ -59,21 +59,79 @@ abstract class AlexCommand extends Command<int> {
     return error(exception.exitCode, message: exception.message);
   }
 
+  /// Run command and add listeners `onOut`/`onErr` on
+  /// std and err output.
+  @protected
+  Future<ProcessResult> runAndListenOutput(
+    String executable,
+    List<String> arguments, {
+    Function(String out) onOut,
+    Function(String err) onErr,
+  }) async {
+    final stdout = StringBuffer();
+    final stderr = StringBuffer();
+    final process = await Process.start(executable, arguments);
+
+    systemEncoding.decoder.bind(process.stdout).listen((event) {
+      stdout.write(event);
+      if (onOut != null) onOut(event);
+    });
+    systemEncoding.decoder.bind(process.stderr).listen((event) {
+      stderr.write(event);
+      if (onErr != null) onErr(event);
+    });
+
+    final exitCode = await process.exitCode;
+
+    return ProcessResult(
+        process.pid, exitCode, stdout.toString(), stderr.toString());
+  }
+
+  @protected
+  Future<ProcessResult> runWithImmediatePrint(
+      String executable, List<String> arguments,
+      {bool printStdOut = true, bool printErrOut = true}) {
+    assert(printStdOut != null);
+    assert(printErrOut != null);
+    return runAndListenOutput(
+      executable,
+      arguments,
+      onOut: printStdOut ? (out) => printInfo(out.trimEndLine()) : null,
+      onErr: printErrOut ? (err) => printError(err.trimEndLine()) : null,
+    );
+  }
+
   /// Runs `flutter pub run` command.
   @protected
-  Future<ProcessResult> runPub(String cmd, List<String> arguments) async {
+  Future<ProcessResult> runPub(String cmd, List<String> arguments,
+      {bool immediatePrintStd = true, bool immediatePrintErr = true}) async {
+    assert(immediatePrintStd != null);
+    assert(immediatePrintErr != null);
     final executable = _getPlatformSpecificExecutableName('flutter');
     final args = ['pub', 'run', cmd, ...arguments];
 
     printVerbose('Run: $executable ${args.join(" ")}');
 
-    return Process.run(executable, args);
+    return immediatePrintStd || immediatePrintErr
+        ? runWithImmediatePrint(
+            executable,
+            args,
+            printStdOut: immediatePrintStd,
+            printErrOut: immediatePrintErr,
+          )
+        : Process.run(executable, args);
   }
 
   @protected
   Future<ProcessResult> runPubOrFail(String cmd, List<String> arguments,
-      {bool printStdOut = true}) async {
-    return runOrFail(() => runPub(cmd, arguments), printStdOut: printStdOut);
+      {bool printStdOut = true, bool immediatePrint = true}) async {
+    assert(printStdOut || !immediatePrint,
+        "You can't disable std output if immediatePrint enabled");
+    return runOrFail(
+        () => runPub(cmd, arguments,
+            immediatePrintStd: immediatePrint && printStdOut,
+            immediatePrintErr: false),
+        printStdOut: !immediatePrint && printStdOut);
   }
 
   @protected
@@ -81,15 +139,13 @@ abstract class AlexCommand extends Command<int> {
       {bool printStdOut = true}) async {
     final res = await run();
 
-    // TODO: prints out during invocation
-
-    if (res.exitCode != 0) {
-      throw RunException(res.exitCode, res.stderr.toString());
-    }
-
     final runOut = res.stdout?.toString();
     if (printStdOut && runOut != null && runOut.isNotEmpty) {
       printInfo(res.stdout.toString());
+    }
+
+    if (res.exitCode != 0) {
+      throw RunException(res.exitCode, res.stderr.toString());
     }
 
     return res;
@@ -102,4 +158,8 @@ abstract class AlexCommand extends Command<int> {
 
     return name;
   }
+}
+
+extension _StringExtension on String {
+  String trimEndLine() => endsWith('\n') ? substring(0, length - 1) : this;
 }

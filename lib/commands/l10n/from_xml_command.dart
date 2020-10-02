@@ -122,10 +122,23 @@ class FromXmlCommand extends L10nCommandBase {
     final dirName = 'values';
     final filename = 'strings.xml';
 
+    // http://developer.android.com/reference/java/util/Locale.html
+    // Note that Java uses several deprecated two-letter codes.
+    // The Hebrew ("he") language code is rewritten as "iw",
+    // Indonesian ("id") as "in", and Yiddish ("yi") as "ji".
+    // This rewriting happens even if you construct your own Locale object,
+    // not just for instances returned by the various lookup methods.
+    final localeMap = const <String, String>{
+      'he': 'iw',
+      'id': 'in',
+      'yi': 'ji'
+    };
+
     // Here file already in required format, just copy it
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
-      final targetDirPath = path.join(resPath, dirName + '-$locale');
+      final androidLocale = localeMap[locale] ?? locale;
+      final targetDirPath = path.join(resPath, dirName + '-$androidLocale');
 
       final targetDir = Directory(targetDirPath);
       if (!(await targetDir.exists())) await targetDir.create(recursive: true);
@@ -227,14 +240,14 @@ class FromXmlCommand extends L10nCommandBase {
 
         switch (element) {
           case 'string':
-            handle(name, L10nEntry.text(child.text));
+            handle(name, L10nEntry.text(_textFromXml(child.text)));
             break;
           case 'plurals':
             final map = child.children
                 .whereType<XmlElement>()
                 .toMap<String, String>(
                     (dynamic el) => (el as XmlElement).getAttribute('quantity'),
-                    (dynamic el) => (el as XmlElement).text);
+                    (dynamic el) => _textFromXml((el as XmlElement).text));
             handle(name, L10nEntry.pluralFromMap(map));
             break;
           default:
@@ -242,6 +255,11 @@ class FromXmlCommand extends L10nCommandBase {
         }
       }
     }
+  }
+
+  String _textFromXml(String val) {
+    // Translates add escape slashes for ' in xml
+    return val.replaceAll(r"\'", "'");
   }
 
   Future<XmlDocument> _loadXml(

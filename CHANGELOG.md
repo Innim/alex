@@ -1,3 +1,20 @@
+## 0.2.4-dev.1 - 2020-09-16
+
+- L10n: handled Android restricted locale names.
+
+## 0.2.3-dev.1 - 2020-09-16
+
+- L10n: Remove escape slashes for strings from xml.
+
+## 0.2.2-dev.1 - 2020-09-08
+
+- Run pub commands prints output immediate (during invocation).
+- Run pub commands prints std output even if it's failed.
+
+## 0.2.1-dev.1 - 2020-09-07
+
+- Export json localization (for backend) to xml.
+
 ## 0.2.0-dev.2 - 2020-09-04
 
 - Fixed fail to run l10n commands on Windows.

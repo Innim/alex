@@ -1,7 +1,7 @@
 import 'package:alex/commands/l10n/generate_command.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'extract_command.dart';
-import 'from_xml/from_xml_command.dart';
+import 'from_xml_command.dart';
 import 'to_xml_command.dart';
 
 /// Command to work with a localization.
