@@ -75,7 +75,7 @@ void gitAddAll() {
 }
 
 void gitCommit(String message) {
-  _git(["commit", "-m", "\"$message\""], "committing changes");
+  _git(["commit", "-m", "$message"], "committing changes");
 }
 
 String gitStatus(String desc, {bool porcelain = false, String errorMsg}) {
