@@ -265,10 +265,6 @@ class StartReleaseCommand extends AlexCommand {
     final newSpec = spec.setVersion(version);
     newSpec.save();
   }
-
-  String v(Version version) {
-    return "v$version";
-  }
 }
 
 class Entry {
