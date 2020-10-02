@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:alex/commands/release/ci_config.dart';
 import 'package:alex/commands/release/git.dart';
@@ -238,7 +239,8 @@ class StartReleaseCommand extends AlexCommand {
         .replaceAll("%name%", name)
         .replaceAll("%text%", text)
         .replaceAll("%display%", display)
-        .replaceAll("%type%", type.id);
+        .replaceAll("%type%", type.id)
+        .replaceAll("%maxlength%", "${type.maxChars}");
   }
 
   Future<String> readTemplate(String fileName) {
@@ -301,14 +303,31 @@ class Entry {
 
 class ItemType {
   static const ItemType Default = ItemType._("default");
-  static const ItemType AppStore = ItemType._("appstore");
-  static const ItemType GooglePlay = ItemType._("googleplay");
+  static const ItemType AppStore = ItemType._("appstore", 255);
+  static const ItemType GooglePlay = ItemType._("googleplay", 500);
 
   static List<ItemType> values = [Default, AppStore, GooglePlay];
 
   final String id;
+  final int _maxChars;
 
-  const ItemType._(this.id) : assert(id != null);
+  const ItemType._(this.id, [this._maxChars]) : assert(id != null);
+
+  int get maxChars {
+    if (_maxChars != null) {
+      return _maxChars;
+    }
+
+    var value = -1;
+
+    for (final item in values) {
+      if (item._maxChars != null) {
+        value = value != -1 ? min(value, item._maxChars) : item._maxChars;
+      }
+    }
+
+    return value;
+  }
 }
 
 extension VersionExtension on Version {
