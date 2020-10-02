@@ -21,11 +21,15 @@ void ensureRemoteUrl() {
 }
 
 void gitflowReleaseStart(String name, [String desc]) {
-  gitflowRelease(
-      "start '$name' $branchDevelop", desc ?? "git flow release $name");
+  // gitflowRelease(
+  //     "start '$name' $branchDevelop", desc ?? "git flow release $name");
+  final branch = "release/$name";
+
+  git("checkout -b $branch $branchDevelop", desc ?? "git flow release $name");
 }
 
 void gitflowReleaseFinish(String name, [String desc]) {
+  // TODO: unused desc
   // gitflowRelease("finish -m \"merge\" '$name'", desc ?? "git flow finish $name");
   final branch = "release/$name";
   gitCheckout(branchMaster);
@@ -92,14 +96,6 @@ void ensure(
   if (isFailed(action())) {
     fail<void>(message);
   }
-}
-
-String gitflowRelease(String args, String desc) {
-  return gitflow("release $args", desc);
-}
-
-String gitflow(String args, String desc) {
-  return git("flow $args", desc);
 }
 
 /// Runs git process and returns result.
