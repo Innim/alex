@@ -109,10 +109,6 @@ class StartReleaseCommand extends AlexCommand {
     return contents.substring(curIndex);
   }
 
-  Future<void> _delay([int timeout = 1]) {
-    return Future<void>.delayed(Duration(seconds: timeout));
-  }
-
   void runBrowser(String url) {
     var fail = false;
     switch (Platform.operatingSystem) {
