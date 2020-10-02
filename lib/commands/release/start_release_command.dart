@@ -68,7 +68,7 @@ class StartReleaseCommand extends AlexCommand {
     gitPush(branchDevelop);
     gitPush(branchMaster);
 
-    print('completed');
+    print('Release successfully completed');
 
     return 0;
   }
