@@ -110,7 +110,6 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   void runBrowser(String url) {
-    var fail = false;
     switch (Platform.operatingSystem) {
       case 'linux':
         Process.run('x-www-browser', [url]);
@@ -122,7 +121,8 @@ class StartReleaseCommand extends AlexCommand {
         Process.run('explorer', [url]);
         break;
       default:
-        fail = true;
+        print("Failed to open url.");
+        exit(1);
         break;
     }
   }
