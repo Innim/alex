@@ -185,6 +185,7 @@ class StartReleaseCommand extends AlexCommand {
           entries.values.any((entry) => entry.update(id, value));
         }
 
+        // TODO: error if default and stores values are set
         if (entries.values.every((entry) => entry.isAllValuesSet())) {
           completer.complete(entries.values);
           response
