@@ -172,20 +172,20 @@ class StartReleaseCommand extends AlexCommand {
 
         print("Request [${request.uri.toString()}]");
 
-        var numStrings = 0;
-
         // TODO: check for max length
+
+        entries.values.forEach((entry) {
+          entry.clear();
+        });
 
         for (final kv in request.uri.queryParameters.entries) {
           final id = kv.key;
           final value = kv.value;
 
-          if (entries.values.any((entry) => entry.update(id, value))) {
-            ++numStrings;
-          }
+          entries.values.any((entry) => entry.update(id, value));
         }
 
-        if (entries.length == numStrings) {
+        if (entries.values.every((entry) => entry.isAllValuesSet())) {
           completer.complete(entries.values);
           entries.forEach((key, value) {
             print("key: $key; value: $value");
@@ -291,6 +291,20 @@ class Entry {
     }
 
     return false;
+  }
+
+  bool isAllValuesSet() {
+    final res = values.entries
+            .every((kv) => kv.value.isNotEmpty || kv.key == ItemType.Default) ||
+        values[ItemType.Default].isNotEmpty;
+
+    return res;
+  }
+
+  void clear() {
+    for (final type in values.keys) {
+      values[type] = "";
+    }
   }
 
   Iterable<String> map(
