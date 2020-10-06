@@ -1,3 +1,7 @@
+- L10n: `from_xml` supports `ru_RU` format for locales.
+- L10n: generation in release mode.
+- Pass `--verbose` argument in `pub run` command, if verbose enabled.
+
 ## 0.2.4-dev.1 - 2020-09-16
 
 - L10n: handled Android restricted locale names.
