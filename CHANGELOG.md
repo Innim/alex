@@ -1,3 +1,7 @@
+## 0.2.5-dev.2 - 2020-10-07
+
+- L10n: Fixed locale prefix format for Android in `from_xml`.
+
 ## 0.2.5-dev.1 - 2020-10-06
 
 - L10n: `from_xml` supports `ru_RU` format for locales.

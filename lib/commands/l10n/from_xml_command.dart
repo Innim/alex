@@ -144,7 +144,7 @@ class FromXmlCommand extends L10nCommandBase {
     // Here file already in required format, just copy it
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
-      final androidLocale = localeMap[locale] ?? locale;
+      final androidLocale = (localeMap[locale] ?? locale).replaceAll('_', '-r');
       final targetDirPath = path.join(resPath, dirName + '-$androidLocale');
 
       final targetDir = Directory(targetDirPath);
