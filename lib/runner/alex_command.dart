@@ -24,7 +24,6 @@ abstract class AlexCommand extends Command<int> {
   @override
   String get description => _description;
 
-  @override
   bool get isVerbose => argResults['verbose'] as bool;
 
   /// Prints message if verbose flag is on.
