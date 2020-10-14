@@ -29,9 +29,13 @@ class Spec {
     return Spec(_yamlMap.copyWith(version: Optional("$value")));
   }
 
-  /// Saves to `_pubspec` file.
-  void save() {
+  String getContent() {
     final file = File(_pubspec);
-    file.writeAsStringSync(_yamlMap.toYamlString());
+    return file.readAsStringSync();
+  }
+
+  void saveContent(String content) {
+    final file = File(_pubspec);
+    file.writeAsStringSync(content);
   }
 }

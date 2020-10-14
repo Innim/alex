@@ -260,8 +260,10 @@ class StartReleaseCommand extends AlexCommand {
 
   void incrementVersion(Spec spec, Version value) {
     final version = value.incrementPatchAndBuild();
-    final newSpec = spec.setVersion(version);
-    newSpec.save();
+    final content = spec.getContent();
+    final updated =
+        content.replaceFirst("version: $value", "version: $version");
+    spec.saveContent(updated);
   }
 }
 
