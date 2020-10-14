@@ -25,6 +25,8 @@ class FromXmlCommand extends L10nCommandBase {
 
   static const _argLocale = 'locale';
 
+  static final _localeRegionRegEx = RegExp(r'[a-z]{2}_[A-Z]{2}');
+
   FromXmlCommand() : super('from_xml', 'Import translations from xml.') {
     argParser
       ..addOption(
@@ -68,6 +70,11 @@ class FromXmlCommand extends L10nCommandBase {
 
     final locales =
         locale?.isNotEmpty ?? false ? [locale] : await _getLocales(config);
+
+    if (locales.isEmpty) {
+      return success(
+          message: 'No locales found. Check ${config.xmlOutputDir} folder');
+    }
 
     printVerbose('Import for locales: ${locales.join(', ')}.');
 
@@ -137,7 +144,7 @@ class FromXmlCommand extends L10nCommandBase {
     // Here file already in required format, just copy it
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
-      final androidLocale = localeMap[locale] ?? locale;
+      final androidLocale = (localeMap[locale] ?? locale).replaceAll('_', '-r');
       final targetDirPath = path.join(resPath, dirName + '-$androidLocale');
 
       final targetDir = Directory(targetDirPath);
@@ -200,14 +207,24 @@ class FromXmlCommand extends L10nCommandBase {
     await for (final item in baseDir.list()) {
       if (item is Directory) {
         final name = path.basename(item.path);
-        // TODO: check by whitelist?
-        if (name.length == 2 && name != baseLocale) locales.add(name);
+        if (name != baseLocale && _isLocaleName(name)) locales.add(name);
       }
     }
 
     locales.sort();
 
     return locales;
+  }
+
+  bool _isLocaleName(String value) {
+    // TODO: check by whitelist?
+    if (value.length == 2) return true;
+
+    if (value.length == 5) {
+      return _localeRegionRegEx.hasMatch(value);
+    }
+
+    return false;
   }
 
   Future<List<String>> _loadKeys(

@@ -24,10 +24,12 @@ abstract class AlexCommand extends Command<int> {
   @override
   String get description => _description;
 
+  bool get isVerbose => argResults['verbose'] as bool;
+
   /// Prints message if verbose flag is on.
   @protected
   void printVerbose(String message) {
-    if (argResults['verbose'] as bool) print(message);
+    if (isVerbose) print(message);
   }
 
   /// Prints some info message in output.
@@ -108,7 +110,13 @@ abstract class AlexCommand extends Command<int> {
     assert(immediatePrintStd != null);
     assert(immediatePrintErr != null);
     final executable = _getPlatformSpecificExecutableName('flutter');
-    final args = ['pub', 'run', cmd, ...arguments];
+    final args = [
+      'pub',
+      if (isVerbose) '-v',
+      'run',
+      cmd,
+      ...arguments,
+    ];
 
     printVerbose('Run: $executable ${args.join(" ")}');
 

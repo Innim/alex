@@ -19,6 +19,9 @@ class GenerateCommand extends L10nCommandBase {
     try {
       await runIntlOrFail('generate_from_arb', [
         '--output-dir=${config.outputDir}',
+        '--codegen_mode=release',
+        '--use-deferred-loading',
+        '--no-suppress-warnings',
         config.sourceFile,
         ...arbFiles,
       ]);
