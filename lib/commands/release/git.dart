@@ -140,5 +140,4 @@ T fail<T>([String message]) {
   }
 
   exit(1);
-  return null;
 }

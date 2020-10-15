@@ -59,6 +59,8 @@ More about specified configuration parameters - in modules descriptions in the [
 
 ## Commands
 
+// TODO @chessmax: `release` command description
+
 ### l10n
 
 Work with localization files.

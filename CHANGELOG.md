@@ -1,3 +1,7 @@
+## 0.3.0-dev.1 - 2020-10-15
+
+- Release: New **Release** feature! Just execute `alex release start` and enjoy 🚀
+
 ## 0.2.5-dev.2 - 2020-10-07
 
 - L10n: Fixed locale prefix format for Android in `from_xml`.
