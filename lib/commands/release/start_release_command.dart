@@ -33,10 +33,10 @@ class StartReleaseCommand extends AlexCommand {
     final spec = Spec.pub();
     final version = spec.version;
     final ver = "v$version";
-    final v = "v${version.short}";
+    final vs = "${version.short}";
 
-    print('Start new release <$v>');
-    gitflowReleaseStart(v);
+    print('Start new release <v$vs>');
+    gitflowReleaseStart(vs);
 
     print('Upgrading CHANGELOG.md...');
 
@@ -55,7 +55,7 @@ class StartReleaseCommand extends AlexCommand {
     gitCommit("Changelog and release notes");
 
     // finishing release
-    gitflowReleaseFinish(v);
+    gitflowReleaseFinish(vs);
 
     if (gitGetCurrentBranch() != branchDevelop) {
       gitCheckout(branchDevelop);
