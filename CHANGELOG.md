@@ -1,3 +1,9 @@
+## 0.3.0-dev.5 - 2020-10-21
+
+- **Fixed**: Invalid assets path.
+- Set minimum textarea height as 5 lines for a release notes.
+- "v" prefix removed from branch name/tag.
+
 ## 0.3.0-dev.1 - 2020-10-15
 
 - Release: New **Release** feature! Just execute `alex release start` and enjoy 🚀

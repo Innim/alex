@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/commands/release/ci_config.dart';
@@ -244,12 +245,26 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   Future<String> readTemplate(String fileName) {
-    return readPackageFile("lib/assets/commands/release/$fileName.html");
+    return readAssetFile("commands/release/$fileName.html");
   }
 
-  Future<String> readPackageFile(String fileName) async {
-    final packageDir = getPackageDir();
-    final filePath = join(packageDir, fileName);
+  Future<String> readAssetFile(String assetPath) async {
+    return readPackageFile("assets/$assetPath");
+  }
+
+  Future<String> readPackageFile(String path) async {
+    final packageUri = Uri.parse('package:alex/$path');
+    final resolvedUri = await Isolate.resolvePackageUri(packageUri);
+
+    String filePath;
+    if (resolvedUri == null) {
+      // trying to get relative path
+      final packageDir = getPackageDir();
+      filePath = join(packageDir, path);
+    } else {
+      filePath = resolvedUri.path;
+    }
+
     return File(filePath).readAsString();
   }
 
