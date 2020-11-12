@@ -43,8 +43,9 @@ class IosStringsExporter extends L10nExporter {
       result.writeln('";');
     });
 
+    final iosLocale = locale.replaceAll('_', '-');
     final targetPath =
-        path.join(iosProjectPath, 'Runner/$locale.lproj/$targetFileName');
+        path.join(iosProjectPath, 'Runner/$iosLocale.lproj/$targetFileName');
     final target = File(targetPath);
     await target.writeAsString(result.toString());
   }

@@ -1,3 +1,7 @@
+## 0.3.0-dev.6 - 2020-11-12
+
+- L10n: Fixed locale prefix format for iOS in `from_xml`.
+
 ## 0.3.0-dev.5 - 2020-10-21
 
 - **Fixed**: Invalid assets path.
