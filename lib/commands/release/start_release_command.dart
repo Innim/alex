@@ -19,17 +19,19 @@ class StartReleaseCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    ensureCleanStatus();
+    final git = GitCommands(GitClient());
 
-    if (gitGetCurrentBranch() != branchDevelop) {
-      gitCheckout(branchDevelop);
+    git.ensureCleanStatus();
+
+    if (git.getCurrentBranch() != branchDevelop) {
+      git.checkout(branchDevelop);
     }
 
-    ensureRemoteUrl();
+    git.ensureRemoteUrl();
 
-    gitPull();
+    git.pull();
 
-    ensureCleanStatus();
+    git.ensureCleanStatus();
 
     final spec = Spec.pub();
     final version = spec.version;
@@ -37,7 +39,7 @@ class StartReleaseCommand extends AlexCommand {
     final vs = "${version.short}";
 
     print('Start new release <v$vs>');
-    gitflowReleaseStart(vs);
+    git.gitflowReleaseStart(vs);
 
     print('Upgrading CHANGELOG.md...');
 
@@ -52,24 +54,24 @@ class StartReleaseCommand extends AlexCommand {
     print("Finishing release...");
 
     // committing changes
-    gitAddAll();
-    gitCommit("Changelog and release notes");
+    git.addAll();
+    git.commit("Changelog and release notes");
 
     // finishing release
-    gitflowReleaseFinish(vs);
+    git.gitflowReleaseFinish(vs);
 
-    if (gitGetCurrentBranch() != branchDevelop) {
-      gitCheckout(branchDevelop);
+    if (git.getCurrentBranch() != branchDevelop) {
+      git.checkout(branchDevelop);
     }
 
     // increment version
     incrementVersion(spec, version);
 
-    gitAddAll();
-    gitCommit("Version increment");
+    git.addAll();
+    git.commit("Version increment");
 
-    gitPush(branchDevelop);
-    gitPush(branchMaster);
+    git.push(branchDevelop);
+    git.push(branchMaster);
 
     print('Release successfully completed');
 
