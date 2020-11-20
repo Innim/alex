@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/commands/release/ci_config.dart';
+import 'package:alex/commands/release/demo.dart';
 import 'package:alex/commands/release/fs.dart';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
@@ -15,16 +16,26 @@ import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
+  static const String flagDemo = "demo";
   FileSystem fs;
   GitCommands git;
   String _packageDir;
 
-  StartReleaseCommand() : super("start", "Start new release");
+  StartReleaseCommand() : super("start", "Start new release") {
+    argParser.addFlag(flagDemo, help: "Runs command in demonstration mode");
+  }
 
   @override
   Future<int> run() async {
-    fs = IOFileSystem();
-    git = GitCommands(GitClient());
+    final isDemo = argResults[flagDemo] as bool;
+    if (!isDemo) {
+      fs = IOFileSystem();
+      git = GitCommands(GitClient());
+    } else {
+      print("Demonstration mode");
+      fs = DemoFileSystem();
+      git = GitCommands(DemoGit());
+    }
 
     git.ensureCleanStatus();
 
@@ -38,7 +49,7 @@ class StartReleaseCommand extends AlexCommand {
 
     git.ensureCleanStatus();
 
-    final spec = Spec.pub();
+    final spec = await Spec.pub(fs);
     final version = spec.version;
     final ver = "v$version";
     final vs = "${version.short}";
@@ -121,7 +132,8 @@ class StartReleaseCommand extends AlexCommand {
     final port = 4024;
     final data = getRawReleaseNotes(port, changeLog);
 
-    await openUrl("http://localhost:$port");
+    // ignore: unawaited_futures
+    openUrl("http://localhost:$port");
 
     final entries = await data;
 
@@ -254,7 +266,12 @@ class StartReleaseCommand extends AlexCommand {
       filePath = resolvedUri.path;
     }
 
-    return fs.readString(filePath);
+    // TODO: windows fix
+    if (filePath.startsWith('/')) {
+      filePath = filePath.substring(1);
+    }
+
+    return File(filePath).readAsString();
   }
 
   String getPackageDir() {

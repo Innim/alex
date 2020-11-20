@@ -41,6 +41,14 @@ class GitClient extends Git {
   }
 }
 
+class ConsoleGit extends Git {
+  @override
+  String execute(List<String> args, String desc) {
+    print("git ${args.join(" ")}");
+    return "";
+  }
+}
+
 class GitCommands {
   final Git _client;
 

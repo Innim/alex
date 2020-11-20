@@ -1,16 +1,18 @@
 import 'dart:io';
 
+import 'package:alex/commands/release/fs.dart';
 import 'package:plain_optional/plain_optional.dart';
 import 'package:pubspec_yaml/pubspec_yaml.dart';
 import 'package:version/version.dart';
 
-/// Some specifiaction.
+/// Some specification.
 class Spec {
   static const _pubspec = "pubspec.yaml";
 
   /// Returns specification of a project in current directory.
-  static Spec pub() {
-    var yamlMap = File(_pubspec).readAsStringSync().toPubspecYaml();
+  static Future<Spec> pub(FileSystem fs) async {
+    final contents = await fs.readString(_pubspec);
+    var yamlMap = contents.toPubspecYaml();
     return Spec(yamlMap);
   }
 
