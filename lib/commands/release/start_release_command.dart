@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/commands/release/ci_config.dart';
+import 'package:alex/commands/release/fs.dart';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
@@ -13,13 +14,16 @@ import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
+  FileSystem fs;
+  GitCommands git;
   String _packageDir;
 
   StartReleaseCommand() : super("start", "Start new release");
 
   @override
   Future<int> run() async {
-    final git = GitCommands(GitClient());
+    fs = IOFileSystem();
+    git = GitCommands(GitClient());
 
     git.ensureCleanStatus();
 
@@ -79,8 +83,8 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   Future<String> upgradeChangeLog(String ver) async {
-    final file = File("CHANGELOG.md");
-    var contents = await file.readAsString();
+    final file = "CHANGELOG.md";
+    var contents = await fs.readString(file);
     if (contents.startsWith("## Next release")) {
       // up to date
       if (contents.contains(ver)) {
@@ -91,7 +95,7 @@ class StartReleaseCommand extends AlexCommand {
       contents = contents.replaceFirst(
           "## Next release", "## Next release\n\n## $ver - $now");
 
-      await file.writeAsString(contents);
+      await fs.writeString(file, contents);
 
       return getCurrentChangeLog(contents);
     } else {
@@ -151,9 +155,9 @@ class StartReleaseCommand extends AlexCommand {
         final content = kv.value;
 
         if (content.isNotEmpty) {
-          final file = await File("ci/changelog/$v/${type}_$ln.txt")
-              .create(recursive: true);
-          await file.writeAsString(content);
+          final path = "ci/changelog/$v/${type}_$ln.txt";
+          await fs.createFile(path);
+          await fs.writeString(path, content);
         }
       }
     }
@@ -267,7 +271,7 @@ class StartReleaseCommand extends AlexCommand {
       filePath = resolvedUri.path;
     }
 
-    return File(filePath).readAsString();
+    return fs.readString(filePath);
   }
 
   String getPackageDir() {
