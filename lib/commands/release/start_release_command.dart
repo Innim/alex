@@ -9,6 +9,7 @@ import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:intl/intl.dart';
+import 'package:open_url/open_url.dart';
 import 'package:path/path.dart';
 import 'package:version/version.dart';
 
@@ -116,29 +117,11 @@ class StartReleaseCommand extends AlexCommand {
     return contents.substring(curIndex);
   }
 
-  void runBrowser(String url) {
-    switch (Platform.operatingSystem) {
-      case 'linux':
-        Process.run('x-www-browser', [url]);
-        break;
-      case 'macos':
-        Process.run('open', [url]);
-        break;
-      case 'windows':
-        Process.run('explorer', [url]);
-        break;
-      default:
-        print("Failed to open url.");
-        exit(1);
-        break;
-    }
-  }
-
   Future<void> getReleaseNotes(Version version, String changeLog) async {
     final port = 4024;
     final data = getRawReleaseNotes(port, changeLog);
 
-    runBrowser("http://localhost:$port");
+    await openUrl("http://localhost:$port");
 
     final entries = await data;
 
