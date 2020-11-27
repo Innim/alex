@@ -151,7 +151,7 @@ class StartReleaseCommand extends AlexCommand {
 
         if (content.isNotEmpty) {
           final path = "ci/changelog/$v/${type}_$ln.txt";
-          await fs.createFile(path);
+          await fs.createFile(path, recursive: true);
           await fs.writeString(path, content);
         }
       }
