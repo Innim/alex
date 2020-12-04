@@ -4,40 +4,58 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/commands/release/ci_config.dart';
+import 'package:alex/commands/release/demo.dart';
+import 'package:alex/commands/release/fs.dart';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:intl/intl.dart';
+import 'package:open_url/open_url.dart';
 import 'package:path/path.dart';
 import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
+  static const String flagDemo = "demo";
+  FileSystem fs;
+  GitCommands git;
   String _packageDir;
 
-  StartReleaseCommand() : super("start", "Start new release");
+  StartReleaseCommand() : super("start", "Start new release") {
+    argParser.addFlag(flagDemo, help: "Runs command in demonstration mode");
+  }
 
   @override
   Future<int> run() async {
-    ensureCleanStatus();
-
-    if (gitGetCurrentBranch() != branchDevelop) {
-      gitCheckout(branchDevelop);
+    final isDemo = argResults[flagDemo] as bool;
+    if (!isDemo) {
+      fs = IOFileSystem();
+      git = GitCommands(GitClient());
+    } else {
+      print("Demonstration mode");
+      fs = DemoFileSystem();
+      git = GitCommands(DemoGit());
     }
 
-    ensureRemoteUrl();
+    git.ensureCleanStatus();
 
-    gitPull();
+    if (git.getCurrentBranch() != branchDevelop) {
+      git.checkout(branchDevelop);
+    }
 
-    ensureCleanStatus();
+    git.ensureRemoteUrl();
 
-    final spec = Spec.pub();
+    git.pull();
+
+    git.ensureCleanStatus();
+
+    final spec = await Spec.pub(fs);
     final version = spec.version;
     final ver = "v$version";
     final vs = "${version.short}";
 
     print('Start new release <v$vs>');
-    gitflowReleaseStart(vs);
+    git.gitflowReleaseStart(vs);
 
     print('Upgrading CHANGELOG.md...');
 
@@ -52,24 +70,24 @@ class StartReleaseCommand extends AlexCommand {
     print("Finishing release...");
 
     // committing changes
-    gitAddAll();
-    gitCommit("Changelog and release notes");
+    git.addAll();
+    git.commit("Changelog and release notes");
 
     // finishing release
-    gitflowReleaseFinish(vs);
+    git.gitflowReleaseFinish(vs);
 
-    if (gitGetCurrentBranch() != branchDevelop) {
-      gitCheckout(branchDevelop);
+    if (git.getCurrentBranch() != branchDevelop) {
+      git.checkout(branchDevelop);
     }
 
     // increment version
     incrementVersion(spec, version);
 
-    gitAddAll();
-    gitCommit("Version increment");
+    git.addAll();
+    git.commit("Version increment");
 
-    gitPush(branchDevelop);
-    gitPush(branchMaster);
+    git.push(branchDevelop);
+    git.push(branchMaster);
 
     print('Release successfully completed');
 
@@ -77,8 +95,8 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   Future<String> upgradeChangeLog(String ver) async {
-    final file = File("CHANGELOG.md");
-    var contents = await file.readAsString();
+    final file = "CHANGELOG.md";
+    var contents = await fs.readString(file);
     if (contents.startsWith("## Next release")) {
       // up to date
       if (contents.contains(ver)) {
@@ -89,7 +107,7 @@ class StartReleaseCommand extends AlexCommand {
       contents = contents.replaceFirst(
           "## Next release", "## Next release\n\n## $ver - $now");
 
-      await file.writeAsString(contents);
+      await fs.writeString(file, contents);
 
       return getCurrentChangeLog(contents);
     } else {
@@ -110,29 +128,12 @@ class StartReleaseCommand extends AlexCommand {
     return contents.substring(curIndex);
   }
 
-  void runBrowser(String url) {
-    switch (Platform.operatingSystem) {
-      case 'linux':
-        Process.run('x-www-browser', [url]);
-        break;
-      case 'macos':
-        Process.run('open', [url]);
-        break;
-      case 'windows':
-        Process.run('explorer', [url]);
-        break;
-      default:
-        print("Failed to open url.");
-        exit(1);
-        break;
-    }
-  }
-
   Future<void> getReleaseNotes(Version version, String changeLog) async {
     final port = 4024;
     final data = getRawReleaseNotes(port, changeLog);
 
-    runBrowser("http://localhost:$port");
+    // ignore: unawaited_futures
+    openUrl("http://localhost:$port");
 
     final entries = await data;
 
@@ -149,9 +150,9 @@ class StartReleaseCommand extends AlexCommand {
         final content = kv.value;
 
         if (content.isNotEmpty) {
-          final file = await File("ci/changelog/$v/${type}_$ln.txt")
-              .create(recursive: true);
-          await file.writeAsString(content);
+          final path = "ci/changelog/$v/${type}_$ln.txt";
+          await fs.createFile(path, recursive: true);
+          await fs.writeString(path, content);
         }
       }
     }
@@ -263,6 +264,11 @@ class StartReleaseCommand extends AlexCommand {
       filePath = join(packageDir, path);
     } else {
       filePath = resolvedUri.path;
+    }
+
+    // TODO: windows fix
+    if (filePath.startsWith('/')) {
+      filePath = filePath.substring(1);
     }
 
     return File(filePath).readAsString();
