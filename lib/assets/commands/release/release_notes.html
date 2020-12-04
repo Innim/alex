@@ -30,8 +30,25 @@
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            let textAreas = document.getElementsByTagName('textarea')
+            for (const textArea of textAreas) {
+                let onChange = function () {
+                    updateMaxCharsDisplay(textArea);
+                };
+                textArea.onkeyup = onChange;
+                textArea.onchange = onChange;
+                updateMaxCharsDisplay(textArea);
+            }
+
             updateState(true);
         });
+
+        function updateMaxCharsDisplay(textArea) {
+            let span = document.getElementById('maxCharsDisplay_' + textArea.name);
+            let length = textArea.value.length;
+            let maxLength = parseInt(textArea.getAttribute('maxlength'));
+            span.innerText = length.toString() + "/" + maxLength.toString();
+        }
 
         function updateState(isDefault) {
             let items = document.querySelectorAll('.item');
