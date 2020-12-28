@@ -1,3 +1,8 @@
+## 0.3.1-dev.1 - 2020-12-28
+
+- L10n: Command `import_xml` to import translations from Google Play
+to the projects's xml files.
+
 ## 0.3.0-dev.6 - 2020-11-12
 
 - L10n: Fixed locale prefix format for iOS in `from_xml`.

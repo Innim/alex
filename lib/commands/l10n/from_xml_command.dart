@@ -25,8 +25,6 @@ class FromXmlCommand extends L10nCommandBase {
 
   static const _argLocale = 'locale';
 
-  static final _localeRegionRegEx = RegExp(r'[a-z]{2}_[A-Z]{2}');
-
   FromXmlCommand() : super('from_xml', 'Import translations from xml.') {
     argParser
       ..addOption(
@@ -69,7 +67,7 @@ class FromXmlCommand extends L10nCommandBase {
     final locale = argResults[_argLocale] as String;
 
     final locales =
-        locale?.isNotEmpty ?? false ? [locale] : await _getLocales(config);
+        locale?.isNotEmpty ?? false ? [locale] : await getLocales(config);
 
     if (locales.isEmpty) {
       return success(
@@ -196,35 +194,6 @@ class FromXmlCommand extends L10nCommandBase {
     }
 
     return success();
-  }
-
-  Future<List<String>> _getLocales(L10nConfig config) async {
-    final baseDirPath = config.xmlOutputDir;
-    final baseDir = Directory(baseDirPath);
-    final baseLocale = config.baseLocaleForXml;
-
-    final locales = <String>[];
-    await for (final item in baseDir.list()) {
-      if (item is Directory) {
-        final name = path.basename(item.path);
-        if (name != baseLocale && _isLocaleName(name)) locales.add(name);
-      }
-    }
-
-    locales.sort();
-
-    return locales;
-  }
-
-  bool _isLocaleName(String value) {
-    // TODO: check by whitelist?
-    if (value.length == 2) return true;
-
-    if (value.length == 5) {
-      return _localeRegionRegEx.hasMatch(value);
-    }
-
-    return false;
   }
 
   Future<List<String>> _loadKeys(
