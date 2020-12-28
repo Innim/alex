@@ -68,10 +68,13 @@ class ImportXmlCommand extends L10nCommandBase {
           final subdirName = '${translationUid}_${googlePlayLocale}';
           final sourceFile = await _requireFile(path.join(
               sourceDir.path, subdirName, '${subdirName}_${projectUid}.xml'));
-          final targetFile = await _requireFile(
-              path.join(config.getXmlFilesPath(locale), filename));
 
-          printVerbose(' Copy $sourceFile to $targetFile');
+          final targetDir = await _requireDirectory(
+              config.getXmlFilesPath(locale),
+              createIfNotExist: true);
+          final targetFile = File(path.join(targetDir.path, filename));
+
+          printVerbose('Copy $sourceFile to $targetFile');
           await sourceFile.copy(targetFile.path);
 
           imported.add(locale);
@@ -84,10 +87,17 @@ class ImportXmlCommand extends L10nCommandBase {
             '${imported.join(", ")}.');
   }
 
-  Future<Directory> _requireDirectory(String path) async {
-    final dir = Directory(path);
+  Future<Directory> _requireDirectory(String path,
+      {bool createIfNotExist = false}) async {
+    var dir = Directory(path);
     final exist = await dir.exists();
-    if (!exist) throw RunException(1, 'Directory $path is not exist');
+    if (!exist) {
+      if (createIfNotExist) {
+        dir = await dir.create(recursive: true);
+      } else {
+        throw RunException(1, 'Directory $path is not exist');
+      }
+    }
     return dir;
   }
 
