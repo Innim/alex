@@ -5,7 +5,7 @@ import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:path/path.dart' as path;
 
-/// Command to import transalations from Google Play
+/// Command to import translations from Google Play
 /// to the project's xml files.
 class ImportXmlCommand extends L10nCommandBase {
   static const _argPath = 'path';
@@ -13,14 +13,14 @@ class ImportXmlCommand extends L10nCommandBase {
   ImportXmlCommand()
       : super(
           'import_xml',
-          'Import transalations from Google Play '
+          'Import translations from Google Play '
               "to the project's xml files",
         ) {
     argParser
       ..addOption(
         _argPath,
         abbr: 'p',
-        help: 'Path to the durectory with translations from Google Play.',
+        help: 'Path to the directory with translations from Google Play.',
         valueHelp: 'PATH',
       );
   }
@@ -80,9 +80,10 @@ class ImportXmlCommand extends L10nCommandBase {
     if (imported.isEmpty) {
       return error(2, message: 'There is no files for import in $sourcePath');
     } else {
+      final importedLocales = imported.join(", ");
       return success(
           message: 'Success. Imported locales (${imported.length}): '
-              '${imported.join(", ")}.');
+              '$importedLocales.');
     }
   }
 
@@ -111,6 +112,7 @@ class ImportXmlCommand extends L10nCommandBase {
     imported.add(locale);
   }
 
+  // TODO: may be move to some utils or base class
   Future<Directory> _requireDirectory(String path,
       {bool createIfNotExist = false}) async {
     var dir = Directory(path);
@@ -125,6 +127,7 @@ class ImportXmlCommand extends L10nCommandBase {
     return dir;
   }
 
+  // TODO: may be move to some utils or base class
   Future<File> _requireFile(String path) async {
     final file = File(path);
     final exist = await file.exists();

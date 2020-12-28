@@ -115,9 +115,9 @@ alex l10n from_xml --to=ios
 #### Import translation from Google Play to project XML files
 
 When you download and unzip translations from Google Play,
-you need to import it in project's xml files. You can 
+you need to import them in project's xml files. You can 
 copy it all manually, but it's very inconvenient.
-So you can use command `import_xml` to do it.
+So you can use the command `import_xml` to do it.
 
 ```
 alex l10n import_xml --path=path/to/dir/with/translations
