@@ -58,33 +58,57 @@ class ImportXmlCommand extends L10nCommandBase {
 
     // TODO: check that all locales (rather than base and gp base) presented
     final imported = <String>[];
+
+    // if multiple files - than it's in subdirectory,
+    // if single file - it's directly in root
     await for (final item in sourceDir.list()) {
-      if (item is Directory) {
-        final name = path.basename(item.path);
-        if (name.startsWith(translationUid)) {
+      final name = path.basename(item.path);
+      if (name.startsWith(translationUid)) {
+        if (item is Directory) {
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
-          final locale = _convertGooglePlayLocale(googlePlayLocale);
-
-          final subdirName = '${translationUid}_${googlePlayLocale}';
-          final sourceFile = await _requireFile(path.join(
-              sourceDir.path, subdirName, '${subdirName}_${projectUid}.xml'));
-
-          final targetDir = await _requireDirectory(
-              config.getXmlFilesPath(locale),
-              createIfNotExist: true);
-          final targetFile = File(path.join(targetDir.path, filename));
-
-          printVerbose('Copy $sourceFile to $targetFile');
-          await sourceFile.copy(targetFile.path);
-
-          imported.add(locale);
+          await _importFile(config, imported, item, projectUid, translationUid,
+              googlePlayLocale, filename);
+        } else if (item is File && item.path.endsWith('.xml')) {
+          final googlePlayLocale =
+              name.replaceFirst('${translationUid}_', '').split('_').first;
+          await _importFile(config, imported, sourceDir, projectUid,
+              translationUid, googlePlayLocale, filename);
         }
       }
     }
 
-    return success(
-        message: 'Success. Imported locales (${imported.length}): '
-            '${imported.join(", ")}.');
+    if (imported.isEmpty) {
+      return error(2, message: 'There is no files for import in $sourcePath');
+    } else {
+      return success(
+          message: 'Success. Imported locales (${imported.length}): '
+              '${imported.join(", ")}.');
+    }
+  }
+
+  Future<void> _importFile(
+      L10nConfig config,
+      List<String> imported,
+      Directory sourceDir,
+      String projectUid,
+      String translationUid,
+      String googlePlayLocale,
+      String filename) async {
+    print('googlePlayLocale: $googlePlayLocale');
+    final locale = _convertGooglePlayLocale(googlePlayLocale);
+
+    final uidWithName = '${translationUid}_${googlePlayLocale}';
+    final sourceFileName = '${uidWithName}_${projectUid}.xml';
+    final sourceFile =
+        await _requireFile(path.join(sourceDir.path, sourceFileName));
+
+    final targetDir = await _requireDirectory(config.getXmlFilesPath(locale),
+        createIfNotExist: true);
+    final targetFile = File(path.join(targetDir.path, filename));
+    printVerbose('Copy $sourceFile to $targetFile');
+    await sourceFile.copy(targetFile.path);
+
+    imported.add(locale);
   }
 
   Future<Directory> _requireDirectory(String path,
