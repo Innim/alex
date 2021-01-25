@@ -267,7 +267,7 @@ class StartReleaseCommand extends AlexCommand {
     }
 
     // TODO: windows fix
-    if (filePath.startsWith('/')) {
+    if (Platform.isWindows && filePath.startsWith('/')) {
       filePath = filePath.substring(1);
     }
 

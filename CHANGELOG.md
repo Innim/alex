@@ -1,3 +1,7 @@
+## 0.3.1-dev.2 - 2021-01-25
+
+* Fixed: can't get file from assets on macOS.
+
 ## 0.3.1-dev.1 - 2021-01-25
 
 - L10n: Command `import_xml` to import translations from Google Play
