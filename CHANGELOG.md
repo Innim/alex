@@ -1,4 +1,4 @@
-## 0.3.1-dev.1 - 2020-12-28
+## 0.3.1-dev.1 - 2021-01-25
 
 - L10n: Command `import_xml` to import translations from Google Play
 to the projects's xml files.
