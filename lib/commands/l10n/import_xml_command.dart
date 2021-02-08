@@ -135,6 +135,14 @@ class ImportXmlCommand extends L10nCommandBase {
   }
 
   String _convertGooglePlayLocale(String value) {
-    return value.replaceAll('-', '_');
+    final parts = value.split('-');
+    if (parts.length > 1) {
+      assert(parts.length == 2);
+      final lang = parts[0];
+      final region = parts[1].toUpperCase();
+      return '${lang}_$region';
+    } else {
+      return parts.first;
+    }
   }
 }
