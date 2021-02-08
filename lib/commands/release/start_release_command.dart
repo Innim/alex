@@ -32,7 +32,7 @@ class StartReleaseCommand extends AlexCommand {
       fs = IOFileSystem();
       git = GitCommands(GitClient());
     } else {
-      print("Demonstration mode");
+      printInfo("Demonstration mode");
       fs = DemoFileSystem();
       git = GitCommands(DemoGit());
     }
@@ -52,22 +52,22 @@ class StartReleaseCommand extends AlexCommand {
     final spec = await Spec.pub(fs);
     final version = spec.version;
     final ver = "v$version";
-    final vs = "${version.short}";
+    final vs = version.short;
 
-    print('Start new release <v$vs>');
+    printInfo('Start new release <v$vs>');
     git.gitflowReleaseStart(vs);
 
-    print('Upgrading CHANGELOG.md...');
+    printInfo('Upgrading CHANGELOG.md...');
 
     final changeLog = await upgradeChangeLog(ver);
 
-    print("Change log: \n" + changeLog);
+    printInfo("Change log: \n$changeLog");
 
-    print('Waiting for release notes...');
+    printInfo('Waiting for release notes...');
 
     await getReleaseNotes(version, changeLog);
 
-    print("Finishing release...");
+    printInfo("Finishing release...");
 
     // committing changes
     git.addAll();
@@ -89,13 +89,13 @@ class StartReleaseCommand extends AlexCommand {
     git.push(branchDevelop);
     git.push(branchMaster);
 
-    print('Release successfully completed');
+    printInfo('Release successfully completed');
 
     return 0;
   }
 
   Future<String> upgradeChangeLog(String ver) async {
-    final file = "CHANGELOG.md";
+    const file = "CHANGELOG.md";
     var contents = await fs.readString(file);
     if (contents.startsWith("## Next release")) {
       // up to date
@@ -117,7 +117,7 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   String getCurrentChangeLog(String contents) {
-    final marker = "## v";
+    const marker = "## v";
     final curIndex = contents.indexOf(marker);
     final lastIndex = contents.indexOf(marker, curIndex + 1);
 
@@ -129,7 +129,7 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   Future<void> getReleaseNotes(Version version, String changeLog) async {
-    final port = 4024;
+    const port = 4024;
     final data = getRawReleaseNotes(port, changeLog);
 
     // ignore: unawaited_futures
@@ -140,7 +140,7 @@ class StartReleaseCommand extends AlexCommand {
     final major = version.major;
     final minor = version.minor;
     final patch = version.patch;
-    final v = ("$major.$minor.$patch");
+    final v = "$major.$minor.$patch";
 
     for (final entry in entries) {
       final ln = entry.lang;
@@ -157,7 +157,7 @@ class StartReleaseCommand extends AlexCommand {
       }
     }
 
-    print("Release notes written successfully");
+    printInfo("Release notes written successfully");
   }
 
   Future<Iterable<Entry>> getRawReleaseNotes(int port, String changeLog) async {
@@ -168,11 +168,11 @@ class StartReleaseCommand extends AlexCommand {
 
     final completer = Completer<Iterable<Entry>>();
 
-    await for (HttpRequest request in server) {
+    await for (final HttpRequest request in server) {
       try {
         final response = request.response;
 
-        print("Request [${request.uri.toString()}]");
+        printInfo("Request [${request.uri.toString()}]");
 
         // TODO: check for max length
 
@@ -206,7 +206,7 @@ class StartReleaseCommand extends AlexCommand {
                     buildEntry(entryTemplate, id, value, entry.lang, type)));
           }).join("\n");
 
-          var text = formTemplate
+          final text = formTemplate
               .replaceAll("%change-log%", changeLog)
               .replaceAll("%items%", items);
 
@@ -216,7 +216,7 @@ class StartReleaseCommand extends AlexCommand {
           await response.close();
         }
       } catch (e, s) {
-        print('Handle request error: $e\n$s');
+        printError('Handle request error: $e\n$s');
       }
     }
 
@@ -229,16 +229,25 @@ class StartReleaseCommand extends AlexCommand {
 
   String buildEntry(
       String template, String id, String text, String name, ItemType type) {
-    if (type != ItemType.Default) {
-      name = (type == ItemType.AppStore ? "[App Store] " : "[Google Play] ") +
-          name;
+    String prefix;
+    switch (type) {
+      case ItemType.appStore:
+        prefix = '[App Store] ';
+        break;
+      case ItemType.googlePlay:
+        prefix = '[Google Play] ';
+        break;
+      case ItemType.byDefault:
+        prefix = '';
+        break;
     }
 
-    final display = type == ItemType.Default ? "block" : "none";
+    final display = type == ItemType.byDefault ? "block" : "none";
+    final itemName = '$prefix$name';
 
     return template
         .replaceAll("%id%", id)
-        .replaceAll("%name%", name)
+        .replaceAll("%name%", itemName)
         .replaceAll("%text%", text)
         .replaceAll("%display%", display)
         .replaceAll("%type%", type.id)
@@ -315,9 +324,9 @@ class Entry {
   }
 
   bool isAllValuesSet() {
-    final res = values.entries
-            .every((kv) => kv.value.isNotEmpty || kv.key == ItemType.Default) ||
-        values[ItemType.Default].isNotEmpty;
+    final res = values.entries.every(
+            (kv) => kv.value.isNotEmpty || kv.key == ItemType.byDefault) ||
+        values[ItemType.byDefault].isNotEmpty;
 
     return res;
   }
@@ -335,11 +344,11 @@ class Entry {
 }
 
 class ItemType {
-  static const ItemType Default = ItemType._("default");
-  static const ItemType AppStore = ItemType._("appstore", 255);
-  static const ItemType GooglePlay = ItemType._("googleplay", 500);
+  static const ItemType byDefault = ItemType._("default");
+  static const ItemType appStore = ItemType._("appstore", 255);
+  static const ItemType googlePlay = ItemType._("googleplay", 500);
 
-  static List<ItemType> values = [Default, AppStore, GooglePlay];
+  static List<ItemType> values = [byDefault, appStore, googlePlay];
 
   final String id;
   final int _maxChars;

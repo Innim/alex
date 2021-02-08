@@ -95,11 +95,10 @@ class ImportXmlCommand extends L10nCommandBase {
       String translationUid,
       String googlePlayLocale,
       String filename) async {
-    print('googlePlayLocale: $googlePlayLocale');
     final locale = _convertGooglePlayLocale(googlePlayLocale);
 
-    final uidWithName = '${translationUid}_${googlePlayLocale}';
-    final sourceFileName = '${uidWithName}_${projectUid}.xml';
+    final uidWithName = '${translationUid}_$googlePlayLocale';
+    final sourceFileName = '${uidWithName}_$projectUid.xml';
     final sourceFile =
         await _requireFile(path.join(sourceDir.path, sourceFileName));
 

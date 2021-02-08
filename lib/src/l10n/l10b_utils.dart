@@ -36,11 +36,10 @@ class L10nUtils {
 
   /// Returns name for xml file of main project localization.
   static String getMainXmlFileName(L10nConfig config) {
-    var fileName = config.xmlOutputName?.isNotEmpty ?? false
+    final fileName = config.xmlOutputName?.isNotEmpty ?? false
         ? config.xmlOutputName
         : _getBaseNameByArb(config);
-    fileName = path.setExtension(fileName, '.xml');
-    return fileName;
+    return path.setExtension(fileName, '.xml');
   }
 
   static String _getBaseNameByArb(L10nConfig config) {

@@ -51,6 +51,6 @@ class IosStringsExporter extends L10nExporter {
   }
 
   String _prepareStr(String text) {
-    return text.replaceAll('"', '\"').replaceAll('\n', r'\n');
+    return text.replaceAll('"', r'\"').replaceAll('\n', r'\n');
   }
 }

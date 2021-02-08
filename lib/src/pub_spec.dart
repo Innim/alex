@@ -12,7 +12,7 @@ class Spec {
   /// Returns specification of a project in current directory.
   static Future<Spec> pub(FileSystem fs) async {
     final contents = await fs.readString(_pubspec);
-    var yamlMap = contents.toPubspecYaml();
+    final yamlMap = contents.toPubspecYaml();
     return Spec(yamlMap);
   }
 
@@ -24,7 +24,7 @@ class Spec {
   ///
   /// Throws exception if no version found.
   Version get version =>
-      _yamlMap.version.iif(some: (v) => Version.parse(v), none: () => null);
+      _yamlMap.version.iif(some: Version.parse, none: () => null);
 
   /// Updates version.
   Spec setVersion(Version value) {

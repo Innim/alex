@@ -75,11 +75,10 @@ class AlexConfig {
   AlexConfig._(this._data) : assert(_data != null);
 
   L10nConfig get l10n {
-    final key = 'l10n';
-    _l10n ??= _data.containsKey(key)
+    const key = 'l10n';
+    return _l10n ??= _data.containsKey(key)
         ? L10nConfig.fromYaml(_data[key] as YamlMap)
         : L10nConfig();
-    return _l10n;
   }
 }
 

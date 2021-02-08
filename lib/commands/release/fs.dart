@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:alex/internal/print.dart' as print;
 
 /// Abstraction to access io functions.
 abstract class FileSystem {
@@ -32,17 +33,17 @@ class IOFileSystem extends FileSystem {
 class ConsoleFileSystem extends FileSystem {
   @override
   Future<void> createFile(String path, {bool recursive = false}) async {
-    print("fs.createFile $path, recursive: $recursive");
+    print.info("fs.createFile $path, recursive: $recursive");
   }
 
   @override
   Future<String> readString(String path) async {
-    print("fs.readString $path");
+    print.info("fs.readString $path");
     return "";
   }
 
   @override
   Future<void> writeString(String path, String contents) async {
-    print("fs.writeString $path, contents: $contents");
+    print.info("fs.writeString $path, contents: $contents");
   }
 }

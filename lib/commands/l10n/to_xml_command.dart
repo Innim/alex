@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
+// ignore: implementation_imports
 import 'package:intl_translation/src/icu_parser.dart';
+// ignore: implementation_imports
 import 'package:intl_translation/src/intl_message.dart';
 
 import 'src/l10n_command_base.dart';
@@ -82,8 +84,7 @@ class ToXmlCommand extends L10nCommandBase {
 
     final exists = await file.exists();
     if (!exists) {
-      return error(1,
-          message: 'ABR file for locale ${baseLocale} is not found');
+      return error(1, message: 'ABR file for locale $baseLocale is not found');
     }
 
     return _proccessArb(file, config.getXmlFilesPath(locale));
@@ -125,7 +126,7 @@ class ToXmlCommand extends L10nCommandBase {
 
   Future<String> _processJson(File file, String outputDir) async {
     final name = path.basename(file.path);
-    printVerbose('Export ${name}');
+    printVerbose('Export $name');
 
     final json = await file.readAsString();
     final map = jsonDecode(json) as Map<String, Object>;
@@ -202,10 +203,10 @@ class _StrData {
     } else if (parsed is Plural) {
       xml.writeln('<plurals name="$key">');
       final plural = parsed;
-      plural.codeAttributeNames.forEach((String quantity) {
+      plural.codeAttributeNames.forEach((quantity) {
         final val = plural[quantity];
         if (val != null) {
-          final str = val.expanded((Message msg, Message chunk) {
+          final str = val.expanded((msg, chunk) {
             if (chunk is LiteralString) return chunk.string;
 
             if (chunk is VariableSubstitution) {

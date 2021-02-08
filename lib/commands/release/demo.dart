@@ -1,5 +1,6 @@
 import 'package:alex/commands/release/fs.dart';
 import 'package:alex/commands/release/git.dart';
+import 'package:alex/internal/print.dart' as print;
 
 /// Demo git implementation.
 class DemoGit extends Git {
@@ -20,7 +21,7 @@ class DemoFileSystem extends FileSystem {
 
   @override
   Future<void> createFile(String path, {bool recursive = false}) async {
-    print("createFile $path recursive: $recursive");
+    print.info("createFile $path recursive: $recursive");
   }
 
   @override
@@ -42,6 +43,6 @@ class DemoFileSystem extends FileSystem {
 
   @override
   Future<void> writeString(String path, String contents) async {
-    print("writeString $path contents: $contents");
+    print.info("writeString $path contents: $contents");
   }
 }

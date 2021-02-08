@@ -7,7 +7,7 @@ import 'package:path/path.dart' as path;
 
 /// Base command for localization feature.
 abstract class L10nCommandBase extends AlexCommand {
-  static final _localeRegionRegEx = RegExp(r'[a-z]{2}_[A-Z]{2}');
+  static final _localeRegionRegEx = RegExp('[a-z]{2}_[A-Z]{2}');
 
   L10nCommandBase(String name, String description) : super(name, description);
 

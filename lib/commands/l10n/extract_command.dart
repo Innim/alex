@@ -33,7 +33,7 @@ class ExtractCommand extends L10nCommandBase {
 
     return success(
         message: 'Strings extracted to ARB file. '
-            'You can send ${mainFile} to the translators');
+            'You can send $mainFile to the translators');
   }
 
   File _arb(String fileName) => File(path.join(l10nConfig.outputDir, fileName));

@@ -32,7 +32,7 @@ class ArbExporter extends L10nExporter {
         map[key] = _validateParameters(key, parameters, value.text);
       } else if (value is L10nPluralEntry) {
         // Получаем заголовочную часть
-        final pluralPrefix = ',plural,';
+        const pluralPrefix = ',plural,';
         final baseVal = baseArb[key] as String;
         final prefix = baseVal.split(pluralPrefix).first;
 
@@ -57,7 +57,7 @@ class ArbExporter extends L10nExporter {
       map['@$key'] = baseMeta;
     });
 
-    final json = JsonEncoder.withIndent('  ').convert(map);
+    final json = const JsonEncoder.withIndent('  ').convert(map);
 
     final target = File(targetPath);
     await target.writeAsString(json);

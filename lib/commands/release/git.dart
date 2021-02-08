@@ -1,5 +1,6 @@
 import 'dart:core';
 import 'dart:io';
+import 'package:alex/internal/print.dart' as print;
 
 const String branchMaster = "master";
 const String branchDevelop = "develop";
@@ -26,15 +27,15 @@ class GitClient extends Git {
       return out.trim();
     }
 
-    print("git ${args.join(" ")}");
-    print("\"$desc\" failed. Git exit code: $code. Error: $error");
+    print.info("git ${args.join(" ")}");
+    print.info('"$desc" failed. Git exit code: $code. Error: $error');
 
     if (out.isNotEmpty) {
-      print("git stdout:\n$out\n");
+      print.info("git stdout:\n$out\n");
     }
 
     if (error.isNotEmpty) {
-      print("git stderr:\n$error\n");
+      print.error("git stderr:\n$error\n");
     }
 
     return fail();
@@ -44,7 +45,7 @@ class GitClient extends Git {
 class ConsoleGit extends Git {
   @override
   String execute(List<String> args, String desc) {
-    print("git ${args.join(" ")}");
+    print.info("git ${args.join(" ")}");
     return "";
   }
 }
@@ -91,7 +92,7 @@ class GitCommands {
   }
 
   void tag(String tag) {
-    git("tag -m \"$tag\" -a $tag", "set tag $tag");
+    git('tag -m "$tag" -a $tag', "set tag $tag");
   }
 
   String remoteGetUrl(String desc) {
@@ -125,7 +126,7 @@ class GitCommands {
   }
 
   void commit(String message) {
-    _git(["commit", "-m", "$message"], "committing changes");
+    _git(["commit", "-m", message], "committing changes");
   }
 
   String status(String desc, {bool porcelain = false, String errorMsg}) {
@@ -158,7 +159,7 @@ class GitCommands {
 
 T fail<T>([String message]) {
   if (message != null) {
-    print(message);
+    print.error(message);
   }
 
   exit(1);

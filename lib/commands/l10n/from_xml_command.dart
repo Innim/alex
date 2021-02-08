@@ -56,7 +56,6 @@ class FromXmlCommand extends L10nCommandBase {
             'Locale for import from xml. If not specified - all locales will be imported.',
         valueHelp: 'LOCALE',
       );
-    ;
   }
 
   @override
@@ -123,9 +122,9 @@ class FromXmlCommand extends L10nCommandBase {
 
   Future<int> _importToAndroid(List<String> locales) async {
     final config = l10nConfig;
-    final resPath = 'android/app/src/main/res/';
-    final dirName = 'values';
-    final filename = 'strings.xml';
+    const resPath = 'android/app/src/main/res/';
+    const dirName = 'values';
+    const filename = 'strings.xml';
 
     // http://developer.android.com/reference/java/util/Locale.html
     // Note that Java uses several deprecated two-letter codes.
@@ -133,17 +132,17 @@ class FromXmlCommand extends L10nCommandBase {
     // Indonesian ("id") as "in", and Yiddish ("yi") as "ji".
     // This rewriting happens even if you construct your own Locale object,
     // not just for instances returned by the various lookup methods.
-    final localeMap = const <String, String>{
+    const localeMap = <String, String>{
       'he': 'iw',
       'id': 'in',
-      'yi': 'ji'
+      'yi': 'ji',
     };
 
     // Here file already in required format, just copy it
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
       final androidLocale = (localeMap[locale] ?? locale).replaceAll('_', '-r');
-      final targetDirPath = path.join(resPath, dirName + '-$androidLocale');
+      final targetDirPath = path.join(resPath, '$dirName-$androidLocale');
 
       final targetDir = Directory(targetDirPath);
       if (!(await targetDir.exists())) await targetDir.create(recursive: true);
@@ -167,7 +166,7 @@ class FromXmlCommand extends L10nCommandBase {
     final config = l10nConfig;
 
     final iosProjectPath = path.join(path.current, 'ios');
-    final fileName = 'info_plist';
+    const fileName = 'info_plist';
 
     for (final locale in locales) {
       printVerbose('Export locale: $locale');

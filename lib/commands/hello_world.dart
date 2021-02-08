@@ -10,11 +10,11 @@ class HelloWorldCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    print('Enter you name: ');
+    printInfo('Enter you name: ');
 
     final name = readLine();
 
-    print('Hello ' + name);
+    printInfo('Hello $name');
     return 0;
   }
 
