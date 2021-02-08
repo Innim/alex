@@ -106,6 +106,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
+  innim_lint:
+    dependency: "direct dev"
+    description:
+      name: innim_lint
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.7+1"
   intl:
     dependency: "direct main"
     description:
@@ -191,12 +198,12 @@ packages:
     source: hosted
     version: "1.7.0"
   pedantic:
-    dependency: "direct dev"
+    dependency: transitive
     description:
       name: pedantic
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.9.0"
+    version: "1.9.2"
   petitparser:
     dependency: transitive
     description:
