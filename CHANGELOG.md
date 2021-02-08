@@ -1,3 +1,8 @@
+## 0.3.2-dev.1 - 2021-02-08
+
+* L10n: Command `import_xml` supports custom xml file names format.
+* Added `innim_lint` analysis ruleset.
+
 ## 0.3.1-dev.2 - 2021-01-25
 
 * Fixed: can't get file from assets on macOS.
