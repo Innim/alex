@@ -66,12 +66,18 @@ class ImportXmlCommand extends L10nCommandBase {
       if (name.startsWith(translationUid)) {
         if (item is Directory) {
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
-          await _importFile(config, imported, item, projectUid, translationUid,
-              googlePlayLocale, filename);
+          final uidWithName = '${translationUid}_$googlePlayLocale';
+          final sourceFilename = '${uidWithName}_$projectUid.xml';
+
+          await _importFile(config, imported, item, sourceFilename, projectUid,
+              translationUid, googlePlayLocale, filename);
         } else if (item is File && item.path.endsWith('.xml')) {
-          final googlePlayLocale =
-              name.replaceFirst('${translationUid}_', '').split('_').first;
-          await _importFile(config, imported, sourceDir, projectUid,
+          final googlePlayLocale = path
+              .withoutExtension(name)
+              .replaceFirst('${translationUid}_', '')
+              .split('_')
+              .first;
+          await _importFile(config, imported, sourceDir, name, projectUid,
               translationUid, googlePlayLocale, filename);
         }
       }
@@ -91,20 +97,21 @@ class ImportXmlCommand extends L10nCommandBase {
       L10nConfig config,
       List<String> imported,
       Directory sourceDir,
+      String sourceFilename,
       String projectUid,
       String translationUid,
       String googlePlayLocale,
-      String filename) async {
+      String targetFilename) async {
+    printVerbose(
+        'translationUid: $translationUid googlePlayLocale: $googlePlayLocale');
     final locale = _convertGooglePlayLocale(googlePlayLocale);
 
-    final uidWithName = '${translationUid}_$googlePlayLocale';
-    final sourceFileName = '${uidWithName}_$projectUid.xml';
     final sourceFile =
-        await _requireFile(path.join(sourceDir.path, sourceFileName));
+        await _requireFile(path.join(sourceDir.path, sourceFilename));
 
     final targetDir = await _requireDirectory(config.getXmlFilesPath(locale),
         createIfNotExist: true);
-    final targetFile = File(path.join(targetDir.path, filename));
+    final targetFile = File(path.join(targetDir.path, targetFilename));
     printVerbose('Copy $sourceFile to $targetFile');
     await sourceFile.copy(targetFile.path);
 
