@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/internal/print.dart' as print;
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:meta/meta.dart';
@@ -29,16 +30,16 @@ abstract class AlexCommand extends Command<int> {
   /// Prints message if verbose flag is on.
   @protected
   void printVerbose(String message) {
-    if (isVerbose) print(message);
+    if (isVerbose) print.verbose(message);
   }
 
   /// Prints some info message in output.
   @protected
-  void printInfo(String message) => print(message);
+  void printInfo(String message) => print.info(message);
 
   /// Prints error message in error output.
   @protected
-  void printError(String message) => stderr.writeln(message);
+  void printError(String message) => print.error(message);
 
   /// Prints 0 code and prints a success message if provided.
   @protected
