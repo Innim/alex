@@ -170,6 +170,9 @@ class StartReleaseCommand extends AlexCommand {
     final completer = Completer<Iterable<Entry>>();
 
     await for (final HttpRequest request in server) {
+      // handle only requests to the root
+      if (request.uri.path != '/') continue;
+
       try {
         final response = request.response;
 
