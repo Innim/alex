@@ -1,3 +1,7 @@
+## 0.3.3-dev.1 - 2021-02-15
+
+* Release: Do not require changelog for locale is it has default.
+
 ## 0.3.2-dev.1 - 2021-02-08
 
 * L10n: Command `import_xml` supports custom xml file names format.
