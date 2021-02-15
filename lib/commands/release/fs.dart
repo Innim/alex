@@ -11,6 +11,9 @@ abstract class FileSystem {
 
   /// Creates a file.
   Future<void> createFile(String path, {bool recursive = false});
+
+  /// Checks whether the file system entity with this path exists.
+  Future<bool> existsFile(String path);
 }
 
 /// File system implementation.
@@ -25,6 +28,9 @@ class IOFileSystem extends FileSystem {
   @override
   Future<void> createFile(String path, {bool recursive = false}) =>
       File(path).create(recursive: recursive);
+
+  @override
+  Future<bool> existsFile(String path) => File(path).exists();
 }
 
 /// File system that redirects dump every command to console.
@@ -45,5 +51,11 @@ class ConsoleFileSystem extends FileSystem {
   @override
   Future<void> writeString(String path, String contents) async {
     print.info("fs.writeString $path, contents: $contents");
+  }
+
+  @override
+  Future<bool> existsFile(String path) {
+    print.info("fs.existsFile $path");
+    return Future.value(false);
   }
 }

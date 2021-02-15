@@ -3,16 +3,18 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:intl/intl.dart';
+import 'package:meta/meta.dart';
+import 'package:open_url/open_url.dart';
+import 'package:path/path.dart' as p;
+import 'package:version/version.dart';
+
 import 'package:alex/commands/release/ci_config.dart';
 import 'package:alex/commands/release/demo.dart';
 import 'package:alex/commands/release/fs.dart';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
-import 'package:intl/intl.dart';
-import 'package:open_url/open_url.dart';
-import 'package:path/path.dart';
-import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
@@ -150,7 +152,7 @@ class StartReleaseCommand extends AlexCommand {
         final content = kv.value;
 
         if (content.isNotEmpty) {
-          final path = "ci/changelog/$v/${type}_$ln.txt";
+          final path = _CIPath.getChangelogPath(v, type, ln);
           await fs.createFile(path, recursive: true);
           await fs.writeString(path, content);
         }
@@ -162,13 +164,17 @@ class StartReleaseCommand extends AlexCommand {
 
   Future<Iterable<Entry>> getRawReleaseNotes(int port, String changeLog) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-    final ciConfig = await CiConfig.getConfig("ci/config.ini");
+    final ciConfig = await CiConfig.getConfig(_CIPath.configPath);
     final langs = ciConfig.localizationLanguageList;
-    final entries = {for (final ln in langs) ln: Entry(ln)};
+
+    final entries = {for (final ln in langs) ln: await _createEntry(ln)};
 
     final completer = Completer<Iterable<Entry>>();
 
     await for (final HttpRequest request in server) {
+      // handle only requests to the root
+      if (request.uri.path != '/') continue;
+
       try {
         final response = request.response;
 
@@ -188,7 +194,7 @@ class StartReleaseCommand extends AlexCommand {
         }
 
         // TODO: error if default and stores values are set
-        if (entries.values.every((entry) => entry.isAllValuesSet())) {
+        if (entries.values.every((entry) => entry.isAllRequiredValuesSet())) {
           completer.complete(entries.values);
           response
               .writeln("Succeed. Close the page and return to the console.");
@@ -202,8 +208,14 @@ class StartReleaseCommand extends AlexCommand {
           final items = entries.values.map((entry) {
             return buildNote(
                 noteTemplate,
-                entry.map((type, id, value) =>
-                    buildEntry(entryTemplate, id, value, entry.lang, type)));
+                entry.map((type, id, value) => buildEntry(
+                      entryTemplate,
+                      id,
+                      value,
+                      entry.lang,
+                      type,
+                      isRequired: entry.isRequired,
+                    )));
           }).join("\n");
 
           final text = formTemplate
@@ -228,7 +240,9 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   String buildEntry(
-      String template, String id, String text, String name, ItemType type) {
+      String template, String id, String text, String name, ItemType type,
+      {@required bool isRequired}) {
+    assert(isRequired != null);
     String prefix;
     switch (type) {
       case ItemType.appStore:
@@ -251,7 +265,8 @@ class StartReleaseCommand extends AlexCommand {
         .replaceAll("%text%", text)
         .replaceAll("%display%", display)
         .replaceAll("%type%", type.id)
-        .replaceAll("%maxlength%", "${type.maxChars}");
+        .replaceAll("%maxlength%", "${type.maxChars}")
+        .replaceAll("%required%", isRequired ? 'required' : '');
   }
 
   Future<String> readTemplate(String fileName) {
@@ -270,7 +285,7 @@ class StartReleaseCommand extends AlexCommand {
     if (resolvedUri == null) {
       // trying to get relative path
       final packageDir = getPackageDir();
-      filePath = join(packageDir, path);
+      filePath = p.join(packageDir, path);
     } else {
       filePath = resolvedUri.path;
     }
@@ -295,6 +310,12 @@ class StartReleaseCommand extends AlexCommand {
         content.replaceFirst("version: $value", "version: $version");
     spec.saveContent(updated);
   }
+
+  Future<Entry> _createEntry(String locale) async {
+    final isDefaultChangelogExists =
+        await fs.existsFile(_CIPath.getDefaultChangelogPath(locale));
+    return Entry(locale, isRequired: !isDefaultChangelogExists);
+  }
 }
 
 class Entry {
@@ -304,11 +325,12 @@ class Entry {
   }
 
   final String lang;
+  final bool isRequired;
   final Map<ItemType, String> values = {
     for (final type in ItemType.values) type: ""
   };
 
-  Entry(this.lang);
+  Entry(this.lang, {@required this.isRequired}) : assert(isRequired != null);
 
   bool update(String id, String value) {
     if (value != null && value.isNotEmpty) {
@@ -323,12 +345,16 @@ class Entry {
     return false;
   }
 
-  bool isAllValuesSet() {
-    final res = values.entries.every(
-            (kv) => kv.value.isNotEmpty || kv.key == ItemType.byDefault) ||
-        values[ItemType.byDefault].isNotEmpty;
+  bool isAllRequiredValuesSet() {
+    if (isRequired) {
+      final res = values.entries.every(
+              (kv) => kv.value.isNotEmpty || kv.key == ItemType.byDefault) ||
+          values[ItemType.byDefault].isNotEmpty;
 
-    return res;
+      return res;
+    } else {
+      return true;
+    }
   }
 
   void clear() {
@@ -382,4 +408,27 @@ extension VersionExtension on Version {
     return Version(major, minor, patch + 1,
         preRelease: preRelease, build: "$build");
   }
+}
+
+class _CIPath {
+  static const root = 'ci/';
+  static const changelogDir = 'changelog/';
+  static const defaultChangelogDir = 'default/';
+
+  static String get rootPath => root;
+
+  static String get configPath => p.join(rootPath, 'config.ini');
+
+  static String get changelogRootPath => p.join(rootPath, changelogDir);
+
+  static String get defaultChangelogRootPath =>
+      p.join(changelogRootPath, defaultChangelogDir);
+
+  static String getChangelogPath(String version, String type, String locale) =>
+      p.join(changelogRootPath, version, '${type}_$locale.txt');
+
+  static String getDefaultChangelogPath(String locale) =>
+      p.join(defaultChangelogRootPath, 'default_$locale.txt');
+
+  _CIPath._();
 }
