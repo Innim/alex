@@ -3,16 +3,17 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:intl/intl.dart';
+import 'package:open_url/open_url.dart';
+import 'package:path/path.dart' as p;
+import 'package:version/version.dart';
+
 import 'package:alex/commands/release/ci_config.dart';
 import 'package:alex/commands/release/demo.dart';
 import 'package:alex/commands/release/fs.dart';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
-import 'package:intl/intl.dart';
-import 'package:open_url/open_url.dart';
-import 'package:path/path.dart';
-import 'package:version/version.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
@@ -150,7 +151,7 @@ class StartReleaseCommand extends AlexCommand {
         final content = kv.value;
 
         if (content.isNotEmpty) {
-          final path = "ci/changelog/$v/${type}_$ln.txt";
+          final path = _CIPath.getChangelogPath(v, type, ln);
           await fs.createFile(path, recursive: true);
           await fs.writeString(path, content);
         }
@@ -162,7 +163,7 @@ class StartReleaseCommand extends AlexCommand {
 
   Future<Iterable<Entry>> getRawReleaseNotes(int port, String changeLog) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-    final ciConfig = await CiConfig.getConfig("ci/config.ini");
+    final ciConfig = await CiConfig.getConfig(_CIPath.configPath);
     final langs = ciConfig.localizationLanguageList;
     final entries = {for (final ln in langs) ln: Entry(ln)};
 
@@ -270,7 +271,7 @@ class StartReleaseCommand extends AlexCommand {
     if (resolvedUri == null) {
       // trying to get relative path
       final packageDir = getPackageDir();
-      filePath = join(packageDir, path);
+      filePath = p.join(packageDir, path);
     } else {
       filePath = resolvedUri.path;
     }
@@ -382,4 +383,20 @@ extension VersionExtension on Version {
     return Version(major, minor, patch + 1,
         preRelease: preRelease, build: "$build");
   }
+}
+
+class _CIPath {
+  static const root = 'ci/';
+  static const changelogDir = 'changelog/';
+  static String get rootPath => root;
+
+  static String get configPath => p.join(rootPath, 'config.ini');
+
+  static String get changelogRootPath => p.join(rootPath, changelogDir);
+
+  static String getChangelogPath(String version, String type, String locale) =>
+      p.join(changelogRootPath, version, '${type}_$locale.txt');
+
+
+  _CIPath._();
 }
