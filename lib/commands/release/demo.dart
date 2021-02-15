@@ -45,4 +45,10 @@ class DemoFileSystem extends FileSystem {
   Future<void> writeString(String path, String contents) async {
     print.info("writeString $path contents: $contents");
   }
+
+  @override
+  Future<bool> existsFile(String path) {
+    print.info("existsFile $path");
+    return Future.value(false);
+  }
 }
