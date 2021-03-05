@@ -7,6 +7,7 @@ import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/exporters/arb_exporter.dart';
 import 'package:alex/src/l10n/exporters/google_docs_exporter.dart';
 import 'package:alex/src/l10n/exporters/ios_strings_exporter.dart';
+import 'package:alex/src/l10n/exporters/json_exported.dart';
 import 'package:alex/src/l10n/l10n_entry.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
@@ -22,8 +23,10 @@ class FromXmlCommand extends L10nCommandBase {
   static const _targetGoogleDocs = 'google_docs';
   static const _targetAndroid = 'android';
   static const _targetIos = 'ios';
+  static const _targetJson = 'json';
 
   static const _argLocale = 'locale';
+  static const _argDir = 'dir';
 
   FromXmlCommand() : super('from_xml', 'Import translations from xml.') {
     argParser
@@ -36,6 +39,7 @@ class FromXmlCommand extends L10nCommandBase {
           _targetArb,
           _targetAndroid,
           _targetIos,
+          _targetJson,
           // TODO: uncomment when implement
           // _targetGoogleDocs,
         ],
@@ -43,6 +47,7 @@ class FromXmlCommand extends L10nCommandBase {
           _targetArb: 'Import to project arb files.',
           _targetAndroid: 'Import to Android localization.',
           _targetIos: 'Import to iOS localization.',
+          _targetJson: 'Import to JSON localization (for backend).',
           // TODO: uncomment when implement
           // _targetGoogleDocs:
           // 'Import to google docs. It\'s for assets translations.',
@@ -50,10 +55,17 @@ class FromXmlCommand extends L10nCommandBase {
         defaultsTo: _targetArb,
       )
       ..addOption(
+        _argDir,
+        abbr: 'd',
+        help: 'Directory to save localization files. '
+            'Supported by targets: $_targetJson.',
+        valueHelp: 'DIR_PATH',
+      )
+      ..addOption(
         _argLocale,
         abbr: 'l',
-        help:
-            'Locale for import from xml. If not specified - all locales will be imported.',
+        help: 'Locale for import from xml. '
+            'If not specified - all locales will be imported.',
         valueHelp: 'LOCALE',
       );
   }
@@ -83,6 +95,8 @@ class FromXmlCommand extends L10nCommandBase {
           return _importToAndroid(locales);
         case _targetIos:
           return _importToIos(locales);
+        case _targetJson:
+          return _importToJson(locales);
         case _targetGoogleDocs:
           // TODO: parameter for filename
           return _importToGoogleDocs('screenshot1', locales);
@@ -178,6 +192,51 @@ class FromXmlCommand extends L10nCommandBase {
 
     return success(
         message: 'Locales ${locales.join(', ')} exported to iOS strings.');
+  }
+
+  Future<int> _importToJson(List<String> locales) async {
+    final config = l10nConfig;
+    final jsonDirPath = argResults[_argDir] as String;
+
+    if (jsonDirPath?.isEmpty ?? true) {
+      return error(1,
+          message: 'Required parameter $_argDir: '
+              'alex l10n from_xml --to=json --dir=/path/to/json/localization/dir');
+    }
+
+    const ext = '.json';
+
+    String jsonLocale(String locale) => locale.replaceAll('_', '-');
+    String getPath(String locale, [String fileBasename]) => path.join(
+        jsonDirPath,
+        jsonLocale(locale),
+        fileBasename != null ? path.setExtension(fileBasename, ext) : null);
+
+    // Get list of files to import from base locale dir
+    final baseLocale = config.baseLocaleForXml;
+    final baseLocaleDir = getPath(baseLocale);
+    final names = <String>{};
+    await for (final file in Directory(baseLocaleDir).list()) {
+      final basename = path.basename(file.path);
+      if (basename.endsWith(ext)) {
+        names.add(path.withoutExtension(basename));
+      }
+    }
+
+    printVerbose('Files to export: ${names.join(', ')}');
+
+    for (final locale in locales) {
+      printVerbose('Export locale: $locale');
+      for (final name in names) {
+        final targetPath = getPath(locale, name);
+        final exporter = JsonExporter(
+            targetPath, locale, await _loadMap(config, name, locale));
+        await exporter.execute();
+      }
+      printVerbose('Success');
+    }
+
+    return success();
   }
 
   Future<int> _importToGoogleDocs(

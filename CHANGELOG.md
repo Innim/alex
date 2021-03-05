@@ -1,5 +1,6 @@
-## 0.3.4-dev.2 - 2021-03-05
+## 0.3.5-dev.1 - 2021-03-05
 
+* L10n: New target `json` in `from_xml` command. Used to apply translations for backend.
 * **Fixed**: Invalid name when import all files.
 * Support for zh locales for iOS.
 
