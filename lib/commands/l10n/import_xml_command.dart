@@ -94,8 +94,8 @@ class ImportXmlCommand extends L10nCommandBase {
           // file pathes like:
           // d_11f922c9b/d_11f922c9b_ko/d_11f922c9b_ko_intl.xml
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
+          final uidWithName = '${translationUid}_$googlePlayLocale';
           if (projectUid != null) {
-            final uidWithName = '${translationUid}_$googlePlayLocale';
             final sourceFilename = '${uidWithName}_$projectUid.xml';
 
             await _importFile(config, imported, item, sourceFilename,
@@ -103,8 +103,14 @@ class ImportXmlCommand extends L10nCommandBase {
           } else {
             await for (final file in item.list()) {
               final sourceFilename = path.basename(file.path);
-              final curProjectUid =
-                  path.withoutExtension(sourceFilename).split('_').last;
+              if (!sourceFilename.startsWith(uidWithName)) {
+                printInfo('Skip $sourceFilename');
+                continue;
+              }
+
+              final curProjectUid = path
+                  .withoutExtension(sourceFilename)
+                  .substring(uidWithName.length + 1);
               final curFileName = _getFilenameByBaseName(curProjectUid);
               await _importFile(config, imported, item, sourceFilename,
                   curProjectUid, translationUid, googlePlayLocale, curFileName);
