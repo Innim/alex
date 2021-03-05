@@ -10,6 +10,7 @@ import 'package:path/path.dart' as path;
 class ImportXmlCommand extends L10nCommandBase {
   static const _argPath = 'path';
   static const _argFile = 'file';
+  static const _argAll = 'all';
 
   ImportXmlCommand()
       : super(
@@ -29,8 +30,13 @@ class ImportXmlCommand extends L10nCommandBase {
         abbr: 'f',
         help: 'Filename for import (without extension). '
             'For example: intl, strings, info_plist, etc. '
-            'By default main localization file will be imported.',
+            'By default main localization file will be imported. '
+            'You can use $_argAll to import all files.',
         valueHelp: 'FILENAME',
+      )
+      ..addFlag(
+        _argAll,
+        help: 'Import all files from provided path.',
       );
   }
 
@@ -38,6 +44,7 @@ class ImportXmlCommand extends L10nCommandBase {
   Future<int> run() async {
     final sourcePath = argResults[_argPath] as String;
     final fileForImport = argResults[_argFile] as String;
+    final importAll = argResults[_argAll] as bool;
 
     if (sourcePath == null) {
       printUsage();
@@ -50,7 +57,8 @@ class ImportXmlCommand extends L10nCommandBase {
     final config = l10nConfig;
 
     try {
-      return _importFromGooglePlay(config, sourcePath, fileForImport);
+      return _importFromGooglePlay(config, sourcePath,
+          fileForImport: fileForImport, importAll: importAll);
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {
@@ -59,18 +67,23 @@ class ImportXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _importFromGooglePlay(L10nConfig config, String sourcePath,
-      [String fileForImport]) async {
-    final filename = fileForImport == null
-        ? config.getMainXmlFileName()
-        : path.setExtension(fileForImport, '.xml');
+      {String fileForImport, bool importAll = false}) async {
+    assert(importAll != null);
+
+    final filename = importAll
+        ? null
+        : (fileForImport == null
+            ? config.getMainXmlFileName()
+            : _getFilenameByBaseName(fileForImport));
 
     final sourceDir = await _requireDirectory(sourcePath);
 
     final translationUid = path.basename(sourcePath);
-    final projectUid = path.withoutExtension(filename);
+    final projectUid =
+        filename != null ? path.withoutExtension(filename) : null;
 
     // TODO: check that all locales (rather than base and gp base) presented
-    final imported = <String>[];
+    final imported = <String>{};
 
     // if multiple files - than it's in subdirectory,
     // if single file - it's directly in root
@@ -78,13 +91,29 @@ class ImportXmlCommand extends L10nCommandBase {
       final name = path.basename(item.path);
       if (name.startsWith(translationUid)) {
         if (item is Directory) {
+          // file pathes like:
+          // d_11f922c9b/d_11f922c9b_ko/d_11f922c9b_ko_intl.xml
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
-          final uidWithName = '${translationUid}_$googlePlayLocale';
-          final sourceFilename = '${uidWithName}_$projectUid.xml';
+          if (projectUid != null) {
+            final uidWithName = '${translationUid}_$googlePlayLocale';
+            final sourceFilename = '${uidWithName}_$projectUid.xml';
 
-          await _importFile(config, imported, item, sourceFilename, projectUid,
-              translationUid, googlePlayLocale, filename);
+            await _importFile(config, imported, item, sourceFilename,
+                projectUid, translationUid, googlePlayLocale, filename);
+          } else {
+            await for (final file in item.list()) {
+              final sourceFilename = path.basename(file.path);
+              final curProjectUid =
+                  path.withoutExtension(sourceFilename).split('_').last;
+              final curFileName = _getFilenameByBaseName(curProjectUid);
+              await _importFile(config, imported, item, sourceFilename,
+                  curProjectUid, translationUid, googlePlayLocale, curFileName);
+            }
+          }
         } else if (item is File && item.path.endsWith('.xml')) {
+          // file pathes like:
+          // d_11f922f82/d_11f922f82_ar_intl.xml
+          // intl/intl_de.xml
           final googlePlayLocale = path
               .withoutExtension(name)
               .replaceFirst('${translationUid}_', '')
@@ -106,17 +135,17 @@ class ImportXmlCommand extends L10nCommandBase {
     }
   }
 
+  String _getFilenameByBaseName(String name) => path.setExtension(name, '.xml');
+
   Future<void> _importFile(
       L10nConfig config,
-      List<String> imported,
+      Set<String> imported,
       Directory sourceDir,
       String sourceFilename,
       String projectUid,
       String translationUid,
       String googlePlayLocale,
       String targetFilename) async {
-    printVerbose(
-        'translationUid: $translationUid googlePlayLocale: $googlePlayLocale');
     final locale = _convertGooglePlayLocale(googlePlayLocale);
 
     final sourceFile =
@@ -125,7 +154,7 @@ class ImportXmlCommand extends L10nCommandBase {
     final targetDir = await _requireDirectory(config.getXmlFilesPath(locale),
         createIfNotExist: true);
     final targetFile = File(path.join(targetDir.path, targetFilename));
-    printVerbose('Copy $sourceFile to $targetFile');
+    printVerbose('Copy ${sourceFile.path} to ${targetFile.path}');
     await sourceFile.copy(targetFile.path);
 
     imported.add(locale);

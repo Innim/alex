@@ -1,3 +1,7 @@
+## 0.3.4-dev.1 - 2021-03-05
+
+* L10n: Command `import_xml` allow to import any file, not only main. Single or all at once.
+
 ## 0.3.3-dev.1 - 2021-02-15
 
 * Release: Do not require changelog for locale is it has default.
