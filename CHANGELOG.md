@@ -1,6 +1,7 @@
 ## 0.3.4-dev.2 - 2021-03-05
 
 * **Fixed**: Invalid name when import all files.
+* Support for zh locales for iOS.
 
 ## 0.3.4-dev.1 - 2021-03-05
 

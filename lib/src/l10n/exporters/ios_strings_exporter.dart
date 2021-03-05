@@ -44,10 +44,38 @@ class IosStringsExporter extends L10nExporter {
     });
 
     final iosLocale = locale.replaceAll('_', '-');
+
+    final target = await _requireTargetFile(iosLocale, targetFileName);
+    await target.writeAsString(result.toString());
+  }
+
+  Future<File> _requireTargetFile(
+      String iosLocale, String targetFileName) async {
+    final res = await _getTargetFile(iosLocale, targetFileName);
+    final exist = await res.exists();
+
+    if (!exist &&
+        iosLocale.startsWith('zh-') &&
+        iosLocale.split('-').length == 2) {
+      for (final altLocale in ['Hans', 'Hant']
+          .map((s) => iosLocale.replaceFirst('zh-', 'zh-$s-'))) {
+        final altRes = await _getTargetFile(altLocale, targetFileName);
+        final altExist = await altRes.exists();
+        if (altExist) return altRes;
+      }
+
+      throw Exception('Cannot find file: ${res.path}');
+    } else {
+      return res;
+    }
+  }
+
+  Future<File> _getTargetFile(String iosLocale, String targetFileName) async {
     final targetPath =
         path.join(iosProjectPath, 'Runner/$iosLocale.lproj/$targetFileName');
-    final target = File(targetPath);
-    await target.writeAsString(result.toString());
+    final res = File(targetPath);
+
+    return res;
   }
 
   String _prepareStr(String text) {
