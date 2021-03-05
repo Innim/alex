@@ -9,6 +9,7 @@ import 'package:path/path.dart' as path;
 /// to the project's xml files.
 class ImportXmlCommand extends L10nCommandBase {
   static const _argPath = 'path';
+  static const _argFile = 'file';
 
   ImportXmlCommand()
       : super(
@@ -22,24 +23,34 @@ class ImportXmlCommand extends L10nCommandBase {
         abbr: 'p',
         help: 'Path to the directory with translations from Google Play.',
         valueHelp: 'PATH',
+      )
+      ..addOption(
+        _argFile,
+        abbr: 'f',
+        help: 'Filename for import (without extension). '
+            'For example: intl, strings, info_plist, etc. '
+            'By default main localization file will be imported.',
+        valueHelp: 'FILENAME',
       );
   }
 
   @override
   Future<int> run() async {
     final sourcePath = argResults[_argPath] as String;
+    final fileForImport = argResults[_argFile] as String;
 
     if (sourcePath == null) {
       printUsage();
       return success();
     }
 
-    printVerbose('Import transalations from: $sourcePath.');
+    printVerbose(
+        'Import ${fileForImport ?? 'main'} transalations from: $sourcePath.');
 
     final config = l10nConfig;
 
     try {
-      return _importFromGooglePlay(config, sourcePath);
+      return _importFromGooglePlay(config, sourcePath, fileForImport);
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {
@@ -47,9 +58,11 @@ class ImportXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _importFromGooglePlay(
-      L10nConfig config, String sourcePath) async {
-    final filename = config.getMainXmlFileName();
+  Future<int> _importFromGooglePlay(L10nConfig config, String sourcePath,
+      [String fileForImport]) async {
+    final filename = fileForImport == null
+        ? config.getMainXmlFileName()
+        : path.setExtension(fileForImport, '.xml');
 
     final sourceDir = await _requireDirectory(sourcePath);
 
