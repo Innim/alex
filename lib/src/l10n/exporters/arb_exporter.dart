@@ -5,7 +5,7 @@ import '../l10n_entry.dart';
 import 'l10n_exporter.dart';
 
 class ArbExporter extends L10nExporter {
-  static final _paramRegExp = RegExp(r'\{([a-z][a-z0-9_]*)\}',
+  static final _paramRegExp = RegExp(r'\{([\p{L}\P{Me}][\p{L}\P{Me}0-9_]*?)\}',
       caseSensitive: false, unicode: true, multiLine: true);
 
   final Map<String, Object> baseArb;

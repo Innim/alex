@@ -1,4 +1,8 @@
+## 0.3.5-dev.2 - 2021-03-10
+
 * Error if key has parameters in original file, but doesn't have any in translation.
+* Verification of parameters, that was translated by mistake
+(previous version doesn't check parameters with non Latin symbols).
 
 ## 0.3.5-dev.1 - 2021-03-05
 
