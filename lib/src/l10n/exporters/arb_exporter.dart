@@ -76,9 +76,17 @@ class ArbExporter extends L10nExporter {
 
   String _validateParameters(String key, Set<String> allowed, String text) {
     final params = _paramRegExp.allMatches(text).map((e) => e.group(1));
-    for (final param in params) {
-      if (!allowed.contains(param)) {
-        throw Exception('[$locale] Unknown parameter {$param} for key "$key"');
+
+    if (params.isNotEmpty) {
+      for (final param in params) {
+        if (!allowed.contains(param)) {
+          throw Exception(
+              '[$locale] Unknown parameter {$param} for key "$key"');
+        }
+      }
+    } else {
+      if (allowed.isNotEmpty) {
+        throw Exception('[$locale] No parameters found for key "$key"');
       }
     }
 

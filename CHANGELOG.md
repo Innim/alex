@@ -1,3 +1,5 @@
+* Error if key has parameters in original file, but doesn't have any in translation.
+
 ## 0.3.5-dev.1 - 2021-03-05
 
 * L10n: New target `json` in `from_xml` command. Used to apply translations for backend.
