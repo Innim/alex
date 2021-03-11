@@ -1,5 +1,4 @@
 import 'package:alex/alex.dart';
-import 'package:alex/src/encoding/utf16.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/decoders/ios_strings_decoder.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
@@ -146,10 +145,7 @@ class ToXmlCommand extends L10nCommandBase {
     final resPaths = <String>[];
 
     await provider.forEachLocalizationFile(locale, (projectName, file) async {
-      final data = await file.hasUtf16leBom
-          ? await file.readAsUft16LEString()
-          : await file.readAsString();
-
+      final data = await L10nIosUtils.loadStringsFile(file);
       if (data.trim().isNotEmpty) {
         final baseName = path.basename(file.path);
         final outputName =

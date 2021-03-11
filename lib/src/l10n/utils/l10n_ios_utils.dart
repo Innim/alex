@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:alex/src/encoding/utf16.dart';
+import 'package:alex/src/l10n/decoders/ios_strings_decoder.dart';
 import 'package:recase/recase.dart';
 
 class L10nIosUtils {
@@ -10,6 +14,17 @@ class L10nIosUtils {
       .replaceAll(r'\n', '')
       .replaceAll(_forbiddenSymbolsRegex, '')
       .pascalCase;
+
+  static Future<String> loadStringsFile(File file) async {
+    return await file.hasUtf16leBom
+        ? await file.readAsUft16LEString()
+        : await file.readAsString();
+  }
+
+  static Future<Map<String, String>> loadAndDecodeStringsFile(File file) async {
+    final content = await L10nIosUtils.loadStringsFile(file);
+    return const IosStringsDecoder().decode(content);
+  }
 
   L10nIosUtils._();
 }

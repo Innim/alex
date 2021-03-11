@@ -10,6 +10,7 @@ import 'package:alex/src/l10n/exporters/ios_strings_exporter.dart';
 import 'package:alex/src/l10n/exporters/json_exported.dart';
 import 'package:alex/src/l10n/l10n_entry.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
+import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
 import 'package:list_ext/list_ext.dart';
@@ -183,6 +184,7 @@ class FromXmlCommand extends L10nCommandBase {
 
     final baseLocale = l10nConfig.baseLocaleForXml;
     final filesByProject = <String, Set<String>>{};
+    final keysMapByXmlBasename = <String, Map<String, String>>{};
 
     await provider.forEachLocalizationFile(
       baseLocale,
@@ -196,6 +198,10 @@ class FromXmlCommand extends L10nCommandBase {
           final files =
               filesByProject[projectName] ?? (filesByProject[projectName] = {});
           files.add(xmlBasename);
+
+          final data = await L10nIosUtils.loadAndDecodeStringsFile(file);
+          keysMapByXmlBasename[xmlBasename] = data.map((key, value) =>
+              MapEntry(L10nIosUtils.covertStringsKeyToXml(key), key));
         }
       },
     );
@@ -210,8 +216,15 @@ class FromXmlCommand extends L10nCommandBase {
 
       for (final projectName in filesByProject.keys) {
         for (final fileName in filesByProject[projectName]) {
-          final exporter = IosStringsExporter(provider, projectName, fileName,
-              locale, await _loadMap(config, fileName, locale));
+          final xmlData = await _loadMap(config, fileName, locale);
+          final keysMap = keysMapByXmlBasename[fileName];
+          final exporter = IosStringsExporter(
+            provider,
+            projectName,
+            fileName,
+            locale,
+            xmlData.map((key, value) => MapEntry(keysMap[key], value)),
+          );
           await exporter.execute();
         }
       }
