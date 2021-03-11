@@ -63,17 +63,7 @@ class ArbExporter extends L10nExporter {
     final json = const JsonEncoder.withIndent('  ').convert(map);
 
     final target = File(targetPath);
-
-    final currentContent =
-        await target.exists() ? await target.readAsString() : '';
-    final hasChanged = currentContent.isNotEmpty &&
-        _removeLastModified(currentContent) != _removeLastModified(json);
-
-    if (hasChanged) {
-      await target.writeAsString(json);
-    }
-
-    return hasChanged;
+    return writeContentIfChanged(target, json, clear: _removeLastModified);
   }
 
   String _removeLastModified(String json) {

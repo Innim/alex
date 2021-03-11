@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:meta/meta.dart';
+
 import '../l10n_entry.dart';
 
 abstract class L10nExporter {
@@ -13,4 +17,20 @@ abstract class L10nExporter {
   /// but without error (no changed)
   /// and throws some `Exception` in case of error.
   Future<bool> execute();
+
+  @protected
+  Future<bool> writeContentIfChanged(File target, String content,
+      {String Function(String val) clear}) async {
+    clear ??= (v) => v;
+    final currentContent =
+        await target.exists() ? await target.readAsString() : '';
+    final hasChanged =
+        currentContent.isNotEmpty && clear(currentContent) != clear(content);
+
+    if (hasChanged) {
+      await target.writeAsString(content);
+    }
+
+    return hasChanged;
+  }
 }

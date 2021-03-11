@@ -52,17 +52,8 @@ class IosStringsExporter extends L10nExporter {
     final target = await _requireTargetFile(iosLocale, targetFileName);
     final newContent = result.toString();
 
-    final currentContent =
-        await target.exists() ? await target.readAsString() : '';
-    final hasChanged = currentContent.isNotEmpty &&
-        currentContent.substring(headerLength) !=
-            newContent.substring(headerLength);
-
-    if (hasChanged) {
-      await target.writeAsString(newContent);
-    }
-
-    return hasChanged;
+    return writeContentIfChanged(target, newContent,
+        clear: (str) => str.substring(headerLength));
   }
 
   Future<File> _requireTargetFile(
