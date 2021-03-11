@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
+import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 
 import '../l10n_entry.dart';
 import 'l10n_exporter.dart';
@@ -44,7 +45,7 @@ class IosStringsExporter extends L10nExporter {
       result.writeln('";');
     });
 
-    final iosLocale = provider.getIosLocale(locale);
+    final iosLocale = L10nIosUtils.getIosLocale(locale);
 
     final target = await _requireTargetFile(iosLocale, targetFileName);
     await target.writeAsString(result.toString());

@@ -181,36 +181,24 @@ class FromXmlCommand extends L10nCommandBase {
     final config = l10nConfig;
     final provider = L10nIosPathProvider(path.current);
 
-    final iosProjectDir = provider.iosProjectDir;
     final baseLocale = l10nConfig.baseLocaleForXml;
-    final baseIosLocale = provider.getIosLocale(baseLocale);
-
     final filesByProject = <String, Set<String>>{};
 
-    await for (final item in iosProjectDir.list()) {
-      if (item is Directory) {
-        final tmpName = path.basename(item.path);
-        final tmpDir = provider.getLocalizationDir(tmpName, baseIosLocale);
-        if (await tmpDir.exists()) {
-          final files = <String>{};
+    await provider.forEachLocalizationFile(
+      baseLocale,
+      (projectName, file) async {
+        final name = path.basenameWithoutExtension(file.path);
+        final xmlBasename =
+            provider.getXmlFileName(name, withouExtension: true);
 
-          await for (final file in tmpDir.list()) {
-            if (file.path.endsWith('.strings')) {
-              final name = path.basenameWithoutExtension(file.path);
-              final xmlBasename =
-                  provider.getXmlFileName(name, withouExtension: true);
-
-              final xmlFile = _getXmlFile(l10nConfig, xmlBasename, baseLocale);
-              if (await xmlFile.exists()) {
-                files.add(xmlBasename);
-              }
-            }
-          }
-
-          filesByProject[tmpName] = files;
+        final xmlFile = _getXmlFile(l10nConfig, xmlBasename, baseLocale);
+        if (await xmlFile.exists()) {
+          final files =
+              filesByProject[projectName] ?? (filesByProject[projectName] = {});
+          files.add(xmlBasename);
         }
-      }
-    }
+      },
+    );
 
     printVerbose(filesByProject.keys
         .where((k) => filesByProject[k].isNotEmpty)
