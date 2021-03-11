@@ -8,6 +8,8 @@ class ArbExporter extends L10nExporter {
   static final _paramRegExp = RegExp(r'\{([\p{L}\P{Me}][\p{L}\P{Me}0-9_]*?)\}',
       caseSensitive: false, unicode: true, multiLine: true);
 
+  static final _lastModifiedLineRegex = RegExp('[ ]*"@@last_modified":.*');
+
   final Map<String, Object> baseArb;
   final String targetPath;
 
@@ -60,10 +62,22 @@ class ArbExporter extends L10nExporter {
 
     final json = const JsonEncoder.withIndent('  ').convert(map);
 
-    // TODO: check for changes
     final target = File(targetPath);
-    await target.writeAsString(json);
-    return true;
+
+    final currentContent =
+        await target.exists() ? await target.readAsString() : '';
+    final hasChanged = currentContent.isNotEmpty &&
+        _removeLastModified(currentContent) != _removeLastModified(json);
+
+    if (hasChanged) {
+      await target.writeAsString(json);
+    }
+
+    return hasChanged;
+  }
+
+  String _removeLastModified(String json) {
+    return json.replaceFirst(_lastModifiedLineRegex, '');
   }
 
   void _addPlural(StringBuffer res, String key, Set<String> allowedParams,

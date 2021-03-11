@@ -128,12 +128,15 @@ class FromXmlCommand extends L10nCommandBase {
       final exporter = ArbExporter(baseArb, arbFilePath, locale,
           await _loadMap(config, fileName, locale));
       try {
-        await exporter.execute();
+        if (await exporter.execute()) {
+          printVerbose('Success');
+        } else {
+          printVerbose('No changes');
+        }
       } on MissedMetaException catch (e) {
         return error(1,
             message: '${e.message} (searched in ${baseArbFile.path})');
       }
-      printVerbose('Success');
     }
 
     return success(
