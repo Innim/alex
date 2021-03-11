@@ -1,4 +1,5 @@
 * L10n: Command `from_xml` for iOS supports all files, not only `InfoPlist.strings`.
+* L10n: Command `to_xml` supports iOS localization `.strings` files.
 
 ## 0.3.5-dev.2 - 2021-03-10
 

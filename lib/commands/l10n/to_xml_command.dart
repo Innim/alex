@@ -1,5 +1,9 @@
 import 'package:alex/alex.dart';
+import 'package:alex/src/encoding/utf16.dart';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/l10n/decoders/ios_strings_decoder.dart';
+import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
+import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,6 +16,7 @@ import 'package:intl_translation/src/intl_message.dart';
 import 'src/l10n_command_base.dart';
 
 const _jsonDecoder = JsonCodec();
+const _iosStringsDecoder = IosStringsDecoder();
 final _pluralAndGenderParser = IcuParser().message;
 final _plainParser = IcuParser().nonIcuMessage;
 
@@ -22,8 +27,9 @@ class ToXmlCommand extends L10nCommandBase {
 
   static const _sourceArb = 'abr';
   static const _sourceJson = 'json';
+  static const _sourceIos = 'ios';
 
-  ToXmlCommand() : super('to_xml', 'Put localization from arb to xml') {
+  ToXmlCommand() : super('to_xml', 'Put localization from source to xml') {
     argParser
       ..addOption(
         _argFrom,
@@ -33,11 +39,14 @@ class ToXmlCommand extends L10nCommandBase {
         allowed: [
           _sourceArb,
           _sourceJson,
+          _sourceIos,
         ],
         allowedHelp: {
           _sourceArb: 'Export from project arb files.',
           _sourceJson: 'Export from JSON (server localization). '
               'Require parameter $_argSource',
+          _sourceIos: 'Export from .strings iOS localization files. '
+              'All not empty files for all projects will be exported.',
         },
         defaultsTo: _sourceArb,
       )
@@ -60,6 +69,8 @@ class ToXmlCommand extends L10nCommandBase {
           return _exportArb();
         case _sourceJson:
           return _exportJson();
+        case _sourceIos:
+          return _exportIos();
         default:
           return error(1, message: 'Unknown target: $target');
       }
@@ -124,6 +135,43 @@ class ToXmlCommand extends L10nCommandBase {
     }
   }
 
+  Future<int> _exportIos() async {
+    final config = l10nConfig;
+    final provider = L10nIosPathProvider(path.current);
+
+    final locale = config.baseLocaleForXml;
+
+    final outputDirPath = config.getXmlFilesPath(locale);
+
+    final resPaths = <String>[];
+
+    await provider.forEachLocalizationFile(locale, (projectName, file) async {
+      final data = await file.hasUtf16leBom
+          ? await file.readAsUft16LEString()
+          : await file.readAsString();
+
+      if (data.trim().isNotEmpty) {
+        final baseName = path.basename(file.path);
+        final outputName =
+            provider.getXmlFileName(baseName, withouExtension: true);
+
+        resPaths.add(await _processStrings(data, outputDirPath, outputName, '''
+Project path: ios/$projectName
+Filename: $baseName
+'''));
+      }
+    });
+
+    if (resPaths.isEmpty) {
+      return success(message: 'No .strings iOS localization files found.');
+    } else {
+      return success(
+          message: 'Success! '
+              '${resPaths.length} .strings iOS localization files exported. '
+              'Strings written in:\n${resPaths.join("\n")}');
+    }
+  }
+
   Future<String> _processJson(File file, String outputDir) async {
     final name = path.basename(file.path);
     printVerbose('Export $name');
@@ -137,6 +185,20 @@ class ToXmlCommand extends L10nCommandBase {
     // TODO: add some unique prefix
 
     return _toXml(data, outputDir, path.withoutExtension(name));
+  }
+
+  Future<String> _processStrings(String content, String outputDir,
+      String outputName, String headerComment) {
+    printVerbose('Export $outputName');
+
+    final data = _iosStringsDecoder.decode(content);
+
+    final res = data.map((key, value) {
+      final xmlKey = L10nIosUtils.covertStringsKeyToXml(key);
+      return MapEntry(xmlKey, _StrData(xmlKey, value));
+    });
+
+    return _toXml(res, outputDir, outputName, header: headerComment);
   }
 
   Future<int> _proccessArb(File file, String outputDir) async {
@@ -160,8 +222,20 @@ class ToXmlCommand extends L10nCommandBase {
   }
 
   Future<String> _toXml(
-      Map<String, _StrData> data, String outputDir, String outputName) async {
-    final xml = StringBuffer('<?xml version="1.0" encoding="utf-8"?>');
+      Map<String, _StrData> data, String outputDir, String outputName,
+      {String header}) async {
+    final xml = StringBuffer();
+    if (header != null) {
+      header.split('\n').forEach((l) {
+        if (l.isNotEmpty) {
+          xml.write('<!-- ');
+          xml.write(l);
+          xml.writeln(' -->');
+        }
+      });
+    }
+
+    xml.writeln('<?xml version="1.0" encoding="utf-8"?>');
     xml.writeln('<resources>');
     data.values.forEach((item) {
       item.add2Xml(xml);
