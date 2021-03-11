@@ -1,5 +1,6 @@
 * L10n: Command `from_xml` for iOS supports all files, not only `InfoPlist.strings`.
 * L10n: Command `to_xml` supports iOS localization `.strings` files.
+* L10n: Print base ARB when alex search for meta, if meta for key was not found.
 
 ## 0.3.5-dev.2 - 2021-03-10
 

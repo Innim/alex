@@ -127,7 +127,12 @@ class FromXmlCommand extends L10nCommandBase {
       final arbFilePath = config.getArbFilePath(locale);
       final exporter = ArbExporter(baseArb, arbFilePath, locale,
           await _loadMap(config, fileName, locale));
-      await exporter.execute();
+      try {
+        await exporter.execute();
+      } on MissedMetaException catch (e) {
+        return error(1,
+            message: '${e.message} (searched in ${baseArbFile.path})');
+      }
       printVerbose('Success');
     }
 

@@ -24,7 +24,8 @@ class ArbExporter extends L10nExporter {
     data.forEach((key, value) {
       final metaKey = '@$key';
       final baseMeta = baseArb[metaKey] as Map<String, Object>;
-      if (baseMeta == null) throw Exception("Can't find meta for $key");
+      if (baseMeta == null) throw MissedMetaException(key);
+
       final parameters =
           (baseMeta['placeholders'] as Map<String, Object>).keys.toSet();
 
@@ -91,5 +92,18 @@ class ArbExporter extends L10nExporter {
     }
 
     return text;
+  }
+}
+
+class MissedMetaException implements Exception {
+  final String key;
+
+  const MissedMetaException(this.key);
+
+  String get message => "Can't find meta for <$key>";
+
+  @override
+  String toString() {
+    return "Exception: $message";
   }
 }
