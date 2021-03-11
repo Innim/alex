@@ -29,8 +29,7 @@ class JsonExporter extends L10nExporter {
     if (!(await target.parent.exists())) {
       await target.parent.create();
     }
-    await target.writeAsString(json);
-    // TODO: check for changes
-    return true;
+
+    return writeContentIfChanged(target, json);
   }
 }

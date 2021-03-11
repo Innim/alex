@@ -282,13 +282,21 @@ class FromXmlCommand extends L10nCommandBase {
 
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
+
+      var updated = 0;
       for (final name in names) {
         final targetPath = getPath(locale, name);
         final exporter = JsonExporter(
             targetPath, locale, await _loadMap(config, name, locale));
-        await exporter.execute();
+
+        if (await exporter.execute()) updated++;
       }
-      printVerbose('Success');
+
+      if (updated > 0) {
+        printVerbose('Success ($updated updated)');
+      } else {
+        printVerbose('No changes');
+      }
     }
 
     return success();
