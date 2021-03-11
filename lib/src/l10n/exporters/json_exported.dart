@@ -11,7 +11,7 @@ class JsonExporter extends L10nExporter {
       : super(locale, data);
 
   @override
-  Future<void> execute() async {
+  Future<bool> execute() async {
     final map = <String, Object>{};
 
     data.forEach((key, value) {
@@ -30,5 +30,7 @@ class JsonExporter extends L10nExporter {
       await target.parent.create();
     }
     await target.writeAsString(json);
+    // TODO: check for changes
+    return true;
   }
 }

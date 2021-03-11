@@ -16,7 +16,7 @@ class ArbExporter extends L10nExporter {
       : super(locale, data);
 
   @override
-  Future<void> execute() async {
+  Future<bool> execute() async {
     final map = <String, Object>{
       '@@last_modified': DateTime.now().toIso8601String(),
     };
@@ -60,8 +60,10 @@ class ArbExporter extends L10nExporter {
 
     final json = const JsonEncoder.withIndent('  ').convert(map);
 
+    // TODO: check for changes
     final target = File(targetPath);
     await target.writeAsString(json);
+    return true;
   }
 
   void _addPlural(StringBuffer res, String key, Set<String> allowedParams,

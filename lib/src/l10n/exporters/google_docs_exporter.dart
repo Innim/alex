@@ -9,7 +9,7 @@ class GoogleDocsExporter extends L10nExporter {
       : super(locale, data);
 
   @override
-  Future<void> execute() async {
+  Future<bool> execute() async {
     // TODO: implement integration with google docs
     print.info('');
     print.info('String for $locale');
@@ -26,5 +26,8 @@ class GoogleDocsExporter extends L10nExporter {
       print.info(res);
     }
     print.info('');
+
+    // TODO: check for changes
+    return true;
   }
 }

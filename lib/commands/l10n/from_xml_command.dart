@@ -219,6 +219,7 @@ class FromXmlCommand extends L10nCommandBase {
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
 
+      var updated = 0;
       for (final projectName in filesByProject.keys) {
         for (final fileName in filesByProject[projectName]) {
           final xmlData = await _loadMap(config, fileName, locale);
@@ -230,10 +231,15 @@ class FromXmlCommand extends L10nCommandBase {
             locale,
             xmlData.map((key, value) => MapEntry(keysMap[key], value)),
           );
-          await exporter.execute();
+          if (await exporter.execute()) updated++;
         }
       }
-      printVerbose('Success');
+
+      if (updated > 0) {
+        printVerbose('Success ($updated updated)');
+      } else {
+        printVerbose('No changes');
+      }
     }
 
     return success(

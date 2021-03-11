@@ -17,7 +17,7 @@ class IosStringsExporter extends L10nExporter {
       : super(locale, data);
 
   @override
-  Future<void> execute() async {
+  Future<bool> execute() async {
     final targetFileName = provider.getTargetFileName(xmlFileName);
 
     final date = DateTime.now().toIso8601String();
@@ -32,6 +32,8 @@ class IosStringsExporter extends L10nExporter {
   ! DO NOT EDIT MANUALLY !
 */
 ''');
+
+    final headerLength = result.length;
 
     data.forEach((key, value) {
       result..write('"')..write(key)..write('"="');
@@ -48,7 +50,19 @@ class IosStringsExporter extends L10nExporter {
     final iosLocale = L10nIosUtils.getIosLocale(locale);
 
     final target = await _requireTargetFile(iosLocale, targetFileName);
-    await target.writeAsString(result.toString());
+    final newContent = result.toString();
+
+    final currentContent =
+        await target.exists() ? await target.readAsString() : '';
+    final hasChanged = currentContent.isNotEmpty &&
+        currentContent.substring(headerLength) !=
+            newContent.substring(headerLength);
+
+    if (hasChanged) {
+      await target.writeAsString(newContent);
+    }
+
+    return hasChanged;
   }
 
   Future<File> _requireTargetFile(

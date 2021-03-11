@@ -6,5 +6,11 @@ abstract class L10nExporter {
 
   L10nExporter(this.locale, this.data);
 
-  Future<void> execute();
+  /// Execute export.
+  ///
+  /// Returns `true` if file was updated,
+  /// returns `false` if files wasn't updated,
+  /// but without error (no changed)
+  /// and throws some `Exception` in case of error.
+  Future<bool> execute();
 }
