@@ -1,3 +1,7 @@
+## 0.3.6-dev.2 - 2021-03-12
+
+* L10n: Command `from_xml` updates `.strings` and `.arb` files only if there are changes.
+
 ## 0.3.6-dev.1 - 2021-03-11
 
 * L10n: Command `from_xml` for iOS supports all files, not only `InfoPlist.strings`.
