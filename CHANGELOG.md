@@ -1,3 +1,5 @@
+* L10n: Command `from_xml` for iOS supports all files, not only `InfoPlist.strings`.
+
 ## 0.3.5-dev.2 - 2021-03-10
 
 * Error if key has parameters in original file, but doesn't have any in translation.

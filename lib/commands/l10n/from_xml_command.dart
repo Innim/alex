@@ -9,6 +9,7 @@ import 'package:alex/src/l10n/exporters/google_docs_exporter.dart';
 import 'package:alex/src/l10n/exporters/ios_strings_exporter.dart';
 import 'package:alex/src/l10n/exporters/json_exported.dart';
 import 'package:alex/src/l10n/l10n_entry.dart';
+import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
 import 'package:list_ext/list_ext.dart';
@@ -178,15 +179,54 @@ class FromXmlCommand extends L10nCommandBase {
 
   Future<int> _importToIos(List<String> locales) async {
     final config = l10nConfig;
+    final provider = L10nIosPathProvider(path.current);
 
-    final iosProjectPath = path.join(path.current, 'ios');
-    const fileName = 'info_plist';
+    final iosProjectDir = provider.iosProjectDir;
+    final baseLocale = l10nConfig.baseLocaleForXml;
+    final baseIosLocale = provider.getIosLocale(baseLocale);
+
+    final filesByProject = <String, Set<String>>{};
+
+    await for (final item in iosProjectDir.list()) {
+      if (item is Directory) {
+        final tmpName = path.basename(item.path);
+        final tmpDir = provider.getLocalizationDir(tmpName, baseIosLocale);
+        if (await tmpDir.exists()) {
+          final files = <String>{};
+
+          await for (final file in tmpDir.list()) {
+            if (file.path.endsWith('.strings')) {
+              final name = path.basenameWithoutExtension(file.path);
+              final xmlBasename =
+                  provider.getXmlFileName(name, withouExtension: true);
+
+              final xmlFile = _getXmlFile(l10nConfig, xmlBasename, baseLocale);
+              if (await xmlFile.exists()) {
+                files.add(xmlBasename);
+              }
+            }
+          }
+
+          filesByProject[tmpName] = files;
+        }
+      }
+    }
+
+    printVerbose(filesByProject.keys
+        .where((k) => filesByProject[k].isNotEmpty)
+        .map((k) => '$k: ${filesByProject[k].join(', ')}')
+        .join('; '));
 
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
-      final exporter = IosStringsExporter(iosProjectPath, fileName, locale,
-          await _loadMap(config, fileName, locale));
-      await exporter.execute();
+
+      for (final projectName in filesByProject.keys) {
+        for (final fileName in filesByProject[projectName]) {
+          final exporter = IosStringsExporter(provider, projectName, fileName,
+              locale, await _loadMap(config, fileName, locale));
+          await exporter.execute();
+        }
+      }
       printVerbose('Success');
     }
 
@@ -308,9 +348,12 @@ class FromXmlCommand extends L10nCommandBase {
 
   Future<XmlDocument> _loadXml(
       L10nConfig config, String fileBaseName, String locale) async {
-    final dirPath = config.getXmlFilesPath(locale);
-    final file =
-        File(path.join(dirPath, path.setExtension(fileBaseName, '.xml')));
+    final file = _getXmlFile(config, fileBaseName, locale);
     return XmlDocument.parse(await file.readAsString());
+  }
+
+  File _getXmlFile(L10nConfig config, String fileBaseName, String locale) {
+    final dirPath = config.getXmlFilesPath(locale);
+    return File(path.join(dirPath, path.setExtension(fileBaseName, '.xml')));
   }
 }

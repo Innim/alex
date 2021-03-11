@@ -112,6 +112,8 @@ And to the iOS localization:
 alex l10n from_xml --to=ios
 ```
 
+Localization xml files for iOS should start with `ios_` prefix.
+
 #### Import translation from Google Play to project XML files
 
 When you download and unzip translations from Google Play,
