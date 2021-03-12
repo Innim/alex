@@ -1,6 +1,9 @@
-* Fixed: doesn't create file from xml if one not exit.
+## 0.3.6-dev.3 - 2021-03-12
 
-## 0.3.6-dev.2 - 2021-03-12
+* Fixed: doesn't create file from xml if one not exit.
+* Fixed: `to_xml` doesn't consider that locale on backend may be in different format. 
+
+## 0.3.6-dev.2 - 2021-03-11
 
 * L10n: Command `from_xml` updates `.strings` and `.arb` files only if there are changes.
 

@@ -111,9 +111,24 @@ class ToXmlCommand extends L10nCommandBase {
     }
 
     final locale = config.baseLocaleForXml;
-    final jsonDir = Directory(path.join(jsonBaseDirPath, locale));
-    if (!(await jsonDir.exists())) {
-      throw Exception('Directory ${jsonDir.path} is not exits');
+    final locales = [locale, locale.replaceAll('_', '-')];
+    final checkedPaths = <String>[];
+    Directory jsonDir;
+
+    for (final l in locales) {
+      final curPath = path.join(jsonBaseDirPath, l);
+      checkedPaths.add(curPath);
+
+      final curDir = Directory(curPath);
+      if (await curDir.exists()) {
+        jsonDir = curDir;
+        break;
+      }
+    }
+
+    if (jsonDir == null) {
+      throw Exception('Directory for locale $locale is not exits. '
+          'Searched:\n${checkedPaths.join('\n')}');
     }
 
     final outputDirPath = config.getXmlFilesPath(locale);
