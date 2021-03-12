@@ -1,3 +1,5 @@
+* Fixed: doesn't create file from xml if one not exit.
+
 ## 0.3.6-dev.2 - 2021-03-12
 
 * L10n: Command `from_xml` updates `.strings` and `.arb` files only if there are changes.

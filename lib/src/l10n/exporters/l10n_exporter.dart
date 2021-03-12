@@ -25,7 +25,7 @@ abstract class L10nExporter {
     final currentContent =
         await target.exists() ? await target.readAsString() : '';
     final hasChanged =
-        currentContent.isNotEmpty && clear(currentContent) != clear(content);
+        currentContent.isEmpty || clear(currentContent) != clear(content);
 
     if (hasChanged) {
       await target.writeAsString(content);
