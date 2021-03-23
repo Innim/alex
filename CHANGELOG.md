@@ -1,3 +1,7 @@
+## 0.3.6-dev.4 - 2021-03-23
+
+* Fixed: comment before `xml` tag breaks xml file.
+
 ## 0.3.6-dev.3 - 2021-03-12
 
 * Fixed: doesn't create file from xml if one not exit.

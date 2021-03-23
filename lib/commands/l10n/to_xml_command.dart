@@ -236,6 +236,8 @@ Filename: $baseName
       Map<String, _StrData> data, String outputDir, String outputName,
       {String header}) async {
     final xml = StringBuffer();
+
+    xml.writeln('<?xml version="1.0" encoding="utf-8"?>');
     if (header != null) {
       header.split('\n').forEach((l) {
         if (l.isNotEmpty) {
@@ -245,8 +247,6 @@ Filename: $baseName
         }
       });
     }
-
-    xml.writeln('<?xml version="1.0" encoding="utf-8"?>');
     xml.writeln('<resources>');
     data.values.forEach((item) {
       item.add2Xml(xml);
