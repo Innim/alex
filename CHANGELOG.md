@@ -1,3 +1,8 @@
+## 0.3.6-dev.5 - 2021-03-26
+
+* Fixed: Changes check for arb files doesn't work on Windows.
+* Fixed: Corrupt newline symbols when generate arb on Windows.
+
 ## 0.3.6-dev.4 - 2021-03-23
 
 * Fixed: comment before `xml` tag breaks xml file.
