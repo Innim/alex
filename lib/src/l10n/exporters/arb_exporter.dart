@@ -32,7 +32,7 @@ class ArbExporter extends L10nExporter {
           (baseMeta['placeholders'] as Map<String, Object>).keys.toSet();
 
       if (value is L10nTextEntry) {
-        map[key] = _validateParameters(key, parameters, value.text);
+        map[key] = _processText(key, parameters, value.text);
       } else if (value is L10nPluralEntry) {
         // Получаем заголовочную часть
         const pluralPrefix = ',plural,';
@@ -76,9 +76,13 @@ class ArbExporter extends L10nExporter {
       res
         ..write(attr)
         ..write('{')
-        ..write(_validateParameters(key, allowedParams, val))
+        ..write(_processText(key, allowedParams, val))
         ..write('}');
     }
+  }
+
+  String _processText(String key, Set<String> allowed, String text) {
+    return clearWinLines(_validateParameters(key, allowed, text));
   }
 
   String _validateParameters(String key, Set<String> allowed, String text) {

@@ -23,7 +23,7 @@ abstract class L10nExporter {
       {String Function(String val) clear}) async {
     clear ??= (v) => v;
     final currentContent =
-        await target.exists() ? await target.readAsString() : '';
+        await target.exists() ? await _readArb(target) : '';
     final hasChanged =
         currentContent.isEmpty || clear(currentContent) != clear(content);
 
@@ -32,5 +32,13 @@ abstract class L10nExporter {
     }
 
     return hasChanged;
+  }
+
+  @protected
+  String clearWinLines(String str) => str.replaceAll('\r\n', '\n');
+
+  Future<String> _readArb(File file) async {
+    final res = await file.readAsString();
+    return clearWinLines(res);
   }
 }
