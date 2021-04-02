@@ -365,8 +365,8 @@ class FromXmlCommand extends L10nCommandBase {
   }
 
   String _textFromXml(String val) {
-    // Translates add escape slashes for ' in xml
-    return val.replaceAll(r"\'", "'");
+    // Translates add escape slashes for ' and " in xml
+    return val.replaceAll(r"\'", "'").replaceAll(r'\"', '"');
   }
 
   Future<XmlDocument> _loadXml(

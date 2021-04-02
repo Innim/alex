@@ -1,3 +1,5 @@
+* Fixed: `from_xml` did not strip escape slashed with double quotes.
+
 ## 0.3.6-dev.5 - 2021-03-26
 
 * Fixed: Changes check for arb files doesn't work on Windows.
