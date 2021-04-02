@@ -11,12 +11,15 @@ class ImportXmlCommand extends L10nCommandBase {
   static const _argPath = 'path';
   static const _argFile = 'file';
   static const _argAll = 'all';
+  static const _argNew = 'new';
 
   ImportXmlCommand()
       : super(
           'import_xml',
           'Import translations from Google Play '
-              "to the project's xml files",
+              "to the project's xml files. "
+              'By default only files for existing locales will be imported. '
+              'If you want to import new locales, use --$_argNew argument.',
         ) {
     argParser
       ..addOption(
@@ -31,12 +34,16 @@ class ImportXmlCommand extends L10nCommandBase {
         help: 'Filename for import (without extension). '
             'For example: intl, strings, info_plist, etc. '
             'By default main localization file will be imported. '
-            'You can use $_argAll to import all files.',
+            'You can use --$_argAll to import all files.',
         valueHelp: 'FILENAME',
       )
       ..addFlag(
         _argAll,
         help: 'Import all files from provided path.',
+      )
+      ..addFlag(
+        _argNew,
+        help: 'Import files for new locales from provided path.',
       );
   }
 
@@ -45,6 +52,7 @@ class ImportXmlCommand extends L10nCommandBase {
     final sourcePath = argResults[_argPath] as String;
     final fileForImport = argResults[_argFile] as String;
     final importAll = argResults[_argAll] as bool;
+    final importNew = argResults[_argNew] as bool;
 
     if (sourcePath == null) {
       printUsage();
@@ -56,9 +64,11 @@ class ImportXmlCommand extends L10nCommandBase {
 
     final config = l10nConfig;
 
+    final locales = importNew ? null : await getLocales(config);
+
     try {
       return _importFromGooglePlay(config, sourcePath,
-          fileForImport: fileForImport, importAll: importAll);
+          fileForImport: fileForImport, importAll: importAll, locales: locales);
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {
@@ -67,7 +77,9 @@ class ImportXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _importFromGooglePlay(L10nConfig config, String sourcePath,
-      {String fileForImport, bool importAll = false}) async {
+      {String fileForImport,
+      bool importAll = false,
+      List<String> locales}) async {
     assert(importAll != null);
 
     final filename = importAll
@@ -85,6 +97,20 @@ class ImportXmlCommand extends L10nCommandBase {
     // TODO: check that all locales (rather than base and gp base) presented
     final imported = <String>{};
 
+    Future<void> import(
+            Directory sourceDir, String sourceFilename, String googlePlayLocale,
+            [String gpProjectUid, String targetFilename]) =>
+        _importFile(
+            config,
+            imported,
+            sourceDir,
+            sourceFilename,
+            gpProjectUid ?? projectUid,
+            translationUid,
+            googlePlayLocale,
+            targetFilename ?? filename,
+            locales);
+
     // if multiple files - than it's in subdirectory,
     // if single file - it's directly in root
     await for (final item in sourceDir.list()) {
@@ -98,8 +124,7 @@ class ImportXmlCommand extends L10nCommandBase {
           if (projectUid != null) {
             final sourceFilename = '${uidWithName}_$projectUid.xml';
 
-            await _importFile(config, imported, item, sourceFilename,
-                projectUid, translationUid, googlePlayLocale, filename);
+            await import(item, sourceFilename, googlePlayLocale);
           } else {
             await for (final file in item.list()) {
               final sourceFilename = path.basename(file.path);
@@ -112,8 +137,8 @@ class ImportXmlCommand extends L10nCommandBase {
                   .withoutExtension(sourceFilename)
                   .substring(uidWithName.length + 1);
               final curFileName = _getFilenameByBaseName(curProjectUid);
-              await _importFile(config, imported, item, sourceFilename,
-                  curProjectUid, translationUid, googlePlayLocale, curFileName);
+              await import(item, sourceFilename, googlePlayLocale,
+                  curProjectUid, curFileName);
             }
           }
         } else if (item is File && item.path.endsWith('.xml')) {
@@ -125,8 +150,7 @@ class ImportXmlCommand extends L10nCommandBase {
               .replaceFirst('${translationUid}_', '')
               .split('_')
               .first;
-          await _importFile(config, imported, sourceDir, name, projectUid,
-              translationUid, googlePlayLocale, filename);
+          await import(sourceDir, name, googlePlayLocale);
         }
       }
     }
@@ -135,6 +159,7 @@ class ImportXmlCommand extends L10nCommandBase {
       return error(2, message: 'There is no files for import in $sourcePath');
     } else {
       final importedLocales = imported.join(", ");
+      // TODO: писать сколько всего должно быть? или может даже ошибку выдать?
       return success(
           message: 'Success. Imported locales (${imported.length}): '
               '$importedLocales.');
@@ -151,8 +176,14 @@ class ImportXmlCommand extends L10nCommandBase {
       String projectUid,
       String translationUid,
       String googlePlayLocale,
-      String targetFilename) async {
+      String targetFilename,
+      List<String> allowedLocales) async {
     final locale = _convertGooglePlayLocale(googlePlayLocale);
+
+    if (allowedLocales != null && !allowedLocales.contains(locale)) {
+      printInfo('Skip locale $locale');
+      return;
+    }
 
     final sourceFile =
         await _requireFile(path.join(sourceDir.path, sourceFilename));

@@ -1,3 +1,7 @@
+## 0.3.7-dev.1 - 2021-04-02
+
+* `import_xml` imports only exisiting locales by default.
+Use `--new` argument if you want to import all locales.
 * Fixed: `from_xml` did not strip escape slashed with double quotes.
 
 ## 0.3.6-dev.5 - 2021-03-26
