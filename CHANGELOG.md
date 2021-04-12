@@ -1,3 +1,7 @@
+## 0.3.7-dev.2 - 2021-04-12
+
+* Fixed: RangeError if old file shorter than header.
+
 ## 0.3.7-dev.1 - 2021-04-02
 
 * `import_xml` imports only exisiting locales by default.

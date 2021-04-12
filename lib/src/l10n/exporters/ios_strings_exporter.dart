@@ -53,7 +53,8 @@ class IosStringsExporter extends L10nExporter {
     final newContent = result.toString();
 
     return writeContentIfChanged(target, newContent,
-        clear: (str) => str.substring(headerLength));
+        clear: (str) =>
+            str.length >= headerLength ? str.substring(headerLength) : str);
   }
 
   Future<File> _requireTargetFile(
