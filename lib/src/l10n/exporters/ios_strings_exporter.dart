@@ -62,18 +62,28 @@ class IosStringsExporter extends L10nExporter {
       String iosLocale, String targetFileName) async {
     File _getTargetFile(String l) =>
         provider.getLocalizationFile(projectName, l, targetFileName);
+    Future<File> _checkAltLocale(String altLocale) async {
+      final altRes = _getTargetFile(altLocale);
+      final altExist = await altRes.exists();
+      return altExist ? altRes : null;
+    }
 
     final res = _getTargetFile(iosLocale);
     final exist = await res.exists();
 
     if (!exist) {
+      // process some locales which is not presented or dirrefent in ios
       if (iosLocale.startsWith('zh-') && iosLocale.split('-').length == 2) {
+        // chinese
         for (final altLocale in ['Hans', 'Hant']
             .map((s) => iosLocale.replaceFirst('zh-', 'zh-$s-'))) {
-          final altRes = _getTargetFile(altLocale);
-          final altExist = await altRes.exists();
-          if (altExist) return altRes;
+          final altRes = await _checkAltLocale(altLocale);
+          if (altRes != null) return altRes;
         }
+      } else if (iosLocale == 'no') {
+        // norwegian
+        final altRes = await _checkAltLocale('nn-NO');
+        if (altRes != null) return altRes;
       }
 
       throw RunException.fileNotFound('Cannot find a file: ${res.path}');

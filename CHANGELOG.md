@@ -1,3 +1,6 @@
+## 0.3.8-dev.1 - 2021-04-14
+
+* Added support for `no` locale for iOS (use `nn-NO`).
 * Fixed: exceptions in from_xml doesn't handles properly.
 * Fixed: `_requireTargetFile()` may return a not existen file.
 
