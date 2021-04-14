@@ -90,21 +90,28 @@ class FromXmlCommand extends L10nCommandBase {
     printVerbose('Import for locales: ${locales.join(', ')}.');
 
     try {
+      int res;
       switch (target) {
         case _targetArb:
-          return _importToArb(locales);
+          res = await _importToArb(locales);
+          break;
         case _targetAndroid:
-          return _importToAndroid(locales);
+          res = await _importToAndroid(locales);
+          break;
         case _targetIos:
-          return _importToIos(locales);
+          res = await _importToIos(locales);
+          break;
         case _targetJson:
-          return _importToJson(locales);
+          res = await _importToJson(locales);
+          break;
         case _targetGoogleDocs:
           // TODO: parameter for filename
-          return _importToGoogleDocs('screenshot1', locales);
+          res = await _importToGoogleDocs('screenshot1', locales);
+          break;
         default:
-          return error(1, message: 'Unknown target: $target');
+          res = error(1, message: 'Unknown target: $target');
       }
+      return res;
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {

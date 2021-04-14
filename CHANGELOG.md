@@ -1,3 +1,5 @@
+* Fixed: exceptions in from_xml doesn't handles properly.
+
 ## 0.3.7-dev.2 - 2021-04-12
 
 * Fixed: RangeError if old file shorter than header.
