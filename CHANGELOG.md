@@ -1,4 +1,5 @@
 * Fixed: exceptions in from_xml doesn't handles properly.
+* Fixed: `_requireTargetFile()` may return a not existen file.
 
 ## 0.3.7-dev.2 - 2021-04-12
 

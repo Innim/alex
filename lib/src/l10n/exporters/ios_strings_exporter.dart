@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
 import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 
@@ -65,17 +66,17 @@ class IosStringsExporter extends L10nExporter {
     final res = _getTargetFile(iosLocale);
     final exist = await res.exists();
 
-    if (!exist &&
-        iosLocale.startsWith('zh-') &&
-        iosLocale.split('-').length == 2) {
-      for (final altLocale in ['Hans', 'Hant']
-          .map((s) => iosLocale.replaceFirst('zh-', 'zh-$s-'))) {
-        final altRes = _getTargetFile(altLocale);
-        final altExist = await altRes.exists();
-        if (altExist) return altRes;
+    if (!exist) {
+      if (iosLocale.startsWith('zh-') && iosLocale.split('-').length == 2) {
+        for (final altLocale in ['Hans', 'Hant']
+            .map((s) => iosLocale.replaceFirst('zh-', 'zh-$s-'))) {
+          final altRes = _getTargetFile(altLocale);
+          final altExist = await altRes.exists();
+          if (altExist) return altRes;
+        }
       }
 
-      throw Exception('Cannot find file: ${res.path}');
+      throw RunException.fileNotFound('Cannot find a file: ${res.path}');
     } else {
       return res;
     }
