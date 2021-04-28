@@ -14,14 +14,16 @@ abstract class L10nCommandBase extends AlexCommand {
   L10nConfig get l10nConfig => AlexConfig.instance.l10n;
 
   @protected
-  Future<ProcessResult> runIntl(String cmd, List<String> arguments) async {
-    return runPub('intl_translation:$cmd', arguments);
+  Future<ProcessResult> runIntl(String cmd, List<String> arguments,
+      {String workingDir}) async {
+    return runPub('intl_translation:$cmd', arguments, workingDir: workingDir);
   }
 
   @protected
   Future<ProcessResult> runIntlOrFail(String cmd, List<String> arguments,
-      {bool printStdOut = true}) async {
-    return runOrFail(() => runIntl(cmd, arguments), printStdOut: printStdOut);
+      {bool printStdOut = true, String workingDir}) async {
+    return runOrFail(() => runIntl(cmd, arguments, workingDir: workingDir),
+        printStdOut: printStdOut);
   }
 
   @protected

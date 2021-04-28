@@ -70,10 +70,12 @@ abstract class AlexCommand extends Command<int> {
     List<String> arguments, {
     Function(String out) onOut,
     Function(String err) onErr,
+    String workingDir,
   }) async {
     final stdout = StringBuffer();
     final stderr = StringBuffer();
-    final process = await Process.start(executable, arguments);
+    final process = await Process.start(executable, arguments,
+        workingDirectory: workingDir);
 
     systemEncoding.decoder.bind(process.stdout).listen((event) {
       stdout.write(event);
@@ -93,7 +95,7 @@ abstract class AlexCommand extends Command<int> {
   @protected
   Future<ProcessResult> runWithImmediatePrint(
       String executable, List<String> arguments,
-      {bool printStdOut = true, bool printErrOut = true}) {
+      {bool printStdOut = true, bool printErrOut = true, String workingDir}) {
     assert(printStdOut != null);
     assert(printErrOut != null);
     return runAndListenOutput(
@@ -101,13 +103,16 @@ abstract class AlexCommand extends Command<int> {
       arguments,
       onOut: printStdOut ? (out) => printInfo(out.trimEndLine()) : null,
       onErr: printErrOut ? (err) => printError(err.trimEndLine()) : null,
+      workingDir: workingDir,
     );
   }
 
   /// Runs `flutter pub run` command.
   @protected
   Future<ProcessResult> runPub(String cmd, List<String> arguments,
-      {bool immediatePrintStd = true, bool immediatePrintErr = true}) async {
+      {bool immediatePrintStd = true,
+      bool immediatePrintErr = true,
+      String workingDir}) async {
     assert(immediatePrintStd != null);
     assert(immediatePrintErr != null);
     final executable = _getPlatformSpecificExecutableName('flutter');
@@ -127,8 +132,9 @@ abstract class AlexCommand extends Command<int> {
             args,
             printStdOut: immediatePrintStd,
             printErrOut: immediatePrintErr,
+            workingDir: workingDir,
           )
-        : Process.run(executable, args);
+        : Process.run(executable, args, workingDirectory: workingDir);
   }
 
   @protected
