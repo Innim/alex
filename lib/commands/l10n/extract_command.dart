@@ -16,10 +16,16 @@ class ExtractCommand extends L10nCommandBase {
     final config = l10nConfig;
 
     try {
-      await runIntlOrFail('extract_to_arb', [
-        '--output-dir=${config.outputDir}',
-        config.sourceFile,
-      ]);
+      final outputDir = config.outputDir;
+      final sourcePath = config.sourceFile;
+
+      await runIntlOrFail(
+        'extract_to_arb',
+        [
+          '--output-dir=$outputDir',
+          sourcePath,
+        ],
+      );
     } on RunException catch (e) {
       return errorBy(e);
     }
