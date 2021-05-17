@@ -13,6 +13,8 @@ class ImportXmlCommand extends L10nCommandBase {
   static const _argAll = 'all';
   static const _argNew = 'new';
 
+  static const _localeJoint = '_';
+
   ImportXmlCommand()
       : super(
           'import_xml',
@@ -178,11 +180,26 @@ class ImportXmlCommand extends L10nCommandBase {
       String googlePlayLocale,
       String targetFilename,
       List<String> allowedLocales) async {
-    final locale = _convertGooglePlayLocale(googlePlayLocale);
+    var locale = _convertGooglePlayLocale(googlePlayLocale);
 
     if (allowedLocales != null && !allowedLocales.contains(locale)) {
-      printInfo('Skip locale $locale');
-      return;
+      // Maybe we have locale with region in an app
+      if (!locale.contains(_localeJoint) &&
+          allowedLocales.any((l) => l.startsWith(locale))) {
+        final allowedLocale =
+            allowedLocales.firstWhere((l) => l.startsWith(locale));
+        printInfo('Locale $locale not found: '
+            'import $googlePlayLocale to $allowedLocale');
+        locale = allowedLocale;
+      } else {
+        printInfo('Skip locale $locale');
+        return;
+      }
+    }
+
+    if (imported.contains(locale)) {
+      throw RunException(1,
+          'Duplicate import for locale $locale (original: $googlePlayLocale)');
     }
 
     final sourceFile =
@@ -226,7 +243,7 @@ class ImportXmlCommand extends L10nCommandBase {
       assert(parts.length == 2);
       final lang = _convertLang(parts[0]);
       final region = parts[1].toUpperCase();
-      return '${lang}_$region';
+      return '$lang$_localeJoint$region';
     } else {
       return _convertLang(parts.first);
     }
