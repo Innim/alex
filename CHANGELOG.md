@@ -1,3 +1,6 @@
+
+* Convert `iw` to `he` for files from Google Play.
+
 ## 0.3.8-dev.1 - 2021-04-14
 
 * Added support for `no` locale for iOS (use `nn-NO`).

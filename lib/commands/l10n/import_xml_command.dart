@@ -224,11 +224,22 @@ class ImportXmlCommand extends L10nCommandBase {
     final parts = value.split('-');
     if (parts.length > 1) {
       assert(parts.length == 2);
-      final lang = parts[0];
+      final lang = _convertLang(parts[0]);
       final region = parts[1].toUpperCase();
       return '${lang}_$region';
     } else {
-      return parts.first;
+      return _convertLang(parts.first);
     }
+  }
+
+  String _convertLang(String lang) {
+    // Some locales on Goolge Play Translations
+    // use different lang code
+    // than we have in an app.
+    const langMap = <String, String>{
+      'iw': 'he',
+    };
+
+    return langMap[lang] ?? lang;
   }
 }
