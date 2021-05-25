@@ -234,12 +234,23 @@ class FromXmlCommand extends L10nCommandBase {
         for (final fileName in filesByProject[projectName]) {
           final xmlData = await _loadMap(config, fileName, locale);
           final keysMap = keysMapByXmlBasename[fileName];
+
+          MapEntry<String, L10nEntry> mapKeys(String key, L10nEntry value) {
+            final iosKey = keysMap[key];
+            if (iosKey == null) {
+              throw Exception(
+                  "Can't find record for key <$key>. File: $fileName, locale: $locale");
+            }
+
+            return MapEntry(iosKey, value);
+          }
+
           final exporter = IosStringsExporter(
             provider,
             projectName,
             fileName,
             locale,
-            xmlData.map((key, value) => MapEntry(keysMap[key], value)),
+            xmlData.map(mapKeys),
           );
           if (await exporter.execute()) updated++;
         }

@@ -1,6 +1,8 @@
+## 0.3.8-dev.2 - 2021-04-25
 
 * Convert `iw` to `he` for files from Google Play.
 * Auto define target locale with region when locale from Google Play contains only lang code.
+* Fails run if key is not found for iOS localization files.
 
 ## 0.3.8-dev.1 - 2021-04-14
 
