@@ -82,7 +82,7 @@ class IosStringsExporter extends L10nExporter {
         }
       } else if (iosLocale == 'no') {
         // norwegian
-        final altRes = await _checkAltLocale('nn-NO');
+        final altRes = await _checkAltLocale('nb');
         if (altRes != null) return altRes;
       }
 

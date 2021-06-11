@@ -164,7 +164,7 @@ class ToXmlCommand extends L10nCommandBase {
       if (data.trim().isNotEmpty) {
         final baseName = path.basename(file.path);
         final outputName =
-            provider.getXmlFileName(baseName, withouExtension: true);
+            provider.getXmlFileName(baseName, withoutExtension: true);
 
         resPaths.add(await _processStrings(data, outputDirPath, outputName, '''
 Project path: ios/$projectName

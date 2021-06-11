@@ -1,3 +1,7 @@
+## 0.3.8-dev.3 - 2021-06-11
+
+* Support for Norwegian locale as `nb`.
+
 ## 0.3.8-dev.2 - 2021-04-25
 
 * Convert `iw` to `he` for files from Google Play.

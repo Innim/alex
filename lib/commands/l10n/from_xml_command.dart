@@ -129,9 +129,18 @@ class FromXmlCommand extends L10nCommandBase {
 
     final fileName = config.getMainXmlFileName();
 
+    const localeMap = {
+      // Use Norwegian Bokmål for Norwegian
+      'no': 'nb',
+    };
+
     for (final locale in locales) {
-      printVerbose('Export locale: $locale');
-      final arbFilePath = config.getArbFilePath(locale);
+      final arbLocale = localeMap[locale] ?? locale;
+      // ignore: prefer_interpolation_to_compose_strings
+      printVerbose('Export locale: $locale' +
+          (arbLocale != locale ? ' -> $arbLocale' : ''));
+
+      final arbFilePath = config.getArbFilePath(arbLocale);
       final exporter = ArbExporter(baseArb, arbFilePath, locale,
           await _loadMap(config, fileName, locale));
       try {
@@ -167,6 +176,8 @@ class FromXmlCommand extends L10nCommandBase {
       'he': 'iw',
       'id': 'in',
       'yi': 'ji',
+      // Custom map: use nb for Norwegian
+      'no': 'nb',
     };
 
     // Here file already in required format, just copy it
@@ -206,7 +217,7 @@ class FromXmlCommand extends L10nCommandBase {
       (projectName, file) async {
         final name = path.basenameWithoutExtension(file.path);
         final xmlBasename =
-            provider.getXmlFileName(name, withouExtension: true);
+            provider.getXmlFileName(name, withoutExtension: true);
 
         final xmlFile = _getXmlFile(l10nConfig, xmlBasename, baseLocale);
         if (await xmlFile.exists()) {
@@ -279,7 +290,13 @@ class FromXmlCommand extends L10nCommandBase {
 
     const ext = '.json';
 
-    String jsonLocale(String locale) => locale.replaceAll('_', '-');
+    const localeMap = {
+      // Use Norwegian Bokmål for Norwegian
+      'no': 'nb',
+    };
+
+    String jsonLocale(String locale) =>
+        localeMap[locale] ?? locale.replaceAll('_', '-');
     String getPath(String locale, [String fileBasename]) => path.join(
         jsonDirPath,
         jsonLocale(locale),

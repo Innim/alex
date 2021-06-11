@@ -47,11 +47,11 @@ class L10nIosPathProvider {
     return path.setExtension(filename.pascalCase, _stringsExt);
   }
 
-  String getXmlFileName(String iosFileName, {bool withouExtension = false}) {
+  String getXmlFileName(String iosFileName, {bool withoutExtension = false}) {
     final baseName = path.withoutExtension(iosFileName).snakeCase;
     var res = '$_xmlPrefix$baseName';
 
-    if (!withouExtension) {
+    if (!withoutExtension) {
       res = path.setExtension(res, '.xml');
     }
 
