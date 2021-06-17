@@ -1,3 +1,7 @@
+## 0.3.9- 2021-06-17
+
+* Auto `pub get` on `l10n` `extract` and `generate` commands.
+
 ## 0.3.8-dev.3 - 2021-06-11
 
 * Support for Norwegian locale as `nb`.

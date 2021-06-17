@@ -112,14 +112,42 @@ abstract class AlexCommand extends Command<int> {
   Future<ProcessResult> runPub(String cmd, List<String> arguments,
       {bool immediatePrintStd = true,
       bool immediatePrintErr = true,
-      String workingDir}) async {
+      String workingDir,
+      bool prependWithPubGet = false}) async {
     assert(immediatePrintStd != null);
     assert(immediatePrintErr != null);
+
+    if (prependWithPubGet) {
+      final pubGetRes = await pub('get',
+          workingDir: workingDir,
+          immediatePrintStd: immediatePrintStd,
+          immediatePrintErr: immediatePrintErr);
+
+      if (pubGetRes.exitCode != 0) return pubGetRes;
+    }
+
+    return pub('run',
+        arguments: [cmd, ...arguments],
+        workingDir: workingDir,
+        immediatePrintStd: immediatePrintStd,
+        immediatePrintErr: immediatePrintErr);
+  }
+
+  /// Runs `flutter pub` command.
+  @protected
+  Future<ProcessResult> pub(String cmd,
+      {List<String> arguments = const [],
+      bool immediatePrintStd = true,
+      bool immediatePrintErr = true,
+      String workingDir}) async {
+    assert(arguments != null);
+    assert(immediatePrintStd != null);
+    assert(immediatePrintErr != null);
+
     final executable = _getPlatformSpecificExecutableName('flutter');
     final args = [
       'pub',
       if (isVerbose) '-v',
-      'run',
       cmd,
       ...arguments,
     ];

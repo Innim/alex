@@ -15,14 +15,19 @@ abstract class L10nCommandBase extends AlexCommand {
 
   @protected
   Future<ProcessResult> runIntl(String cmd, List<String> arguments,
-      {String workingDir}) async {
-    return runPub('intl_translation:$cmd', arguments, workingDir: workingDir);
+      {String workingDir, bool prependWithPubGet = false}) async {
+    return runPub('intl_translation:$cmd', arguments,
+        workingDir: workingDir, prependWithPubGet: prependWithPubGet);
   }
 
   @protected
   Future<ProcessResult> runIntlOrFail(String cmd, List<String> arguments,
-      {bool printStdOut = true, String workingDir}) async {
-    return runOrFail(() => runIntl(cmd, arguments, workingDir: workingDir),
+      {bool printStdOut = true,
+      String workingDir,
+      bool prependWithPubGet = false}) async {
+    return runOrFail(
+        () => runIntl(cmd, arguments,
+            workingDir: workingDir, prependWithPubGet: prependWithPubGet),
         printStdOut: printStdOut);
   }
 

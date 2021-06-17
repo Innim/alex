@@ -25,6 +25,7 @@ class ExtractCommand extends L10nCommandBase {
           '--output-dir=$outputDir',
           sourcePath,
         ],
+        prependWithPubGet: true,
       );
     } on RunException catch (e) {
       return errorBy(e);

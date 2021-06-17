@@ -17,14 +17,18 @@ class GenerateCommand extends L10nCommandBase {
     final arbFiles = await _getArbFiles(config);
 
     try {
-      await runIntlOrFail('generate_from_arb', [
-        '--output-dir=${config.outputDir}',
-        '--codegen_mode=release',
-        '--use-deferred-loading',
-        '--no-suppress-warnings',
-        config.sourceFile,
-        ...arbFiles,
-      ]);
+      await runIntlOrFail(
+        'generate_from_arb',
+        [
+          '--output-dir=${config.outputDir}',
+          '--codegen_mode=release',
+          '--use-deferred-loading',
+          '--no-suppress-warnings',
+          config.sourceFile,
+          ...arbFiles,
+        ],
+        prependWithPubGet: true,
+      );
     } on RunException catch (e) {
       return errorBy(e);
     }
