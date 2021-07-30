@@ -20,6 +20,14 @@ class Spec {
 
   Spec(this._yamlMap) : assert(_yamlMap != null);
 
+  factory Spec.byString(String yaml) {
+    assert(yaml != null);
+    return Spec(yaml.toPubspecYaml());
+  }
+
+  /// Returns name.
+  String get name => _yamlMap.name;
+
   /// Returns version.
   ///
   /// Throws exception if no version found.
@@ -40,4 +48,16 @@ class Spec {
     final file = File(_pubspec);
     file.writeAsStringSync(content);
   }
+
+  bool hasDependency(String name) =>
+      _hasDependency(_yamlMap.dependencies, name);
+
+  bool hasDevDependency(String name) =>
+      _hasDependency(_yamlMap.devDependencies, name);
+
+  bool dependsOn(String name) => hasDependency(name) || hasDevDependency(name);
+
+  bool _hasDependency(
+          Iterable<PackageDependencySpec> dependencies, String name) =>
+      dependencies.any((d) => d.package() == name);
 }
