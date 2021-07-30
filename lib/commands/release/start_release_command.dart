@@ -257,11 +257,12 @@ class StartReleaseCommand extends AlexCommand {
     }
 
     final display = type == ItemType.byDefault ? "block" : "none";
-    final itemName = '$prefix$name';
+    final itemNameSb = StringBuffer()..write(prefix)..write(name);
+    if (isRequired) itemNameSb.write('*');
 
     return template
         .replaceAll("%id%", id)
-        .replaceAll("%name%", itemName)
+        .replaceAll("%name%", itemNameSb.toString())
         .replaceAll("%text%", text)
         .replaceAll("%display%", display)
         .replaceAll("%type%", type.id)
