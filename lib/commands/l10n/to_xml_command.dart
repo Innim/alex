@@ -76,7 +76,7 @@ class ToXmlCommand extends L10nCommandBase {
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {
-      return error(1, message: 'Failed by: $e');
+      return error(2, message: 'Failed by: $e');
     }
   }
 
@@ -94,7 +94,7 @@ class ToXmlCommand extends L10nCommandBase {
 
     final exists = await file.exists();
     if (!exists) {
-      return error(1, message: 'ABR file for locale $baseLocale is not found');
+      return error(2, message: 'ABR file for locale $baseLocale is not found');
     }
 
     return _proccessArb(file, config.getXmlFilesPath(locale));

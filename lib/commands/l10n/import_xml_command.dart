@@ -74,7 +74,7 @@ class ImportXmlCommand extends L10nCommandBase {
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {
-      return error(1, message: 'Failed by: $e');
+      return error(2, message: 'Failed by: $e');
     }
   }
 
