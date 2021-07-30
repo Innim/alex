@@ -1,4 +1,4 @@
-## 0.4.0 - 2021-07-30
+## 0.4.0-dev.0 - 2021-07-30
 
 * New command: `alex pubspec update` - used for update dependency. It's usful for update git dependencies.
 * [release] Prints release notes and changelog at the end of successfull release.
