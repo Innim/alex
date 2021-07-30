@@ -1,8 +1,7 @@
 import 'dart:io';
 
 /// Prints some info message in output.
-// ignore: avoid_print
-void info(String message) => print(message);
+void info(String message) => stdout.writeln(message);
 
 /// Prints error message in error output.
 void error(String message) => stderr.writeln(message);
