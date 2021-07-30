@@ -166,6 +166,21 @@ abstract class AlexCommand extends Command<int> {
   }
 
   @protected
+  Future<ProcessResult> pubOrFail(String cmd,
+      {List<String> arguments,
+      bool printStdOut = true,
+      bool immediatePrint = true}) async {
+    assert(printStdOut || !immediatePrint,
+        "You can't disable std output if immediatePrint enabled");
+    return runOrFail(
+        () => pub(cmd,
+            arguments: arguments,
+            immediatePrintStd: immediatePrint && printStdOut,
+            immediatePrintErr: false),
+        printStdOut: !immediatePrint && printStdOut);
+  }
+
+  @protected
   Future<ProcessResult> runPubOrFail(String cmd, List<String> arguments,
       {bool printStdOut = true, bool immediatePrint = true}) async {
     assert(printStdOut || !immediatePrint,
