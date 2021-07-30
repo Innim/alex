@@ -1,7 +1,10 @@
+## 0.4.0 - 2021-07-30
+
+* New command: `alex pubspec update` - used for update dependency. It's usful for update git dependencies.
 * [release] Prints release notes and changelog at the end of successfull release.
 * [release] Mark required for release notes langs with `*`.
 
-## 0.3.9- 2021-06-17
+## 0.3.9 - 2021-06-17
 
 * Auto `pub get` on `l10n` `extract` and `generate` commands.
 
