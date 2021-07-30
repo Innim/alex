@@ -1,3 +1,6 @@
+* [release] Prints release notes and changelog at the end of successfull release.
+* [release] Mark required for release notes langs with `*`.
+
 ## 0.3.9- 2021-06-17
 
 * Auto `pub get` on `l10n` `extract` and `generate` commands.

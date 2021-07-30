@@ -67,7 +67,7 @@ class StartReleaseCommand extends AlexCommand {
 
     printInfo('Waiting for release notes...');
 
-    await getReleaseNotes(version, changeLog);
+    final releaseNotes = await getReleaseNotes(version, changeLog);
 
     printInfo("Finishing release...");
 
@@ -92,6 +92,19 @@ class StartReleaseCommand extends AlexCommand {
     git.push(branchMaster);
 
     printInfo('Release successfully completed');
+    printInfo('');
+    printInfo(
+        'Release summary, copypaste it in the comment for release issue:');
+    printInfo('');
+    printInfo('''
+# Release Notes
+
+$releaseNotes
+
+# Changelog 
+
+$changeLog
+''');
 
     return 0;
   }
@@ -130,7 +143,7 @@ class StartReleaseCommand extends AlexCommand {
     return contents.substring(curIndex);
   }
 
-  Future<void> getReleaseNotes(Version version, String changeLog) async {
+  Future<String> getReleaseNotes(Version version, String changeLog) async {
     const port = 4024;
     final data = getRawReleaseNotes(port, changeLog);
 
@@ -144,6 +157,8 @@ class StartReleaseCommand extends AlexCommand {
     final patch = version.patch;
     final v = "$major.$minor.$patch";
 
+    String result;
+
     for (final entry in entries) {
       final ln = entry.lang;
 
@@ -152,6 +167,8 @@ class StartReleaseCommand extends AlexCommand {
         final content = kv.value;
 
         if (content.isNotEmpty) {
+          result ??= content;
+
           final path = _CIPath.getChangelogPath(v, type, ln);
           await fs.createFile(path, recursive: true);
           await fs.writeString(path, content);
@@ -160,6 +177,7 @@ class StartReleaseCommand extends AlexCommand {
     }
 
     printInfo("Release notes written successfully");
+    return result;
   }
 
   Future<Iterable<Entry>> getRawReleaseNotes(int port, String changeLog) async {
@@ -257,11 +275,12 @@ class StartReleaseCommand extends AlexCommand {
     }
 
     final display = type == ItemType.byDefault ? "block" : "none";
-    final itemName = '$prefix$name';
+    final itemNameSb = StringBuffer()..write(prefix)..write(name);
+    if (isRequired) itemNameSb.write('*');
 
     return template
         .replaceAll("%id%", id)
-        .replaceAll("%name%", itemName)
+        .replaceAll("%name%", itemNameSb.toString())
         .replaceAll("%text%", text)
         .replaceAll("%display%", display)
         .replaceAll("%type%", type.id)

@@ -1,6 +1,7 @@
 import 'package:alex/commands/release/fs.dart';
 import 'package:alex/commands/release/git.dart';
 import 'package:alex/internal/print.dart' as print;
+import 'package:path/path.dart' as p;
 
 /// Demo git implementation.
 class DemoGit extends Git {
@@ -35,7 +36,7 @@ class DemoFileSystem extends FileSystem {
     }
 
     if (path.contains('CHANGELOG.md')) {
-      return "## Next release\n\n## v0.3.27+4041 - 2020-10-02\n\n## Fixed:\n\n -NPE when open settings";
+      return "## Next release\n\n## v0.3.27+4041 - 2020-10-02\n\n## Fixed:\n\n - NPE when open settings";
     }
 
     return "";
@@ -48,7 +49,14 @@ class DemoFileSystem extends FileSystem {
 
   @override
   Future<bool> existsFile(String path) {
-    print.info("existsFile $path");
-    return Future.value(false);
+    var result = false;
+
+    if (path.contains('changelog/default/default')) {
+      final name = p.withoutExtension(p.basename(path));
+      result = !['ru', 'en'].any(name.endsWith);
+    }
+
+    print.info("existsFile $path -> $result");
+    return Future.value(result);
   }
 }
