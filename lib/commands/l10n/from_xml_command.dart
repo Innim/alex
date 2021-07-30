@@ -115,7 +115,7 @@ class FromXmlCommand extends L10nCommandBase {
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {
-      return error(1, message: 'Failed by: $e');
+      return error(2, message: 'Failed by: $e');
     }
   }
 
@@ -150,7 +150,7 @@ class FromXmlCommand extends L10nCommandBase {
           printVerbose('No changes');
         }
       } on MissedMetaException catch (e) {
-        return error(1,
+        return error(2,
             message: '${e.message} (searched in ${baseArbFile.path})');
       }
     }

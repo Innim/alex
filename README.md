@@ -136,3 +136,22 @@ Generate `JsonSerializable` and other.
 ```
 alex code gen
 ```
+
+### Pubspec
+
+Work with pubspec and dependencies.
+
+### Update dependency
+
+Update specified dependency. It's useful when you want to update
+dependecy for git. 
+
+```
+alex pubspec update
+```
+
+and input package name. Or define it right in a command:
+
+```
+alex pubspec update -dPACKAGE_NAME
+```
