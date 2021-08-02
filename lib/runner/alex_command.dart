@@ -10,11 +10,13 @@ import 'package:meta/meta.dart';
 abstract class AlexCommand extends Command<int> {
   final String _name;
   final String _description;
+  final List<String> _aliases;
+
   final ArgParser _argParser = ArgParser(
     allowTrailingOptions: false,
   )..addFlag('verbose', help: 'Show additional diagnostic info');
 
-  AlexCommand(this._name, this._description);
+  AlexCommand(this._name, this._description, [this._aliases = const []]);
 
   @override
   String get name => _name;
@@ -24,6 +26,9 @@ abstract class AlexCommand extends Command<int> {
 
   @override
   String get description => _description;
+
+  @override
+  List<String> get aliases => _aliases;
 
   bool get isVerbose => argResults['verbose'] as bool;
 
