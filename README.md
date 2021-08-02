@@ -141,6 +141,16 @@ alex code gen
 
 Work with pubspec and dependencies.
 
+```
+alex pubspec <command>
+```
+
+или 
+
+```
+alex pub <command>
+```
+
 ### Update dependency
 
 Update specified dependency. It's useful when you want to update

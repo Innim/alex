@@ -1,3 +1,5 @@
+* Alias `pub` for `pubspec` command.
+
 ## 0.4.0-dev.0 - 2021-07-30
 
 * New command: `alex pubspec update` - used for update dependency. It's usful for update git dependencies.
