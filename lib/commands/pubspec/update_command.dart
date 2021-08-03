@@ -117,7 +117,7 @@ class UpdateCommand extends PubspecCommandBase {
     }
 
     // Run pub get to get write updated entry
-    await pubOrFail('get', arguments: [dirPath]);
+    await pubGetOrFail(path: dirPath);
 
     return true;
   }

@@ -1,8 +1,11 @@
+## 0.4.1-dev.0 - 2021-08-03
+
+* New command: `alex pubspec get` - used to get dependencies. It's useful for get dependencies in project with inherit packages, or in repository with multiple packages.
 * Alias `pub` for `pubspec` command.
 
 ## 0.4.0-dev.0 - 2021-07-30
 
-* New command: `alex pubspec update` - used for update dependency. It's usful for update git dependencies.
+* New command: `alex pubspec update` - used for update dependency. It's useful for update git dependencies.
 * [release] Prints release notes and changelog at the end of successfull release.
 * [release] Mark required for release notes langs with `*`.
 

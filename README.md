@@ -165,3 +165,18 @@ and input package name. Or define it right in a command:
 ```
 alex pubspec update -dPACKAGE_NAME
 ```
+
+### Get dependencies
+
+Run `pub get` for all projects/packages in folder (recursively). It's useful
+when you have multiple packages or project and package in single repository.
+
+```
+alex pubspec get
+```
+
+or 
+
+```
+alex pub get
+```

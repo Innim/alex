@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:glob/glob.dart';
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:alex/runner/alex_command.dart';
@@ -10,6 +11,7 @@ abstract class PubspecCommandBase extends AlexCommand {
   PubspecCommandBase(String name, String description)
       : super(name, description);
 
+  @protected
   Future<List<File>> getPubspecs() async {
     final projectPath = p.current;
     final pubspecSearch = Glob("**$_pubspecFileName");
