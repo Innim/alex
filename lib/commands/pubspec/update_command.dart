@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:alex/commands/pubspec/src/pubspec_command_base.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/pub_spec.dart';
-import 'package:glob/glob.dart';
 import 'package:path/path.dart' as p;
 import 'package:list_ext/list_ext.dart';
 
@@ -11,7 +10,6 @@ class UpdateCommand extends PubspecCommandBase {
   static const _argDependency = 'dependency';
   static const _argDependencyAbbr = 'd';
 
-  static const _pubspecFileName = 'pubspec.yaml';
   static const _pubspecLockFileName = 'pubspec.lock';
 
   UpdateCommand()
@@ -47,20 +45,8 @@ class UpdateCommand extends PubspecCommandBase {
     printInfo('Updating <$dependency>...');
 
     try {
-      final projectPath = p.current;
-      final pubspecSearch = Glob("**$_pubspecFileName");
-      final pubspecFiles = <File>[];
-      await for (final file
-          in pubspecSearch.list(root: projectPath, followLinks: false)) {
-        if (file is File && p.basename(file.path) == _pubspecFileName) {
-          printVerbose('Found ${file.path}');
-          pubspecFiles.add(file);
-        }
-      }
-
-      if (pubspecFiles.isEmpty) {
-        printInfo('Pubspec files are not found');
-      } else {
+      final pubspecFiles = await getPubspecs();
+      if (pubspecFiles.isNotEmpty) {
         printVerbose('Sort pubspec files consider mutual dependencies');
         _sortPubpecs(pubspecFiles);
 
