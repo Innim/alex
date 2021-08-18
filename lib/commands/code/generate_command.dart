@@ -10,10 +10,14 @@ class GenerateCommand extends CodeCommandBase {
     printInfo('Start code generation...');
 
     try {
-      await runPubOrFail('build_runner', [
-        'build',
-        '--delete-conflicting-outputs',
-      ]);
+      await runPubOrFail(
+        'build_runner',
+        [
+          'build',
+          '--delete-conflicting-outputs',
+        ],
+        prependWithPubGet: true,
+      );
     } on RunException catch (e) {
       return errorBy(e);
     }

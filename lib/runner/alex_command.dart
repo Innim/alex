@@ -202,13 +202,16 @@ abstract class AlexCommand extends Command<int> {
 
   @protected
   Future<ProcessResult> runPubOrFail(String cmd, List<String> arguments,
-      {bool printStdOut = true, bool immediatePrint = true}) async {
+      {bool printStdOut = true,
+      bool immediatePrint = true,
+      bool prependWithPubGet = false}) async {
     assert(printStdOut || !immediatePrint,
         "You can't disable std output if immediatePrint enabled");
     return runOrFail(
         () => runPub(cmd, arguments,
             immediatePrintStd: immediatePrint && printStdOut,
-            immediatePrintErr: false),
+            immediatePrintErr: false,
+            prependWithPubGet: prependWithPubGet),
         printStdOut: !immediatePrint && printStdOut);
   }
 
