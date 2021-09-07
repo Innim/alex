@@ -8,5 +8,6 @@ build/
 # Directory created by dartdoc
 doc/api/
 
-# VS Code launch confing
+# VS Code settings
 .vscode/launch.json
+.vscode/settings.json
