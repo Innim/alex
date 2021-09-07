@@ -39,7 +39,7 @@ installed, then you haven't `pub` command. So when you try to run `alex` you wil
 ~/Development/flutter/.pub-cache/bin/alex: line 17: pub: command not found
 ```
 
-There are more than one solution for this. You can just install seperate Dart SDK if you want. 
+There are more than one solution for this. You can just install separate Dart SDK if you want. 
 
 Or, if you don't want to do it, you can edit specified file (`~/Development/flutter/.pub-cache/bin/alex` in this example). All you need to change in it - it's use `flutter pub` instead of `pub`, so replace `pub global run alex:alex "$@"` with `flutter pub global run alex:alex "$@"`, save the file, and you are all set.
 
@@ -49,7 +49,7 @@ Or, if you don't want to do it, you can edit specified file (`~/Development/flut
 
 #### Configuration
 
-To provide more convinient way to work with project, `alex` can use some configuration.
+To provide more convenient way to work with project, `alex` can use some configuration.
 You can define configuration in your project's `pubspec.yaml`, section  `alex`,
 or in separate file `alex.yaml`.
 
@@ -103,7 +103,7 @@ alex l10n from_xml
 Also you can export to the Android localization:
 
 ```
-alex l10n from_xml --to=anroid
+alex l10n from_xml --to=android
 ```
 
 And to the iOS localization:
@@ -154,7 +154,7 @@ alex pub <command>
 ### Update dependency
 
 Update specified dependency. It's useful when you want to update
-dependecy for git. 
+dependency for git. 
 
 ```
 alex pubspec update
