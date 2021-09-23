@@ -3,8 +3,6 @@ import 'package:args/command_runner.dart';
 import 'package:alex/internal/print.dart' as print;
 
 Future<int> run(List<String> args) async {
-  //args = ['release'];
-
   try {
     return await AlexCommandRunner().run(args);
   } on UsageException catch (e) {

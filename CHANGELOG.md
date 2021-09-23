@@ -1,3 +1,7 @@
+## 0.4.3-dev.0 - 2021-09-23
+
+* `l10n import_xml` support for new Google Play naming: just base filename, without translation id and locale.
+
 ## 0.4.2-dev.0 - 2021-08-16
 
 * `pub get` before code generation.
@@ -39,7 +43,7 @@
 
 ## 0.3.7-dev.1 - 2021-04-02
 
-* `import_xml` imports only exisiting locales by default.
+* `import_xml` imports only existing locales by default.
 Use `--new` argument if you want to import all locales.
 * Fixed: `from_xml` did not strip escape slashed with double quotes.
 

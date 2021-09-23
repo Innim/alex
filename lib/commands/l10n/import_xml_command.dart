@@ -113,6 +113,10 @@ class ImportXmlCommand extends L10nCommandBase {
             targetFilename ?? filename,
             locales);
 
+    // In some cases source filename may be just base filename
+    // but we don't know for sure
+    bool useBaseName;
+
     // if multiple files - than it's in subdirectory,
     // if single file - it's directly in root
     await for (final item in sourceDir.list()) {
@@ -124,12 +128,19 @@ class ImportXmlCommand extends L10nCommandBase {
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
           final uidWithName = '${translationUid}_$googlePlayLocale';
           if (projectUid != null) {
-            final sourceFilename = '${uidWithName}_$projectUid.xml';
+            final compositeFilename = '${uidWithName}_$projectUid.xml';
+
+            useBaseName ??=
+                !File(path.join(item.path, compositeFilename)).existsSync() &&
+                    File(path.join(item.path, filename)).existsSync();
+
+            final sourceFilename = useBaseName ? filename : compositeFilename;
 
             await import(item, sourceFilename, googlePlayLocale);
           } else {
             await for (final file in item.list()) {
               final sourceFilename = path.basename(file.path);
+              // TODO: add "or equal to target file name"?
               if (!sourceFilename.startsWith(uidWithName)) {
                 printInfo('Skip $sourceFilename');
                 continue;
