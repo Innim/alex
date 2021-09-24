@@ -1,9 +1,11 @@
 import 'package:alex/src/fs/fs.dart';
 import 'package:intl/intl.dart';
+import 'package:version/version.dart';
 
 class Changelog {
   static const _filename = "CHANGELOG.md";
   static const _nextVersionHeader = '## Next release';
+  static const _versionHeaderPrefix = '## v';
 
   final FileSystem fs;
   Future<String> _content;
@@ -23,8 +25,8 @@ class Changelog {
     }
   }
 
-  Future<bool> hasVersion(String version) async =>
-      (await content).contains('## $version');
+  Future<bool> hasVersion(Version version) async =>
+      (await content).contains('$_versionHeaderPrefix$version');
 
   Future<String> getLastVersionChangelog() async {
     final str = await content;
@@ -41,12 +43,12 @@ class Changelog {
     return str.substring(curIndex);
   }
 
-  Future<void> releaseVersion(String version, {DateTime date}) async {
+  Future<void> releaseVersion(Version version, {DateTime date}) async {
     date ??= DateTime.now();
     final dateStr = DateFormat("yyyy-MM-dd").format(date);
 
-    _update((await content).replaceFirst(
-        _nextVersionHeader, "$_nextVersionHeader\n\n## $version - $dateStr"));
+    _update((await content).replaceFirst(_nextVersionHeader,
+        "$_nextVersionHeader\n\n$_versionHeaderPrefix$version - $dateStr"));
   }
 
   void _update(String content) {

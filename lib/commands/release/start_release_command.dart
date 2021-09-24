@@ -4,7 +4,6 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/src/changelog/changelog.dart';
-import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
@@ -44,7 +43,6 @@ class StartReleaseCommand extends AlexCommand {
 
     final spec = await Spec.pub(fs);
     final version = spec.version;
-    final ver = "v$version";
     final vs = version.short;
 
     printInfo('Start new release <v$vs>');
@@ -52,7 +50,7 @@ class StartReleaseCommand extends AlexCommand {
 
     printInfo('Upgrading CHANGELOG.md...');
 
-    final changeLog = await upgradeChangeLog(ver);
+    final changeLog = await upgradeChangeLog(version);
 
     printInfo("Change log: \n$changeLog");
 
@@ -100,13 +98,13 @@ $changeLog
     return 0;
   }
 
-  Future<String> upgradeChangeLog(String ver) async {
+  Future<String> upgradeChangeLog(Version version) async {
     final changelog = Changelog(fs);
 
     // nothin to do if up to date
     // TODO: check that this is exactly a last version
-    if (!(await changelog.hasVersion(ver))) {
-      await changelog.releaseVersion(ver);
+    if (!(await changelog.hasVersion(version))) {
+      await changelog.releaseVersion(version);
       await changelog.save();
     }
 
