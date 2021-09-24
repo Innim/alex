@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:alex/runner/alex_command.dart';
+import 'package:alex/src/changelog/changelog.dart';
+import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/git/git.dart';
 import 'package:alex/src/exception/run_exception.dart';
 
@@ -39,11 +43,14 @@ class FinishCommand extends FeatureCommandBase {
     }
 
     try {
+      FileSystem fs;
       GitCommands git;
       if (!isDemo) {
+        fs = IOFileSystem();
         git = GitCommands(GitClient());
       } else {
         printInfo("Demonstration mode");
+        fs = DemoFileSystem();
         git = GitCommands(DemoGit());
       }
 
@@ -65,15 +72,17 @@ class FinishCommand extends FeatureCommandBase {
         deleteBranch: false,
       );
 
-      // TODO: Add entry in changelog (in a merge commit or in a new one after it)
-      //  - Can be in section Added, Fixed or even Pre-release.
-      // TODO: Push develop
-      // TODO: Remove branch from remote
-      // TODO: Merge develop in pipe/test (optional?)
+      printVerbose('Add entry in changelog');
+      final changed = await _updateChangelog(fs);
 
-// Some potential problems:
-// Merge conflicts
-// How to define feature branch (issue number should be enough in most cases)
+      if (changed) {
+        // TODO: printVerbose('Commit changelog');
+      }
+
+      // TODO: printVerbose('Push develop');
+      // TODO: printVerbose('Remove branch from remote');
+      // TODO: printVerbose('Merge develop in pipe/test');
+      // TODO: handle merge conflicts
 
       return success(message: 'Finished 🏁');
     } on RunException catch (e) {
@@ -103,5 +112,32 @@ class FinishCommand extends FeatureCommandBase {
     } else {
       return branchName;
     }
+  }
+
+  Future<bool> _updateChangelog(FileSystem fs) async {
+    final changelog = Changelog(fs);
+
+    // check if need changelog (need only after first release)
+    if (!(await changelog.hasAnyVersion())) {
+      printVerbose('No need in changelog (no released versions)');
+      return false;
+    }
+
+    // TODO: get changelog entry candidate from task
+    printInfo('Enter changelog line:');
+    final line = stdin.readLineSync();
+
+    if (line.isEmpty) {
+      printVerbose('No changelog info');
+      return false;
+    }
+
+    // TODO: Can be in section Added, Fixed or even Pre-release.
+
+    printVerbose('Write to changelog: $line');
+    await changelog.addAddedEntry(line);
+    await changelog.save();
+
+    return true;
   }
 }

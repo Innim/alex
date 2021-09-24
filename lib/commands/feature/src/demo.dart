@@ -1,3 +1,4 @@
+import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/git/git.dart';
 import 'package:alex/internal/print.dart' as print;
 
@@ -24,5 +25,51 @@ class DemoGit extends Git {
     }
 
     return "";
+  }
+}
+
+/// Demo file system implementation.
+class DemoFileSystem extends FileSystem {
+  @override
+  Future<void> createFile(String path, {bool recursive = false}) async {
+    print.info("createFile $path recursive: $recursive");
+  }
+
+  @override
+  Future<bool> existsFile(String path) {
+    const result = false;
+
+    print.info("existsFile $path -> $result");
+    return Future.value(result);
+  }
+
+  @override
+  Future<String> readString(String path) async {
+    print.info("readString $path");
+
+    if (path.contains('CHANGELOG.md')) {
+      return '''
+## Next release
+
+### Added
+
+- Some new feature
+
+## v0.3.27+4041 - 2020-10-02
+
+## Added
+- Cool feature
+
+## Fixed
+- NPE when open settings
+''';
+    }
+
+    return '';
+  }
+
+  @override
+  Future<void> writeString(String path, String contents) async {
+    print.info("writeString $path contents: $contents");
   }
 }

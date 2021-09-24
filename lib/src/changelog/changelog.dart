@@ -34,6 +34,9 @@ class Changelog {
   Future<bool> hasVersion(Version version) async =>
       (await content).contains('$_versionHeaderPrefix$version');
 
+  Future<bool> hasAnyVersion() async =>
+      (await getLastVersionChangelog()) != null;
+
   Future<String> getNextReleaseChangelog({bool includeHeader = false}) async {
     var str = await content;
 
@@ -137,9 +140,6 @@ class Changelog {
     lines.insert(targetIndex, entry.toString());
 
     final updatedContent = lines.join(sep);
-
-    print('prev: $prevContent');
-    print('new: $updatedContent');
     await setNextReleaseChangelog(updatedContent);
   }
 
