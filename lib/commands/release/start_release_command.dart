@@ -39,17 +39,7 @@ class StartReleaseCommand extends AlexCommand {
       git = GitCommands(DemoGit());
     }
 
-    git.ensureCleanStatus();
-
-    if (git.getCurrentBranch() != branchDevelop) {
-      git.checkout(branchDevelop);
-    }
-
-    git.ensureRemoteUrl();
-
-    git.pull();
-
-    git.ensureCleanStatus();
+    git.ensureCleanAndChekoutDevelop();
 
     final spec = await Spec.pub(fs);
     final version = spec.version;

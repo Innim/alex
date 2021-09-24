@@ -164,3 +164,19 @@ T fail<T>([String message]) {
 
   exit(1);
 }
+
+extension GitCommandsExtension on GitCommands {
+  void ensureCleanAndChekoutDevelop() {
+    ensureCleanStatus();
+
+    if (getCurrentBranch() != branchDevelop) {
+      checkout(branchDevelop);
+    }
+
+    ensureRemoteUrl();
+
+    pull();
+
+    ensureCleanStatus();
+  }
+}
