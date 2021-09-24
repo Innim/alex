@@ -244,3 +244,37 @@ abstract class AlexCommand extends Command<int> {
 extension _StringExtension on String {
   String trimEndLine() => endsWith('\n') ? substring(0, length - 1) : this;
 }
+
+class CmdArg {
+  final String name;
+  final String abbr;
+
+  const CmdArg(this.name, {this.abbr});
+}
+
+extension CmdArgArgParserExtension on ArgParser {
+  void addArg(CmdArg info,
+          {String help,
+          String valueHelp,
+          Iterable<String> allowed,
+          Map<String, String> allowedHelp,
+          String defaultsTo,
+          Function callback,
+          bool hide = false}) =>
+      addOption(
+        info.name,
+        abbr: info.abbr,
+        help: help,
+        valueHelp: valueHelp,
+        allowed: allowed,
+        allowedHelp: allowedHelp,
+        defaultsTo: defaultsTo,
+        callback: callback,
+        hide: hide,
+      );
+}
+
+extension CmdArgArgResultsExtension on ArgResults {
+  bool getBool(CmdArg arg) => this[arg.name] as bool;
+  int getInt(CmdArg arg) => int.tryParse(this[arg.name] as String);
+}
