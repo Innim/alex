@@ -59,7 +59,10 @@ class FinishCommand extends FeatureCommandBase {
 
       // TODO: Merge develop in remote feature branch?
 
-      // TODO: Merge feature branch (from remote) in develop
+      // Merge feature branch (from remote) in develop
+      git.gitflowFeatureFinish(
+          branchName.replaceFirst(branchFeaturePrefix, ''));
+
       // TODO: Add entry in changelog (in a merge commit or in a new one after it)
       //  - Can be in section Added, Fixed or even Pre-release.
       // TODO: Push develop

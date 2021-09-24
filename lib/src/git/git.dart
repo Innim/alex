@@ -93,6 +93,14 @@ class GitCommands {
     branchDelete(branch);
   }
 
+  void gitflowFeatureFinish(String name) {
+    // merge from remote
+    final branch = "$branchRemotePrefix$branchFeaturePrefix$name";
+    checkout(branchDevelop);
+    merge(branch);
+    branchDelete(branch);
+  }
+
   void tag(String tag) {
     git('tag -m "$tag" -a $tag', "set tag $tag");
   }
