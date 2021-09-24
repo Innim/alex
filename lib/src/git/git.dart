@@ -4,6 +4,8 @@ import 'package:alex/internal/print.dart' as print;
 
 const String branchMaster = "master";
 const String branchDevelop = "develop";
+const String branchRemotePrefix = "remotes/";
+const String branchFeaturePrefix = "feature/";
 
 /// Interface of a git client.
 abstract class Git {
@@ -140,6 +142,13 @@ class GitCommands {
 
   String getCurrentBranch([String desc]) {
     return git("branch --show-current", desc ?? "get current branch");
+  }
+
+  Iterable<String> getBranches({bool all = false}) {
+    final cmd = StringBuffer('branch');
+    if (all) cmd.write(' -a');
+    final res = git(cmd.toString(), 'Get branches list');
+    return res.split('\n').map((e) => e.trim());
   }
 
   void ensure(String Function() action, bool Function(String) isFailed,
