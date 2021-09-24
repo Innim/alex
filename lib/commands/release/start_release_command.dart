@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:alex/src/changelog/changelog.dart';
 import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
 import 'package:open_url/open_url.dart';
@@ -100,37 +101,16 @@ $changeLog
   }
 
   Future<String> upgradeChangeLog(String ver) async {
-    const file = "CHANGELOG.md";
-    var contents = await fs.readString(file);
-    if (contents.startsWith("## Next release")) {
-      // up to date
-      if (contents.contains(ver)) {
-        return getCurrentChangeLog(contents);
-      }
+    final changelog = Changelog(fs);
 
-      final now = DateFormat("yyyy-MM-dd").format(DateTime.now());
-      contents = contents.replaceFirst(
-          "## Next release", "## Next release\n\n## $ver - $now");
-
-      await fs.writeString(file, contents);
-
-      return getCurrentChangeLog(contents);
-    } else {
-      return fail(
-          "Unable to upgrade CHANGELOG.md file due to unknown structure");
-    }
-  }
-
-  String getCurrentChangeLog(String contents) {
-    const marker = "## v";
-    final curIndex = contents.indexOf(marker);
-    final lastIndex = contents.indexOf(marker, curIndex + 1);
-
-    if (lastIndex != -1) {
-      return contents.substring(curIndex, lastIndex);
+    // nothin to do if up to date
+    // TODO: check that this is exactly a last version
+    if (!(await changelog.hasVersion(ver))) {
+      await changelog.releaseVersion(ver);
+      await changelog.save();
     }
 
-    return contents.substring(curIndex);
+    return changelog.getLastVersionChangelog();
   }
 
   Future<String> getReleaseNotes(Version version, String changeLog) async {
