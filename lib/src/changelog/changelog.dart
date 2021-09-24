@@ -28,6 +28,21 @@ class Changelog {
   Future<bool> hasVersion(Version version) async =>
       (await content).contains('$_versionHeaderPrefix$version');
 
+  Future<String> getNextReleaseChangelog() async {
+    var str = await content;
+
+    final endIndex = str.indexOf(_versionHeaderPrefix);
+    if (endIndex != -1) {
+      str = str.substring(0, endIndex);
+    }
+
+    str = str.replaceFirst(_nextVersionHeader, '').trim();
+    if (str.isEmpty) return '';
+
+    final res = StringBuffer()..writeln(str);
+    return res.toString();
+  }
+
   Future<String> getLastVersionChangelog() async {
     final str = await content;
 
