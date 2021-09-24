@@ -14,7 +14,7 @@
 ## 0.4.0-dev.0 - 2021-07-30
 
 * New command: `alex pubspec update` - used for update dependency. It's useful for update git dependencies.
-* [release] Prints release notes and changelog at the end of successfull release.
+* [release] Prints release notes and changelog at the end of successful release.
 * [release] Mark required for release notes langs with `*`.
 
 ## 0.3.9 - 2021-06-17
@@ -35,7 +35,7 @@
 
 * Added support for `no` locale for iOS (use `nn-NO`).
 * Fixed: exceptions in from_xml doesn't handles properly.
-* Fixed: `_requireTargetFile()` may return a not existen file.
+* Fixed: `_requireTargetFile()` may return a not existed file.
 
 ## 0.3.7-dev.2 - 2021-04-12
 
