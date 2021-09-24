@@ -4,6 +4,7 @@ import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 part 'changelog_test.contents.dart';
+part 'changelog_test.results.dart';
 
 void main() {
   group('getNextReleaseChangelog()', () {
@@ -74,6 +75,41 @@ void main() {
 
 - New bug fix.
 ''');
+    });
+  });
+
+  group('addAddedEntry()', () {
+    test('should add line in Added section', () async {
+      final changelog =
+          Changelog(_FileSystemMock(nextReleaseWithAddedAndFixed));
+
+      await changelog.addAddedEntry('New added line');
+
+      expect(await changelog.content, addAddedResultWithAddedAndFixed);
+    });
+
+    test('should add section and line if no section', () async {
+      final changelog = Changelog(_FileSystemMock(nextReleaseEmpty));
+
+      await changelog.addAddedEntry('New added line');
+
+      expect(await changelog.content, addAddedResultWithEmpty);
+    });
+
+    test('should add section and line if has only other section', () async {
+      final changelog = Changelog(_FileSystemMock(nextReleaseWithFixed));
+
+      await changelog.addAddedEntry('New added line');
+
+      expect(await changelog.content, addAddedResultWithFixed);
+    });
+
+    test('should auto add empty line after header', () async {
+      final changelog = Changelog(_FileSystemMock(nextReleaseEmptyNoLine));
+
+      await changelog.addAddedEntry('New added line');
+
+      expect(await changelog.content, addAddedResultWithEmpty);
     });
   });
 }

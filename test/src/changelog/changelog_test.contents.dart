@@ -120,6 +120,31 @@ const nextReleaseEmpty = '''
 - Old bug fix 2.
 ''';
 
+const nextReleaseEmptyNoLine = '''
+## Next release
+## v0.8.0+4064 - 2021-09-24
+
+### Added
+
+- Feature 1.
+- Feature 2.
+
+### Fixed
+
+- Bug fix.
+
+## v0.7.9+4060 - 2021-08-30
+
+### Added
+
+- Old feature.
+
+### Fixed
+
+- Old bug fix 1.
+- Old bug fix 2.
+''';
+
 const nextReleaseWithNoReleasedVersion = '''
 ## Next release
 
