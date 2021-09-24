@@ -1,5 +1,5 @@
-import 'package:alex/commands/release/fs.dart';
-import 'package:alex/commands/release/git.dart';
+import 'package:alex/src/fs/fs.dart';
+import 'package:alex/src/git/git.dart';
 import 'package:alex/internal/print.dart' as print;
 import 'package:path/path.dart' as p;
 

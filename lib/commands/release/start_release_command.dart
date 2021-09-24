@@ -11,8 +11,8 @@ import 'package:version/version.dart';
 
 import 'package:alex/commands/release/ci_config.dart';
 import 'package:alex/commands/release/demo.dart';
-import 'package:alex/commands/release/fs.dart';
-import 'package:alex/commands/release/git.dart';
+import 'package:alex/src/fs/fs.dart';
+import 'package:alex/src/git/git.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
 

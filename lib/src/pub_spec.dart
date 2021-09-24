@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:alex/commands/release/fs.dart';
+import 'package:alex/src/fs/fs.dart';
 import 'package:plain_optional/plain_optional.dart';
 import 'package:pubspec_yaml/pubspec_yaml.dart';
 import 'package:version/version.dart';
