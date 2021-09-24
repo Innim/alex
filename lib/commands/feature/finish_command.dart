@@ -47,7 +47,7 @@ class FinishCommand extends FeatureCommandBase {
         git = GitCommands(DemoGit());
       }
 
-      // Pull develop
+      printVerbose('Pull develop and check status');
       git.ensureCleanAndChekoutDevelop();
 
       final branchName = await _getBranchName(git, issueId);
@@ -59,9 +59,11 @@ class FinishCommand extends FeatureCommandBase {
 
       // TODO: Merge develop in remote feature branch?
 
-      // Merge feature branch (from remote) in develop
+      printVerbose('Merge feature branch (from remote) in develop');
       git.gitflowFeatureFinish(
-          branchName.replaceFirst(branchFeaturePrefix, ''));
+        branchName.replaceFirst(branchFeaturePrefix, ''),
+        deleteBranch: false,
+      );
 
       // TODO: Add entry in changelog (in a merge commit or in a new one after it)
       //  - Can be in section Added, Fixed or even Pre-release.
