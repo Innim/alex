@@ -1,4 +1,5 @@
 import 'package:alex/commands/code/code_command.dart';
+import 'package:alex/commands/feature/feature_command.dart';
 import 'package:alex/commands/hello_world.dart';
 import 'package:alex/commands/l10n/l10n_command.dart';
 import 'package:alex/commands/pubspec/pubspec_command.dart';
@@ -16,6 +17,7 @@ class AlexCommandRunner extends CommandRunner<int> {
       L10nCommand(),
       CodeCommand(),
       PubspecCommand(),
+      FeatureCommand(),
     ].forEach(addCommand);
   }
 }
