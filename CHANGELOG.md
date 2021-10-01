@@ -1,3 +1,8 @@
+## 0.5.0-dev.0 - 2021-10-01
+
+* New command: `alex feature finish` - used to finish feature.
+It's merge branches, update changelog and remote feature branch from remote.
+
 ## 0.4.3-dev.0 - 2021-09-23
 
 * `l10n import_xml` support for new Google Play naming: just base filename, without translation id and locale.

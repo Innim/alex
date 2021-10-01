@@ -61,6 +61,38 @@ More about specified configuration parameters - in modules descriptions in the [
 
 // TODO @chessmax: `release` command description
 
+### Feature
+
+Work with feature branches and issues.
+
+```
+alex feature <command>
+```
+
+or 
+
+```
+alex f <command>
+```
+
+#### Finish feature 
+
+Finish feature by issue id:
+- merge feature branch into `develop`;
+- update CHANGELOG;
+- delete feature branch from remote;
+- merge `develop` in `pipe/test`.
+
+```
+alex feature finish --issue={issueId}
+```
+
+or
+
+```
+alex f f -i{issueId}
+```
+
 ### l10n
 
 Work with localization files.
@@ -145,7 +177,7 @@ Work with pubspec and dependencies.
 alex pubspec <command>
 ```
 
-или 
+or 
 
 ```
 alex pub <command>
