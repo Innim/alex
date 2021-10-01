@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
-import 'package:intl/intl.dart';
+import 'package:alex/src/changelog/changelog.dart';
 import 'package:meta/meta.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
@@ -39,21 +39,10 @@ class StartReleaseCommand extends AlexCommand {
       git = GitCommands(DemoGit());
     }
 
-    git.ensureCleanStatus();
-
-    if (git.getCurrentBranch() != branchDevelop) {
-      git.checkout(branchDevelop);
-    }
-
-    git.ensureRemoteUrl();
-
-    git.pull();
-
-    git.ensureCleanStatus();
+    git.ensureCleanAndChekoutDevelop();
 
     final spec = await Spec.pub(fs);
     final version = spec.version;
-    final ver = "v$version";
     final vs = version.short;
 
     printInfo('Start new release <v$vs>');
@@ -61,7 +50,7 @@ class StartReleaseCommand extends AlexCommand {
 
     printInfo('Upgrading CHANGELOG.md...');
 
-    final changeLog = await upgradeChangeLog(ver);
+    final changeLog = await upgradeChangeLog(version);
 
     printInfo("Change log: \n$changeLog");
 
@@ -109,38 +98,17 @@ $changeLog
     return 0;
   }
 
-  Future<String> upgradeChangeLog(String ver) async {
-    const file = "CHANGELOG.md";
-    var contents = await fs.readString(file);
-    if (contents.startsWith("## Next release")) {
-      // up to date
-      if (contents.contains(ver)) {
-        return getCurrentChangeLog(contents);
-      }
+  Future<String> upgradeChangeLog(Version version) async {
+    final changelog = Changelog(fs);
 
-      final now = DateFormat("yyyy-MM-dd").format(DateTime.now());
-      contents = contents.replaceFirst(
-          "## Next release", "## Next release\n\n## $ver - $now");
-
-      await fs.writeString(file, contents);
-
-      return getCurrentChangeLog(contents);
-    } else {
-      return fail(
-          "Unable to upgrade CHANGELOG.md file due to unknown structure");
-    }
-  }
-
-  String getCurrentChangeLog(String contents) {
-    const marker = "## v";
-    final curIndex = contents.indexOf(marker);
-    final lastIndex = contents.indexOf(marker, curIndex + 1);
-
-    if (lastIndex != -1) {
-      return contents.substring(curIndex, lastIndex);
+    // nothin to do if up to date
+    // TODO: check that this is exactly a last version
+    if (!(await changelog.hasVersion(version))) {
+      await changelog.releaseVersion(version);
+      await changelog.save();
     }
 
-    return contents.substring(curIndex);
+    return changelog.getLastVersionChangelog();
   }
 
   Future<String> getReleaseNotes(Version version, String changeLog) async {

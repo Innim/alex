@@ -4,6 +4,11 @@ import 'package:alex/internal/print.dart' as print;
 
 const String branchMaster = "master";
 const String branchDevelop = "develop";
+const String branchTest = "pipe/test";
+const String branchRemotePrefix = "remotes/";
+const String branchFeaturePrefix = "feature/";
+const String defaultRemote = "origin";
+const _sep = '/';
 
 /// Interface of a git client.
 abstract class Git {
@@ -15,8 +20,13 @@ abstract class Git {
 
 /// Git implementation.
 class GitClient extends Git {
+  final bool isVerbose;
+
+  GitClient({this.isVerbose = false});
+
   @override
   String execute(List<String> args, String desc) {
+    _verbose(desc);
     final result = Process.runSync("git", args);
 
     final out = result.stdout as String;
@@ -39,6 +49,10 @@ class GitClient extends Git {
     }
 
     return fail();
+  }
+
+  void _verbose(String message) {
+    if (isVerbose) print.verbose(message);
   }
 }
 
@@ -91,20 +105,45 @@ class GitCommands {
     branchDelete(branch);
   }
 
+  void gitflowFeatureFinish(String branchName, {bool deleteBranch = true}) {
+    checkout(branchDevelop);
+    merge(branchName);
+    if (deleteBranch) branchDelete(branchName);
+  }
+
+  void mergeDevelopInTest([String remote = defaultRemote]) {
+    checkout(branchTest);
+    pull(remote);
+    merge(branchDevelop);
+    push(branchTest, remote);
+    checkout(branchDevelop);
+  }
+
   void tag(String tag) {
     git('tag -m "$tag" -a $tag', "set tag $tag");
   }
 
-  String remoteGetUrl(String desc) {
-    return git("remote get-url origin", desc);
+  String remoteGetUrl(String desc, [String remote = defaultRemote]) {
+    return git("remote get-url $remote", desc);
   }
 
-  String fetch(String branch, [String origin = "origin"]) {
-    return git("fetch $origin", "fetch $origin");
+  String fetch(String branch, [String remote = defaultRemote]) {
+    return git("fetch $remote", "fetch $remote");
   }
 
   void branchDelete(String branch) {
-    git("branch -d $branch", "delete $branch");
+    if (branch.startsWith(branchRemotePrefix)) {
+      final parts = branch.split(_sep);
+      final remote = parts[1];
+      final remoteBranchName = parts.sublist(2).join(_sep);
+      branchDeleteFromRemote(remoteBranchName, remote);
+    } else {
+      git("branch -d $branch", "delete $branch");
+    }
+  }
+
+  void branchDeleteFromRemote(String branch, [String remote = defaultRemote]) {
+    git("push $remote --delete $branch", "delete $branch from $remote");
   }
 
   void merge(String branch) {
@@ -112,13 +151,12 @@ class GitCommands {
         "merge $branch");
   }
 
-  String pull([String origin = "origin"]) {
-    // TODO: git pull origin develop?
-    return git("pull $origin", "pull $origin");
+  String pull([String remote = defaultRemote]) {
+    return git("pull $remote", "pull $remote");
   }
 
-  void push(String branch) {
-    git("push -v --tags origin $branch:$branch", "pushing $branch");
+  void push(String branch, [String remote = defaultRemote]) {
+    git("push -v --tags $remote $branch:$branch", "pushing $branch");
   }
 
   void addAll() {
@@ -142,6 +180,13 @@ class GitCommands {
     return git("branch --show-current", desc ?? "get current branch");
   }
 
+  Iterable<String> getBranches({bool all = false}) {
+    final cmd = StringBuffer('branch');
+    if (all) cmd.write(' -a');
+    final res = git(cmd.toString(), 'Get branches list');
+    return res.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty);
+  }
+
   void ensure(String Function() action, bool Function(String) isFailed,
       String message) {
     if (isFailed(action())) {
@@ -163,4 +208,20 @@ T fail<T>([String message]) {
   }
 
   exit(1);
+}
+
+extension GitCommandsExtension on GitCommands {
+  void ensureCleanAndChekoutDevelop() {
+    ensureCleanStatus();
+
+    if (getCurrentBranch() != branchDevelop) {
+      checkout(branchDevelop);
+    }
+
+    ensureRemoteUrl();
+
+    pull();
+
+    ensureCleanStatus();
+  }
 }
