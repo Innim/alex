@@ -20,6 +20,8 @@ class Changelog {
 
   Future<String> get content => _content ??= _load();
 
+  Future<bool> get exists => fs.existsFile(_filepath);
+
   Future<void> reload() async {
     _content = _load();
     await _content;
@@ -27,7 +29,7 @@ class Changelog {
 
   Future<void> save() async {
     if (_content != null) {
-      await fs.writeString(_filename, await _content);
+      await fs.writeString(_filepath, await _content);
     }
   }
 
@@ -92,6 +94,8 @@ class Changelog {
   Future<void> addPreReleaseEntry(String line) =>
       _addEntry(_preReleaseSubheader, line);
 
+  String get _filepath => _filename;
+
   Future<void> _addEntry(String subheader, String line) async {
     const sep = '\n';
     const entryStart = '- ';
@@ -148,7 +152,7 @@ class Changelog {
   }
 
   Future<String> _load() async {
-    final res = await fs.readString(_filename);
+    final res = await fs.readString(_filepath);
     if (!_validate(res)) {
       throw Exception("CHANGELOG.md has unknown structure");
     }

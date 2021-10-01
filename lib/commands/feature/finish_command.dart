@@ -125,9 +125,14 @@ class FinishCommand extends FeatureCommandBase {
   Future<bool> _updateChangelog(FileSystem fs) async {
     final changelog = Changelog(fs);
 
+    if (!(await changelog.exists)) {
+      printInfo('Changelog file is not found, skip update');
+      return false;
+    }
+
     // check if need changelog (need only after first release)
     if (!(await changelog.hasAnyVersion())) {
-      printVerbose('No need in changelog (no released versions)');
+      printInfo('No need in changelog update (no released versions)');
       return false;
     }
 

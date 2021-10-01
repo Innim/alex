@@ -38,7 +38,7 @@ class DemoFileSystem extends FileSystem {
 
   @override
   Future<bool> existsFile(String path) {
-    const result = false;
+    final result = ['CHANGELOG.md'].contains(path);
 
     print.info("existsFile $path -> $result");
     return Future.value(result);
