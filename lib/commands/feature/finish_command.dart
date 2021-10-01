@@ -180,8 +180,16 @@ class _Branch {
   bool isIssueFeature(int issueId) =>
       name.startsWith('$branchFeaturePrefix$issueId.');
 
-  _Branch merge(_Branch other) => _Branch._(name ?? other.name,
-      localName ?? other.localName, remoteName ?? other.remoteName);
+  _Branch merge(_Branch other) => _Branch._(
+        name ?? other.name,
+        localName ?? other.localName,
+        remoteName == null ||
+                (other.remoteName
+                        ?.startsWith('$branchRemotePrefix$defaultRemote/') ??
+                    false)
+            ? other.remoteName
+            : remoteName,
+      );
 
   @override
   String toString() {
