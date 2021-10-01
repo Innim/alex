@@ -17,8 +17,13 @@ abstract class Git {
 
 /// Git implementation.
 class GitClient extends Git {
+  final bool isVerbose;
+
+  GitClient({this.isVerbose = false});
+
   @override
   String execute(List<String> args, String desc) {
+    _verbose(desc);
     final result = Process.runSync("git", args);
 
     final out = result.stdout as String;
@@ -41,6 +46,10 @@ class GitClient extends Git {
     }
 
     return fail();
+  }
+
+  void _verbose(String message) {
+    if (isVerbose) print.verbose(message);
   }
 }
 
