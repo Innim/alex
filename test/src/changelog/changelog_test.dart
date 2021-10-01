@@ -28,7 +28,7 @@ void main() {
       expect(res, '''
 ### Fixed
 
-- New bug fix.
+- Some bug fix.
 ''');
     });
 
@@ -46,7 +46,7 @@ void main() {
 
 ### Fixed
 
-- New bug fix.
+- Some bug fix.
 ''');
     });
 
@@ -97,11 +97,37 @@ void main() {
     });
 
     test('should add section and line if has only other section', () async {
+      final changelog = Changelog(_FileSystemMock(nextReleaseWithAdded));
+
+      await changelog.addFixedEntry('New bug fix.');
+
+      expect(await changelog.content, addFixedResultWithAdded);
+    });
+
+    test('should add section and line in valid order', () async {
       final changelog = Changelog(_FileSystemMock(nextReleaseWithFixed));
 
       await changelog.addAddedEntry('New added line');
 
       expect(await changelog.content, addAddedResultWithFixed);
+    });
+
+    test('should add third section and line in valid order', () async {
+      final changelog =
+          Changelog(_FileSystemMock(nextReleaseWithAddedAndFixed));
+
+      await changelog.addPreReleaseEntry('New added line');
+
+      expect(await changelog.content, addPreReleaseResultWithAddedAndFixed);
+    });
+
+    test('should add middle section and line in valid order', () async {
+      final changelog =
+          Changelog(_FileSystemMock(nextReleaseWithAddedAndPreRelease));
+
+      await changelog.addFixedEntry('New bug fix.');
+
+      expect(await changelog.content, addFixedResultWithAddedAndPreRelease);
     });
 
     test('should auto add empty line after header', () async {

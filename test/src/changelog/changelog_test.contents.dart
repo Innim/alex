@@ -39,7 +39,41 @@ const nextReleaseWithAddedAndFixed = '''
 
 ### Fixed
 
-- New bug fix.
+- Some bug fix.
+
+## v0.8.0+4064 - 2021-09-24
+
+### Added
+
+- Feature 1.
+- Feature 2.
+
+### Fixed
+
+- Bug fix.
+
+## v0.7.9+4060 - 2021-08-30
+
+### Added
+
+- Old feature.
+
+### Fixed
+
+- Old bug fix 1.
+- Old bug fix 2.
+''';
+
+const nextReleaseWithAddedAndPreRelease = '''
+## Next release
+
+### Added 
+
+- Some new feature.
+
+### Pre-release
+
+- Some feature preview.
 
 ## v0.8.0+4064 - 2021-09-24
 
@@ -69,7 +103,7 @@ const nextReleaseWithFixed = '''
 
 ### Fixed
 
-- New bug fix.
+- Some bug fix.
 
 ## v0.8.0+4064 - 2021-09-24
 

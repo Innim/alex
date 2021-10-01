@@ -13,6 +13,12 @@ class Changelog {
   static const _fixedSubheader = '${_subheaderPrefix}Fixed';
   static const _preReleaseSubheader = '${_subheaderPrefix}Pre-release';
 
+  static const _subheadersOrder = [
+    _addedSubheader,
+    _fixedSubheader,
+    _preReleaseSubheader
+  ];
+
   final FileSystem fs;
   Future<String> _content;
 
@@ -110,12 +116,31 @@ class Changelog {
 
     if (startIndex == 0) {
       // No header, need to add it
-      // TODO: order of subheaders
-      if (lines.last.trim().isNotEmpty) lines.add('');
-      lines.add(subheader);
-      lines.add('');
-      targetIndex = lines.length;
-      lines.add('');
+
+      // consider order of subheaders
+      final orderIndex = _subheadersOrder.indexOf(subheader);
+      var startNextHeaderIndex = -1;
+      for (var nextHeaderOrderIndex = orderIndex + 1;
+          nextHeaderOrderIndex < _subheadersOrder.length;
+          nextHeaderOrderIndex++) {
+        startNextHeaderIndex = lines.indexWhere(
+            (e) => e.trim() == _subheadersOrder[nextHeaderOrderIndex]);
+
+        if (startNextHeaderIndex != -1) break;
+      }
+
+      final insertPosition =
+          startNextHeaderIndex == -1 ? lines.length : startNextHeaderIndex;
+
+      final insert = [
+        if (lines[insertPosition - 1].trim().isNotEmpty) '',
+        subheader,
+        '',
+        '',
+      ];
+
+      lines.insertAll(insertPosition, insert);
+      targetIndex = insertPosition + insert.length - 1;
     } else {
       var sectionLen = lines.length == startIndex
           ? 0
