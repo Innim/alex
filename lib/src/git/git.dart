@@ -6,6 +6,7 @@ const String branchMaster = "master";
 const String branchDevelop = "develop";
 const String branchRemotePrefix = "remotes/";
 const String branchFeaturePrefix = "feature/";
+const String defaultRemote = "origin";
 
 /// Interface of a git client.
 abstract class Git {
@@ -112,12 +113,12 @@ class GitCommands {
     git('tag -m "$tag" -a $tag', "set tag $tag");
   }
 
-  String remoteGetUrl(String desc) {
-    return git("remote get-url origin", desc);
+  String remoteGetUrl(String desc, [String remote = defaultRemote]) {
+    return git("remote get-url $remote", desc);
   }
 
-  String fetch(String branch, [String origin = "origin"]) {
-    return git("fetch $origin", "fetch $origin");
+  String fetch(String branch, [String remote = defaultRemote]) {
+    return git("fetch $remote", "fetch $remote");
   }
 
   void branchDelete(String branch) {
@@ -129,13 +130,13 @@ class GitCommands {
         "merge $branch");
   }
 
-  String pull([String origin = "origin"]) {
+  String pull([String remote = defaultRemote]) {
     // TODO: git pull origin develop?
-    return git("pull $origin", "pull $origin");
+    return git("pull $remote", "pull $remote");
   }
 
-  void push(String branch) {
-    git("push -v --tags origin $branch:$branch", "pushing $branch");
+  void push(String branch, [String remote = defaultRemote]) {
+    git("push -v --tags $remote $branch:$branch", "pushing $branch");
   }
 
   void addAll() {
