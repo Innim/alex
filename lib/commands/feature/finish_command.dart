@@ -76,7 +76,9 @@ class FinishCommand extends FeatureCommandBase {
       final changed = await _updateChangelog(fs);
 
       if (changed) {
-        // TODO: printVerbose('Commit changelog');
+        printVerbose('Commit changelog');
+        git.addAll();
+        git.commit("Changelog: issue #$issueId.");
       }
 
       // TODO: printVerbose('Push develop');
