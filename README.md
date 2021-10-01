@@ -2,6 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/alex)](https://pub.dev/packages/alex)
 ![Analyze & Test](https://github.com/Innim/alex/actions/workflows/dart.yml/badge.svg?branch=master)
+[![innim lint](https://img.shields.io/badge/style-innim_lint-40c4ff.svg)](https://pub.dev/packages/innim_lint)
 
 **alex** - command line tool for working with Flutter projects.
 
