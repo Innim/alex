@@ -57,18 +57,18 @@ class FinishCommand extends FeatureCommandBase {
       printVerbose('Pull develop and check status');
       git.ensureCleanAndChekoutDevelop();
 
-      final branchName = await _getBranchName(git, issueId);
-      if (branchName == null) {
+      final branch = await _getBranch(git, issueId);
+      if (branch == null) {
         return error(1, message: "Can't find branch for issue #$issueId");
       }
 
-      printVerbose('Finish feature $branchName');
+      printVerbose('Finish feature $branch');
 
       // TODO: Merge develop in remote feature branch?
 
       printVerbose('Merge feature branch (from remote) in develop');
       git.gitflowFeatureFinish(
-        branchName.replaceFirst(branchFeaturePrefix, ''),
+        branch.remoteName ?? branch.localName,
         deleteBranch: false,
       );
 
@@ -92,26 +92,26 @@ class FinishCommand extends FeatureCommandBase {
     }
   }
 
-  Future<String> _getBranchName(GitCommands git, int issueId) async {
-    final branches = git.getBranches(all: true);
+  Future<_Branch> _getBranch(GitCommands git, int issueId) async {
+    final branchesNames = git.getBranches(all: true);
+    final branches = branchesNames
+        .map((n) => _Branch(n))
+        .where((b) => b.isIssueFeature(issueId));
+    if (branches.isEmpty) return null;
 
-    final res = branches
-        .map(_trimRemote)
-        .where((b) => b.startsWith(branchFeaturePrefix))
-        .toSet();
-    if (res.isEmpty) return null;
+    final map = <String, _Branch>{};
+
+    for (final branch in branches) {
+      final existen = map[branch.name];
+      if (existen != null) {
+        map[branch.name] = existen.merge(branch);
+      } else {
+        map[branch.name] = branch;
+      }
+    }
 
     // TODO: if more than one - give a choise
-    return res.first;
-  }
-
-  String _trimRemote(String branchName) {
-    if (branchName.startsWith(branchRemotePrefix)) {
-      const sep = '/';
-      return branchName.split(sep).sublist(2).join(sep);
-    } else {
-      return branchName;
-    }
+    return map.values.first;
   }
 
   Future<bool> _updateChangelog(FileSystem fs) async {
@@ -139,5 +139,48 @@ class FinishCommand extends FeatureCommandBase {
     await changelog.save();
 
     return true;
+  }
+}
+
+class _Branch {
+  final String name;
+  // TODO: multiple remotes
+  final String remoteName;
+  final String localName;
+
+  factory _Branch(String name) {
+    String baseName;
+    String localName;
+    String remoteName;
+
+    if (name.startsWith(branchRemotePrefix)) {
+      const sep = '/';
+      remoteName = name;
+      baseName = name.split(sep).sublist(2).join(sep);
+    } else {
+      baseName = name;
+      localName = name;
+    }
+
+    return _Branch._(baseName, localName, remoteName);
+  }
+
+  _Branch._(this.name, this.localName, this.remoteName);
+
+  bool get isFeature => name.startsWith(branchFeaturePrefix);
+
+  bool isIssueFeature(int issueId) =>
+      name.startsWith('$branchFeaturePrefix$issueId.');
+
+  _Branch merge(_Branch other) => _Branch._(name ?? other.name,
+      localName ?? other.localName, remoteName ?? other.remoteName);
+
+  @override
+  String toString() {
+    final sb = StringBuffer(name);
+    if (remoteName != null) {
+      sb..write(' [')..write(remoteName)..write(']');
+    }
+    return sb.toString();
   }
 }

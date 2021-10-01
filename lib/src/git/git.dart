@@ -93,12 +93,10 @@ class GitCommands {
     branchDelete(branch);
   }
 
-  void gitflowFeatureFinish(String name, {bool deleteBranch = true}) {
-    // merge from remote
-    final branch = "$branchRemotePrefix$branchFeaturePrefix$name";
+  void gitflowFeatureFinish(String branchName, {bool deleteBranch = true}) {
     checkout(branchDevelop);
-    merge(branch);
-    if (deleteBranch) branchDelete(branch);
+    merge(branchName);
+    if (deleteBranch) branchDelete(branchName);
   }
 
   void tag(String tag) {
