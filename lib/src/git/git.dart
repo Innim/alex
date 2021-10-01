@@ -4,6 +4,7 @@ import 'package:alex/internal/print.dart' as print;
 
 const String branchMaster = "master";
 const String branchDevelop = "develop";
+const String branchTest = "pipe/test";
 const String branchRemotePrefix = "remotes/";
 const String branchFeaturePrefix = "feature/";
 const String defaultRemote = "origin";
@@ -107,6 +108,14 @@ class GitCommands {
     checkout(branchDevelop);
     merge(branchName);
     if (deleteBranch) branchDelete(branchName);
+  }
+
+  void mergeDevelopInTest([String remote = defaultRemote]) {
+    checkout(branchTest);
+    pull(remote);
+    merge(branchDevelop);
+    push(branchTest, remote);
+    checkout(branchDevelop);
   }
 
   void tag(String tag) {

@@ -87,7 +87,9 @@ class FinishCommand extends FeatureCommandBase {
       printVerbose('Remove feature branch');
       git.branchDelete(branchName);
 
-      // TODO: printVerbose('Merge develop in pipe/test');
+      printVerbose('Merge develop in branchTest');
+      git.mergeDevelopInTest();
+
       // TODO: handle merge conflicts
 
       return success(message: 'Finished 🏁');
