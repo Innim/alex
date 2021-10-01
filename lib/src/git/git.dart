@@ -156,7 +156,7 @@ class GitCommands {
     final cmd = StringBuffer('branch');
     if (all) cmd.write(' -a');
     final res = git(cmd.toString(), 'Get branches list');
-    return res.split('\n').map((e) => e.trim());
+    return res.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty);
   }
 
   void ensure(String Function() action, bool Function(String) isFailed,
