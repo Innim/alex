@@ -8,6 +8,7 @@ const String branchTest = "pipe/test";
 const String branchRemotePrefix = "remotes/";
 const String branchFeaturePrefix = "feature/";
 const String defaultRemote = "origin";
+const _sep = '/';
 
 /// Interface of a git client.
 abstract class Git {
@@ -131,7 +132,18 @@ class GitCommands {
   }
 
   void branchDelete(String branch) {
-    git("branch -d $branch", "delete $branch");
+    if (branch.startsWith(branchRemotePrefix)) {
+      final parts = branch.split(_sep);
+      final remote = parts[1];
+      final remoteBranchName = parts.sublist(2).join(_sep);
+      branchDeleteFromRemote(remoteBranchName, remote);
+    } else {
+      git("branch -d $branch", "delete $branch");
+    }
+  }
+
+  void branchDeleteFromRemote(String branch, [String remote = defaultRemote]) {
+    git("push $remote --delete $branch", "delete $branch from $remote");
   }
 
   void merge(String branch) {
