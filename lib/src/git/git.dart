@@ -152,7 +152,6 @@ class GitCommands {
   }
 
   String pull([String remote = defaultRemote]) {
-    // TODO: git pull origin develop?
     return git("pull $remote", "pull $remote");
   }
 
