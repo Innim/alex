@@ -64,13 +64,13 @@ class FinishCommand extends FeatureCommandBase {
 
       printVerbose('Finish feature $branch');
 
+      // priotiry - remote if exist
+      final branchName = branch.remoteName ?? branch.localName;
+
       // TODO: Merge develop in remote feature branch?
 
-      printVerbose('Merge feature branch (from remote) in develop');
-      git.gitflowFeatureFinish(
-        branch.remoteName ?? branch.localName,
-        deleteBranch: false,
-      );
+      printVerbose('Merge feature branch in develop');
+      git.gitflowFeatureFinish(branchName, deleteBranch: false);
 
       printVerbose('Add entry in changelog');
       final changed = await _updateChangelog(fs);
@@ -81,8 +81,12 @@ class FinishCommand extends FeatureCommandBase {
         git.commit("Changelog: issue #$issueId.");
       }
 
-      // TODO: printVerbose('Push develop');
-      // TODO: printVerbose('Remove branch from remote');
+      printVerbose('Push develop');
+      git.push(branchDevelop);
+
+      printVerbose('Remove feature branch');
+      git.branchDelete(branchName);
+
       // TODO: printVerbose('Merge develop in pipe/test');
       // TODO: handle merge conflicts
 
