@@ -145,10 +145,42 @@ class FinishCommand extends FeatureCommandBase {
       return false;
     }
 
-    // TODO: Can be in section Added, Fixed or even Pre-release.
+    // Can be in section Added, Fixed or even Pre-release.
+    int section;
+    do {
+      printInfo('''
+Which section to add:
+[1]: Added (Default)
+[2]: Fixed
+[3]: Pre-release
+?''');
+
+      final sectionInput = stdin.readLineSync();
+      if (sectionInput?.trim()?.isEmpty ?? true) {
+        printInfo('Use default Added');
+        section = 1;
+      } else {
+        final intValue = int.tryParse(sectionInput);
+        if (![1, 2, 3].contains(intValue)) {
+          printVerbose('Invalid value <$sectionInput>');
+        } else {
+          section = intValue;
+        }
+      }
+    } while (section == null);
 
     printVerbose('Write to changelog: $line');
-    await changelog.addAddedEntry(line);
+    switch (section) {
+      case 1:
+        await changelog.addAddedEntry(line);
+        break;
+      case 2:
+        await changelog.addFixedEntry(line);
+        break;
+      case 3:
+        await changelog.addPreReleaseEntry(line);
+        break;
+    }
     await changelog.save();
 
     return true;
