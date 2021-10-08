@@ -17,7 +17,9 @@ abstract class FileSystem {
 }
 
 /// File system implementation.
-class IOFileSystem extends FileSystem {
+class IOFileSystem implements FileSystem {
+  const IOFileSystem();
+
   @override
   Future<String> readString(String path) => File(path).readAsString();
 

@@ -1,4 +1,8 @@
-## 0.5.0-dev.0 - 2021-10-01
+## 0.5.1 - 2021-10-01
+
+* L10n: Support for [intl_generator](https://pub.dev/packages/intl_generator).
+
+## 0.5.0 - 2021-10-01
 
 * New command: `alex feature finish` - used to finish feature.
 It's merge branches, update changelog and remote feature branch from remote.

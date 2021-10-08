@@ -2,12 +2,18 @@ import 'dart:io';
 
 import 'package:alex/alex.dart';
 import 'package:alex/runner/alex_command.dart';
+import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/fs/fs.dart';
+import 'package:alex/src/pub_spec.dart';
 import 'package:meta/meta.dart';
+import 'package:list_ext/list_ext.dart';
 import 'package:path/path.dart' as path;
 
 /// Base command for localization feature.
 abstract class L10nCommandBase extends AlexCommand {
   static final _localeRegionRegEx = RegExp('[a-z]{2}_[A-Z]{2}');
+
+  String _intlGeneratorPackage;
 
   L10nCommandBase(String name, String description) : super(name, description);
 
@@ -16,7 +22,8 @@ abstract class L10nCommandBase extends AlexCommand {
   @protected
   Future<ProcessResult> runIntl(String cmd, List<String> arguments,
       {String workingDir, bool prependWithPubGet = false}) async {
-    return runPub('intl_translation:$cmd', arguments,
+    final packageName = await _getIntlGeneratorPackageName();
+    return runPub('$packageName:$cmd', arguments,
         workingDir: workingDir, prependWithPubGet: prependWithPubGet);
   }
 
@@ -59,5 +66,24 @@ abstract class L10nCommandBase extends AlexCommand {
     }
 
     return false;
+  }
+
+  Future<String> _getIntlGeneratorPackageName() async {
+    if (_intlGeneratorPackage != null) return _intlGeneratorPackage;
+
+    final needle = ['intl_translation', 'intl_generator'];
+
+    // TODO: may be better to check pubspec.lock?
+    final spec = await Spec.pub(const IOFileSystem());
+
+    final res = needle.firstWhereOrNull(spec.hasDevDependency);
+    if (res == null) {
+      throw RunException(
+          2,
+          "Can't found any of generation packages: ${needle.join(', ')}. "
+          "Did you forget to add a dependency?");
+    }
+
+    return res;
   }
 }
