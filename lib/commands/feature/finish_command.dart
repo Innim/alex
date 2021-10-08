@@ -62,7 +62,7 @@ class FinishCommand extends FeatureCommandBase {
         return error(1, message: "Can't find branch for issue #$issueId");
       }
 
-      printVerbose('Finish feature $branch');
+      printInfo('Finish feature $branch');
 
       // priotiry - remote if exist
       final branchName = branch.remoteName ?? branch.localName;
