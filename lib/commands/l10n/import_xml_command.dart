@@ -209,7 +209,7 @@ class ImportXmlCommand extends L10nCommandBase {
     }
 
     if (imported.contains(locale)) {
-      throw RunException(1,
+      throw RunException.warn(
           'Duplicate import for locale $locale (original: $googlePlayLocale)');
     }
 
@@ -234,7 +234,7 @@ class ImportXmlCommand extends L10nCommandBase {
       if (createIfNotExist) {
         dir = await dir.create(recursive: true);
       } else {
-        throw RunException(1, 'Directory $path is not exist');
+        throw RunException.warn('Directory $path is not exist');
       }
     }
     return dir;
@@ -244,7 +244,7 @@ class ImportXmlCommand extends L10nCommandBase {
   Future<File> _requireFile(String path) async {
     final file = File(path);
     final exist = await file.exists();
-    if (!exist) throw RunException(1, 'File $path is not exist');
+    if (!exist) throw RunException.warn('File $path is not exist');
     return file;
   }
 

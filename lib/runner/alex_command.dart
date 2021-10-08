@@ -226,7 +226,7 @@ abstract class AlexCommand extends Command<int> {
     }
 
     if (res.exitCode != 0) {
-      throw RunException(res.exitCode, res.stderr.toString());
+      throw RunException.withCode(res.exitCode, res.stderr.toString());
     }
 
     return res;

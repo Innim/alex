@@ -78,8 +78,7 @@ abstract class L10nCommandBase extends AlexCommand {
 
     final res = needle.firstWhereOrNull(spec.hasDevDependency);
     if (res == null) {
-      throw RunException(
-          2,
+      throw RunException.err(
           "Can't found any of generation packages: ${needle.join(', ')}. "
           "Did you forget to add a dependency?");
     }
