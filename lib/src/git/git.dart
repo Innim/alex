@@ -99,28 +99,31 @@ class GitCommands {
     git("checkout -b $branch $branchDevelop", desc ?? "git flow release $name");
   }
 
-  void gitflowReleaseFinish(String name, [String desc]) {
+  void gitflowReleaseFinish(String name,
+      {String desc, bool failOnMergeConflict = false}) {
     // TODO: unused desc
     // gitflowRelease("finish -m \"merge\" '$name'", desc ?? "git flow finish $name");
     final branch = "release/$name";
     checkout(branchMaster);
-    merge(branch);
+    merge(branch, failOnMergeConflict: failOnMergeConflict);
     tag(name);
     checkout(branchDevelop);
-    merge(branch);
+    merge(branch, failOnMergeConflict: failOnMergeConflict);
     branchDelete(branch);
   }
 
-  void gitflowFeatureFinish(String branchName, {bool deleteBranch = true}) {
+  void gitflowFeatureFinish(String branchName,
+      {bool deleteBranch = true, bool failOnMergeConflict = false}) {
     checkout(branchDevelop);
-    merge(branchName);
+    merge(branchName, failOnMergeConflict: failOnMergeConflict);
     if (deleteBranch) branchDelete(branchName);
   }
 
-  void mergeDevelopInTest([String remote = defaultRemote]) {
+  void mergeDevelopInTest(
+      {String remote = defaultRemote, bool failOnMergeConflict = false}) {
     checkout(branchTest);
     pull(remote);
-    merge(branchDevelop);
+    merge(branchDevelop, failOnMergeConflict: failOnMergeConflict);
     push(branchTest, remote);
     checkout(branchDevelop);
   }
@@ -152,9 +155,45 @@ class GitCommands {
     git("push $remote --delete $branch", "delete $branch from $remote");
   }
 
-  void merge(String branch) {
-    _git(["merge", "-m", "Merge branch '$branch'", "--no-edit", branch],
-        "merge $branch");
+  void merge(String branch, {bool failOnMergeConflict = false}) {
+    try {
+      _git(["merge", "-m", "Merge branch '$branch'", "--no-edit", branch],
+          "merge $branch");
+    } on RunException catch (e) {
+      if (!failOnMergeConflict &&
+          e.exitCode == 1 &&
+          e.message.contains(
+              'Automatic merge failed; fix conflicts and then commit the result.')) {
+        print.info('alex will continue after merge would be resolved');
+        do {
+          sleep(const Duration(seconds: 1));
+        } while (isInMerge());
+
+        // check if merged (it can be aborted)
+        // get all merged branches
+        final merged = getBranches(all: true, merged: true);
+        if (!merged.contains(branch)) {
+          fail("Branch $branch wasn't merged");
+        }
+
+        return;
+      }
+
+      rethrow;
+    }
+  }
+
+  bool isInMerge() {
+    try {
+      _git(['merge', 'HEAD'], 'Check if in merge', printIfError: false);
+      return false;
+    } on RunException catch (e) {
+      if (e.exitCode == 128) {
+        return true;
+      } else {
+        rethrow;
+      }
+    }
   }
 
   String pull([String remote = defaultRemote]) {
@@ -186,9 +225,10 @@ class GitCommands {
     return git("branch --show-current", desc ?? "get current branch");
   }
 
-  Iterable<String> getBranches({bool all = false}) {
+  Iterable<String> getBranches({bool all = false, bool merged = false}) {
     final cmd = StringBuffer('branch');
     if (all) cmd.write(' -a');
+    if (merged) cmd.write(' --merged');
     final res = git(cmd.toString(), 'Get branches list');
     return res.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty);
   }

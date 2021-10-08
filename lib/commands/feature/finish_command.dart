@@ -102,6 +102,8 @@ class FinishCommand extends FeatureCommandBase {
 
   Future<_Branch> _getBranch(GitCommands git, int issueId) async {
     final branchesNames = git.getBranches(all: true);
+    printVerbose('Branches: $branchesNames');
+
     final branches = branchesNames
         .map((n) => _Branch(n))
         .where((b) => b.isIssueFeature(issueId));

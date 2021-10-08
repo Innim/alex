@@ -1,6 +1,7 @@
 ## 0.5.1 - 2021-10-01
 
 * L10n: Support for [intl_generator](https://pub.dev/packages/intl_generator).
+* Handle Git merge conflicts.
 
 ## 0.5.0 - 2021-10-01
 
