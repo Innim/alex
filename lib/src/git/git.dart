@@ -16,7 +16,7 @@ abstract class Git {
   /// Runs git process and returns result.
   ///
   /// If run fails, it will print an error and exit the process.
-  String execute(List<String> args, String desc);
+  String execute(List<String> args, String desc, {bool printIfError = true});
 }
 
 /// Git implementation.
@@ -26,7 +26,7 @@ class GitClient extends Git {
   GitClient({this.isVerbose = false});
 
   @override
-  String execute(List<String> args, String desc) {
+  String execute(List<String> args, String desc, {bool printIfError = true}) {
     _verbose(desc);
     final result = Process.runSync("git", args);
 
@@ -38,18 +38,24 @@ class GitClient extends Git {
       return out.trim();
     }
 
-    print.info("git ${args.join(" ")}");
-    print.info('"$desc" failed. Git exit code: $code. Error: $error');
-
-    if (out.isNotEmpty) {
-      print.info("git stdout:\n$out\n");
+    if (printIfError) {
+      print.info("git ${args.join(" ")}");
+      print.info('"$desc" failed. Git exit code: $code.');
     }
+
+    String message;
 
     if (error.isNotEmpty) {
-      print.error("git stderr:\n$error\n");
+      if (printIfError) print.error("git stderr:\n$error\n");
+      message = error;
     }
 
-    return fail();
+    if (out.isNotEmpty) {
+      if (printIfError) print.info("git stdout:\n$out\n");
+      message ??= out;
+    }
+
+    throw RunException.withCode(code, message);
   }
 
   void _verbose(String message) {
@@ -59,7 +65,7 @@ class GitClient extends Git {
 
 class ConsoleGit extends Git {
   @override
-  String execute(List<String> args, String desc) {
+  String execute(List<String> args, String desc, {bool printIfError = true}) {
     print.info("git ${args.join(" ")}");
     return "";
   }
@@ -73,7 +79,6 @@ class GitCommands {
   void ensureCleanStatus() {
     ensure(() => status("check status of current branch", porcelain: true),
         (r) {
-      // print("r: " + r);
       return r != "";
     }, "There are unstaged changes. Commit or reset them to proceed.");
   }
@@ -195,12 +200,13 @@ class GitCommands {
     }
   }
 
-  String git(String args, String desc) {
+  String git(String args, String desc, {bool printIfError = true}) {
     final arguments = args.split(' ');
-    return _git(arguments, desc);
+    return _git(arguments, desc, printIfError: printIfError);
   }
 
-  String _git(List<String> args, String desc) => _client.execute(args, desc);
+  String _git(List<String> args, String desc, {bool printIfError = true}) =>
+      _client.execute(args, desc, printIfError: printIfError);
 }
 
 T fail<T>([String message]) {

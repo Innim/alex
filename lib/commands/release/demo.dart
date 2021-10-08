@@ -6,7 +6,7 @@ import 'package:path/path.dart' as p;
 /// Demo git implementation.
 class DemoGit extends Git {
   @override
-  String execute(List<String> args, String desc) {
+  String execute(List<String> args, String desc, {bool printIfError = true}) {
     switch (args[0]) {
       case "remote":
         return "https://github.com/demo/demo.git";

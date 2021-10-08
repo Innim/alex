@@ -5,7 +5,7 @@ import 'package:alex/internal/print.dart' as print;
 /// Demo git implementation.
 class DemoGit extends Git {
   @override
-  String execute(List<String> args, String desc) {
+  String execute(List<String> args, String desc, {bool printIfError = true}) {
     print.info("[demo] git ${args.join(" ")}");
 
     switch (args[0]) {
