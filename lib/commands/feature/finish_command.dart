@@ -46,7 +46,7 @@ class FinishCommand extends FeatureCommandBase {
       FileSystem fs;
       GitCommands git;
       if (!isDemo) {
-        fs = IOFileSystem();
+        fs = const IOFileSystem();
         git = GitCommands(GitClient(isVerbose: isVerbose));
       } else {
         printInfo("Demonstration mode");

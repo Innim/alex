@@ -18,7 +18,7 @@ class DemoGit extends Git {
 
 /// Demo file system implementation.
 class DemoFileSystem extends FileSystem {
-  final _native = IOFileSystem();
+  final _native = const IOFileSystem();
 
   @override
   Future<void> createFile(String path, {bool recursive = false}) async {

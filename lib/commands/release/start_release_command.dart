@@ -31,7 +31,7 @@ class StartReleaseCommand extends AlexCommand {
   Future<int> run() async {
     final isDemo = argResults[flagDemo] as bool;
     if (!isDemo) {
-      fs = IOFileSystem();
+      fs = const IOFileSystem();
       git = GitCommands(GitClient());
     } else {
       printInfo("Demonstration mode");
