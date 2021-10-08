@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'dart:io';
 import 'package:alex/internal/print.dart' as print;
+import 'package:alex/src/exception/run_exception.dart';
 
 const String branchMaster = "master";
 const String branchDevelop = "develop";
@@ -203,11 +204,7 @@ class GitCommands {
 }
 
 T fail<T>([String message]) {
-  if (message != null) {
-    print.error(message);
-  }
-
-  exit(1);
+  throw RunException.err(message);
 }
 
 extension GitCommandsExtension on GitCommands {
