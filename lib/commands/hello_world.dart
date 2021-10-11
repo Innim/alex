@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:alex/runner/alex_command.dart';
 
 class HelloWorldCommand extends AlexCommand {
@@ -19,7 +16,7 @@ class HelloWorldCommand extends AlexCommand {
   }
 
   String readLine() {
-    final line = stdin.readLineSync(encoding: Encoding.getByName('utf-8'));
+    final line = console.readLineSync();
     return line.trim();
   }
 }

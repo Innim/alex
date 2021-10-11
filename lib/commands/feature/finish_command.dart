@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/changelog/changelog.dart';
+import 'package:alex/src/console/console.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/git/git.dart';
 import 'package:alex/src/exception/run_exception.dart';
@@ -43,6 +42,8 @@ class FinishCommand extends FeatureCommandBase {
     }
 
     try {
+      final console = this.console;
+
       FileSystem fs;
       GitCommands git;
       if (!isDemo) {
@@ -73,7 +74,7 @@ class FinishCommand extends FeatureCommandBase {
       git.gitflowFeatureFinish(branchName, deleteBranch: false);
 
       printVerbose('Add entry in changelog');
-      final changed = await _updateChangelog(fs);
+      final changed = await _updateChangelog(console, fs);
 
       if (changed) {
         printVerbose('Commit changelog');
@@ -124,7 +125,7 @@ class FinishCommand extends FeatureCommandBase {
     return map.values.first;
   }
 
-  Future<bool> _updateChangelog(FileSystem fs) async {
+  Future<bool> _updateChangelog(Console console, FileSystem fs) async {
     final changelog = Changelog(fs);
 
     if (!(await changelog.exists)) {
@@ -140,7 +141,7 @@ class FinishCommand extends FeatureCommandBase {
 
     // TODO: get changelog entry candidate from task
     printInfo('Enter changelog line:');
-    final line = stdin.readLineSync();
+    final line = console.readLineSync();
 
     if (line.isEmpty) {
       printVerbose('No changelog info');
@@ -157,7 +158,7 @@ Which section to add:
 [3]: Pre-release
 ?''');
 
-      final sectionInput = stdin.readLineSync();
+      final sectionInput = console.readLineSync();
       if (sectionInput?.trim()?.isEmpty ?? true) {
         printInfo('Use default Added');
         section = 1;

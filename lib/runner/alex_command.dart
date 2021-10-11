@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:alex/src/console/console.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/internal/print.dart' as print;
 import 'package:args/args.dart';
@@ -11,6 +12,8 @@ abstract class AlexCommand extends Command<int> {
   final String _name;
   final String _description;
   final List<String> _aliases;
+
+  Console _console;
 
   final ArgParser _argParser = ArgParser(
     allowTrailingOptions: false,
@@ -29,6 +32,12 @@ abstract class AlexCommand extends Command<int> {
 
   @override
   List<String> get aliases => _aliases;
+
+  @protected
+  Console get console => _console ??= const StdConsole();
+
+  @protected
+  set console(Console value) => _console = value;
 
   bool get isVerbose => argResults['verbose'] as bool;
 

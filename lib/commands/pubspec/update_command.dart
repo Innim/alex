@@ -31,7 +31,7 @@ class UpdateCommand extends PubspecCommandBase {
     var dependency = argResults[_argDependency] as String;
     if (dependency?.isEmpty ?? true) {
       printInfo('Enter package name to update:');
-      dependency = stdin.readLineSync();
+      dependency = console.readLineSync();
 
       if (dependency?.isEmpty ?? true) {
         return error(1,
