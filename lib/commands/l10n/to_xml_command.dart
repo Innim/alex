@@ -291,7 +291,8 @@ class _StrData {
       plural.codeAttributeNames.forEach((quantity) {
         final val = plural[quantity];
         if (val != null) {
-          final str = val.expanded((msg, chunk) {
+          // ignore: avoid_types_on_closure_parameters
+          final str = val.expanded((Message msg, Object chunk) {
             if (chunk is LiteralString) return chunk.string;
 
             if (chunk is VariableSubstitution) {

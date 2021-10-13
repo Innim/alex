@@ -26,7 +26,7 @@ class L10nIosPathProvider {
         final tmpDir = getLocalizationDir(tmpName, iosLocale);
         if (await tmpDir.exists()) {
           await for (final file in tmpDir.list()) {
-            if (file.path.endsWith(_stringsExt)) {
+            if (file is File && file.path.endsWith(_stringsExt)) {
               final res = f(tmpName, file);
               if (res is Future<void>) {
                 await res;

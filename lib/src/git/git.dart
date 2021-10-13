@@ -236,7 +236,7 @@ class GitCommands {
   void ensure(String Function() action, bool Function(String) isFailed,
       String message) {
     if (isFailed(action())) {
-      fail<void>(message);
+      fail(message);
     }
   }
 
@@ -249,7 +249,7 @@ class GitCommands {
       _client.execute(args, desc, printIfError: printIfError);
 }
 
-T fail<T>([String message]) {
+void fail([String message]) {
   throw RunException.err(message);
 }
 
