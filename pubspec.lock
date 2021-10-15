@@ -113,6 +113,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.1"
+  dart_console:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "9d88ca3d74d31d12e900bb794837245fde44bd6a"
+      url: "https://github.com/greymag/dart_console"
+    source: git
+    version: "1.1.0-pre.0"
   dart_style:
     dependency: transitive
     description:

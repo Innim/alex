@@ -34,7 +34,7 @@ abstract class AlexCommand extends Command<int> {
   List<String> get aliases => _aliases;
 
   @protected
-  Console get console => _console ??= const StdConsole();
+  Console get console => _console ??= DartConsole();
 
   @protected
   set console(Console value) => _console = value;

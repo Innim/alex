@@ -11,6 +11,8 @@ environment:
 
 dependencies:
   args: ^2.1.0
+  dart_console: 
+    git: https://github.com/greymag/dart_console
   glob: ^2.0.0
   ini: ^2.0.1
   intl: ^0.17.0
