@@ -8,9 +8,9 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 // ignore: implementation_imports
-import 'package:intl_translation/src/icu_parser.dart';
+import 'package:intl_generator/src/icu_parser.dart';
 // ignore: implementation_imports
-import 'package:intl_translation/src/intl_message.dart';
+import 'package:intl_generator/src/intl_message.dart';
 
 import 'src/l10n_command_base.dart';
 
