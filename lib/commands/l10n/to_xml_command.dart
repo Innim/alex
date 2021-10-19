@@ -293,13 +293,18 @@ class _StrData {
         if (val != null) {
           // ignore: avoid_types_on_closure_parameters
           final str = val.expanded((Message msg, Object chunk) {
+            if (chunk is String) return chunk;
             if (chunk is LiteralString) return chunk.string;
 
             if (chunk is VariableSubstitution) {
               return '{${plural.mainArgument}}';
             }
 
-            throw Exception('Unhandled chunk type: ${chunk.runtimeType}');
+            throw Exception('Unhandled chunk type for plural <$key>:'
+                ' ${chunk.runtimeType}.\n'
+                'Value: $value\n'
+                'Parsed: $plural\n'
+                'Chunk: $chunk');
           });
 
           xml.writeln('<item quantity="$quantity">$str</item>');

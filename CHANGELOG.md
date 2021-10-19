@@ -1,3 +1,7 @@
+## 0.5.2 - 2021-10-19
+
+* L10n: `to_xml` supports string without parameter for plural.
+
 ## 0.5.1 - 2021-10-01
 
 * L10n: Support for [intl_generator](https://pub.dev/packages/intl_generator).
