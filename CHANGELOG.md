@@ -1,3 +1,5 @@
+* Finish Feature: Prints message in console if no changelog entered.
+
 ## 0.5.2 - 2021-10-19
 
 * L10n: `to_xml` supports string without parameter for plural.

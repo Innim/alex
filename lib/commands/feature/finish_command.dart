@@ -144,7 +144,7 @@ class FinishCommand extends FeatureCommandBase {
     final line = console.readLineSync();
 
     if (line.isEmpty) {
-      printVerbose('No changelog info');
+      printInfo('No changelog record');
       return false;
     }
 
