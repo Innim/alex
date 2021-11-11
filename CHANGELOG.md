@@ -1,3 +1,6 @@
+## 0.5.3 - 2021-11-11
+
+* L10n: `from_xml` allow values without parameters in plurals if original string doesn't have it.
 * Finish Feature: Prints message in console if no changelog entered.
 
 ## 0.5.2 - 2021-10-19

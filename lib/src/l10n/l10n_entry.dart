@@ -48,6 +48,12 @@ class L10nPluralEntry extends L10nEntry {
   List<String> get codeAttributeNames =>
       ["zero", "one", "two", "few", "many", "other"];
 
+  String find(String attributeName) {
+    // https://cldr.unicode.org/index/cldr-spec/plural-rules#h.m2v80lrdfvr9
+    final val = this[attributeName];
+    return val ?? other;
+  }
+
   @override
   String toString() {
     return 'L10nPluralEntry(zero: $zero, one: $one, two: $two, few: $few, '
@@ -57,10 +63,13 @@ class L10nPluralEntry extends L10nEntry {
   String operator [](String attributeName) {
     switch (attributeName) {
       case "zero":
+      case "=0":
         return zero;
       case "one":
+      case "=1":
         return one;
       case "two":
+      case "=2":
         return two;
       case "few":
         return few;

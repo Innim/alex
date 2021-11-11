@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:alex/src/l10n/decoders/arb_decoder.dart';
+
 import '../l10n_entry.dart';
 import 'l10n_exporter.dart';
 
@@ -36,8 +38,11 @@ class ArbExporter extends L10nExporter {
       } else if (value is L10nPluralEntry) {
         // Получаем заголовочную часть
         const pluralPrefix = ',plural,';
-        final baseVal = baseArb[key] as String;
-        final prefix = baseVal.split(pluralPrefix).first;
+        final baseStr = baseArb[key] as String;
+        final prefix = baseStr.split(pluralPrefix).first;
+
+        final baseValue =
+            arbDecoder.decodeValue(key, baseStr) as L10nPluralEntry;
 
         final val = StringBuffer(prefix)..write(pluralPrefix)..write(' ');
         <String, String>{
@@ -47,8 +52,15 @@ class ArbExporter extends L10nExporter {
           'few': value.few,
           'many': value.many,
           'other': value.other,
-        }.forEach(
-            (attr, value) => _addPlural(val, key, parameters, value, attr));
+        }.forEach((attr, value) {
+          final baseVal = baseValue.find(attr);
+          final allowed = baseVal == null
+              ? {}
+              : parameters
+                  .where((param) => baseVal.contains('{$param}'))
+                  .toSet();
+          return _addPlural(val, key, allowed, value, attr);
+        });
         val.write('}');
 
         map[key] = val.toString();
@@ -97,7 +109,8 @@ class ArbExporter extends L10nExporter {
       }
     } else {
       if (allowed.isNotEmpty) {
-        throw Exception('[$locale] No parameters found for key "$key"');
+        throw Exception('[$locale] No parameters found for key "$key". '
+            'Expected: ${allowed.join(', ')}.');
       }
     }
 
