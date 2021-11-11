@@ -1,23 +1,19 @@
 import 'package:alex/alex.dart';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/l10n/decoders/arb_decoder.dart';
 import 'package:alex/src/l10n/decoders/ios_strings_decoder.dart';
+import 'package:alex/src/l10n/l10n_entry.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
 import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
-// ignore: implementation_imports
-import 'package:intl_translation/src/icu_parser.dart';
-// ignore: implementation_imports
-import 'package:intl_translation/src/intl_message.dart';
 
 import 'src/l10n_command_base.dart';
 
 const _jsonDecoder = JsonCodec();
 const _iosStringsDecoder = IosStringsDecoder();
-final _pluralAndGenderParser = IcuParser().message;
-final _plainParser = IcuParser().nonIcuMessage;
 
 /// Command to put localization from arb to xml.
 class ToXmlCommand extends L10nCommandBase {
@@ -278,43 +274,20 @@ class _StrData {
     final desc = meta != null ? meta['description'] as String : null;
     if (desc?.isNotEmpty ?? false) xml.writeln('<!-- $desc -->');
 
-    var parsed = _pluralAndGenderParser.parse(value).value as Object;
-    if (parsed is LiteralString && parsed.string.isEmpty) {
-      parsed = _plainParser.parse(value).value;
-    }
-
-    if (parsed is LiteralString) {
-      xml.writeln('<string name="$key">${parsed.string}</string>');
-    } else if (parsed is Plural) {
+    final parsed = arbDecoder.decodeValue(key, value);
+    if (parsed is L10nTextEntry) {
+      xml.writeln('<string name="$key">${parsed.text}</string>');
+    } else if (parsed is L10nPluralEntry) {
       xml.writeln('<plurals name="$key">');
       final plural = parsed;
       plural.codeAttributeNames.forEach((quantity) {
         final val = plural[quantity];
         if (val != null) {
-          // ignore: avoid_types_on_closure_parameters
-          final str = val.expanded((Message msg, Object chunk) {
-            if (chunk is String) return chunk;
-            if (chunk is LiteralString) return chunk.string;
-
-            if (chunk is VariableSubstitution) {
-              return '{${plural.mainArgument}}';
-            }
-
-            throw Exception('Unhandled chunk type for plural <$key>:'
-                ' ${chunk.runtimeType}.\n'
-                'Value: $value\n'
-                'Parsed: $plural\n'
-                'Chunk: $chunk');
-          });
-
-          xml.writeln('<item quantity="$quantity">$str</item>');
+          xml.writeln('<item quantity="$quantity">$val</item>');
         }
       });
 
       xml.writeln('</plurals>');
-    } else if (parsed is CompositeMessage) {
-      // doesn't process message with args, just add it as is
-      xml.writeln('<string name="$key">$value</string>');
     } else {
       throw UnimplementedError(
           'Process is not implemented for type ${parsed.runtimeType}. '

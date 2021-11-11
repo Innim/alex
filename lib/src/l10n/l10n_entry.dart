@@ -45,9 +45,31 @@ class L10nPluralEntry extends L10nEntry {
   const L10nPluralEntry(
       this.zero, this.one, this.two, this.few, this.many, this.other);
 
+  List<String> get codeAttributeNames =>
+      ["zero", "one", "two", "few", "many", "other"];
+
   @override
   String toString() {
     return 'L10nPluralEntry(zero: $zero, one: $one, two: $two, few: $few, '
         'many: $many, other: $other)';
+  }
+
+  String operator [](String attributeName) {
+    switch (attributeName) {
+      case "zero":
+        return zero;
+      case "one":
+        return one;
+      case "two":
+        return two;
+      case "few":
+        return few;
+      case "many":
+        return many;
+      case "other":
+        return other;
+      default:
+        return null;
+    }
   }
 }
