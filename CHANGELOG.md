@@ -1,3 +1,7 @@
+* Finish Feature: 
+  * Ability to provide issue id in interactive mode.
+  * List of current feature branches.
+
 ## 0.5.3 - 2021-11-11
 
 * L10n: `from_xml` allow values without parameters in plurals if original string doesn't have it.

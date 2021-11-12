@@ -26,7 +26,7 @@ class FinishCommand extends FeatureCommandBase {
       )
       ..addArg(
         _argIssue,
-        help: 'Issue number, which used for branch name. Required.',
+        help: 'Issue number, which used for branch name.',
         valueHelp: 'NUMBER',
       );
   }
@@ -34,12 +34,7 @@ class FinishCommand extends FeatureCommandBase {
   @override
   Future<int> run() async {
     final isDemo = argResults.getBool(_argDemo);
-    final issueId = argResults.getInt(_argIssue);
-
-    if (issueId == null) {
-      printUsage();
-      return success();
-    }
+    var issueId = argResults.getInt(_argIssue);
 
     try {
       final console = this.console;
@@ -58,7 +53,24 @@ class FinishCommand extends FeatureCommandBase {
       printVerbose('Pull develop and check status');
       git.ensureCleanAndChekoutDevelop();
 
-      final branch = await _getBranch(git, issueId);
+      final branches = await _getFeatureBranches(git);
+
+      if (issueId == null) {
+        printInfo('You should specified issue id to finish feature.');
+        printInfo('Current feature branches:');
+        branches.forEach((b) => printInfo('- ${b.name}'));
+
+        printInfo('Enter issue id:');
+
+        do {
+          final issueIdStr = console.readLineSync();
+
+          if (issueIdStr.isNotEmpty) issueId = int.tryParse(issueIdStr);
+          // ignore: invariant_booleans
+        } while (issueId == null);
+      }
+
+      final branch = await _getBranch(branches, issueId);
       if (branch == null) {
         return error(1, message: "Can't find branch for issue #$issueId");
       }
@@ -101,14 +113,14 @@ class FinishCommand extends FeatureCommandBase {
     }
   }
 
-  Future<_Branch> _getBranch(GitCommands git, int issueId) async {
+  Future<List<_Branch>> _getFeatureBranches(GitCommands git) async {
     final branchesNames = git.getBranches(all: true);
     printVerbose('Branches: $branchesNames');
 
-    final branches = branchesNames
-        .map((n) => _Branch(n))
-        .where((b) => b.isIssueFeature(issueId));
-    if (branches.isEmpty) return null;
+    final branches =
+        branchesNames.map((n) => _Branch(n)).where((b) => b.isFeature);
+
+    if (branches.isEmpty) return [];
 
     final map = <String, _Branch>{};
 
@@ -121,8 +133,17 @@ class FinishCommand extends FeatureCommandBase {
       }
     }
 
+    final res = map.values.toList();
+    res.sort((a, b) => a.name.compareTo(b.name));
+    return res;
+  }
+
+  Future<_Branch> _getBranch(Iterable<_Branch> branches, int issueId) async {
+    final res = branches.where((b) => b.isIssueFeature(issueId));
+    if (res.isEmpty) return null;
+
     // TODO: if more than one - give a choise
-    return map.values.first;
+    return res.first;
   }
 
   Future<bool> _updateChangelog(Console console, FileSystem fs) async {
