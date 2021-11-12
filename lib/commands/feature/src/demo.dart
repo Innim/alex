@@ -6,7 +6,7 @@ import 'package:alex/internal/print.dart' as print;
 class DemoGit extends Git {
   @override
   String execute(List<String> args, String desc, {bool printIfError = true}) {
-    print.info("[demo] git ${args.join(" ")}");
+    _print("git ${args.join(" ")}");
 
     switch (args[0]) {
       case "remote":
@@ -33,20 +33,20 @@ class DemoGit extends Git {
 class DemoFileSystem extends FileSystem {
   @override
   Future<void> createFile(String path, {bool recursive = false}) async {
-    print.info("createFile $path recursive: $recursive");
+    _print("createFile $path recursive: $recursive");
   }
 
   @override
   Future<bool> existsFile(String path) {
     final result = ['CHANGELOG.md'].contains(path);
 
-    print.info("existsFile $path -> $result");
+    _print("existsFile $path -> $result");
     return Future.value(result);
   }
 
   @override
   Future<String> readString(String path) async {
-    print.info("readString $path");
+    _print("readString $path");
 
     if (path.contains('CHANGELOG.md')) {
       return '''
@@ -71,6 +71,8 @@ class DemoFileSystem extends FileSystem {
 
   @override
   Future<void> writeString(String path, String contents) async {
-    print.info("writeString $path contents: $contents");
+    _print("writeString $path contents: $contents");
   }
 }
+
+void _print(String message) => print.info("  > [demo] $message");
