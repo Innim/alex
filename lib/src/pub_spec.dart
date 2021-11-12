@@ -7,14 +7,17 @@ import 'package:version/version.dart';
 
 /// Some specification.
 class Spec {
-  static const _pubspec = "pubspec.yaml";
+  static const fileName = "pubspec.yaml";
 
   /// Returns specification of a project in current directory.
   static Future<Spec> pub(FileSystem fs) async {
-    final contents = await fs.readString(_pubspec);
+    final contents = await fs.readString(fileName);
     final yamlMap = contents.toPubspecYaml();
     return Spec(yamlMap);
   }
+
+  /// Returns `true` if pubspec is exists in current directory.
+  static Future<bool> exists(FileSystem fs) => fs.existsFile(fileName);
 
   final PubspecYaml _yamlMap;
 
@@ -40,12 +43,12 @@ class Spec {
   }
 
   String getContent() {
-    final file = File(_pubspec);
+    final file = File(fileName);
     return file.readAsStringSync();
   }
 
   void saveContent(String content) {
-    final file = File(_pubspec);
+    final file = File(fileName);
     file.writeAsStringSync(content);
   }
 

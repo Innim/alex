@@ -38,7 +38,7 @@ class DemoFileSystem extends FileSystem {
 
   @override
   Future<bool> existsFile(String path) {
-    final result = ['CHANGELOG.md'].contains(path);
+    final result = ['CHANGELOG.md', 'pubspec.yaml'].contains(path);
 
     _print("existsFile $path -> $result");
     return Future.value(result);

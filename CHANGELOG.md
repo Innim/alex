@@ -1,6 +1,7 @@
 * Finish Feature: 
   * Ability to provide issue id in interactive mode.
   * List of current feature branches.
+  * Check if run command not in project directory.
 
 ## 0.5.3 - 2021-11-11
 

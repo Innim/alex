@@ -4,6 +4,7 @@ import 'package:alex/src/console/console.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/git/git.dart';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/pub_spec.dart';
 
 import 'src/feature_command_base.dart';
 import 'src/demo.dart';
@@ -48,6 +49,13 @@ class FinishCommand extends FeatureCommandBase {
         printInfo("Demonstration mode");
         fs = DemoFileSystem();
         git = GitCommands(DemoGit());
+      }
+
+      printVerbose('Check if this is a project directory');
+      final pubspecExists = await Spec.exists(fs);
+      if (!pubspecExists) {
+        return error(1,
+            message: 'You should run command from project root directory.');
       }
 
       printVerbose('Pull develop and check status');
