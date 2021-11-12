@@ -1,3 +1,5 @@
+## 0.5.4 - 2021-11-12
+
 * Finish Feature: 
   * Ability to provide issue id in interactive mode.
   * List of current feature branches.
