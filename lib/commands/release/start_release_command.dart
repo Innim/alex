@@ -45,6 +45,12 @@ class StartReleaseCommand extends AlexCommand {
     final version = spec.version;
     final vs = version.short;
 
+    if (int.tryParse(version.build) == null) {
+      return error(1,
+          message: 'Invalid version "$vs": '
+              'you should define build number (after +).');
+    }
+
     printInfo('Start new release <v$vs>');
     git.gitflowReleaseStart(vs);
 
@@ -291,6 +297,8 @@ $changeLog
   }
 
   void incrementVersion(Spec spec, Version value) {
+    printVerbose('Increment version');
+
     final version = value.incrementPatchAndBuild();
     final content = spec.getContent();
     final updated =

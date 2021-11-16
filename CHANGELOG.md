@@ -1,3 +1,7 @@
+## 0.5.5 - 2021-11-12
+
+* Release Start: check if has build number in version string
+
 ## 0.5.4 - 2021-11-12
 
 * Finish Feature: 
