@@ -15,10 +15,11 @@ import 'src/l10n_command_base.dart';
 const _jsonDecoder = JsonCodec();
 const _iosStringsDecoder = IosStringsDecoder();
 
-/// Command to put localization from arb to xml.
+/// Command to put localization to xml.
 class ToXmlCommand extends L10nCommandBase {
   static const _argFrom = 'from';
   static const _argSource = 'source';
+  static const _argLocale = 'locale';
 
   static const _sourceArb = 'abr';
   static const _sourceJson = 'json';
@@ -51,21 +52,32 @@ class ToXmlCommand extends L10nCommandBase {
         help: 'Directory of source localization files. '
             'Supported by sources: $_sourceJson',
         valueHelp: 'DIR_PATH',
+      )
+      ..addOption(
+        _argLocale,
+        abbr: 'l',
+        help: 'Locale to export. By default this is '
+            'base_locale_for_xml from alex configuration.',
+        valueHelp: 'DIR_PATH',
       );
   }
 
   @override
   Future<int> run() async {
+    final config = l10nConfig;
+
     final target = argResults[_argFrom] as String;
+    final baseLocale =
+        argResults[_argLocale] as String ?? config.baseLocaleForXml;
 
     try {
       switch (target) {
         case _sourceArb:
-          return _exportArb();
+          return _exportArb(baseLocale);
         case _sourceJson:
-          return _exportJson();
+          return _exportJson(baseLocale);
         case _sourceIos:
-          return _exportIos();
+          return _exportIos(baseLocale);
         default:
           return error(1, message: 'Unknown target: $target');
       }
@@ -76,27 +88,25 @@ class ToXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _exportArb() async {
+  Future<int> _exportArb(String locale) async {
     final config = l10nConfig;
     final l10nSubpath = config.outputDir;
-    final baseLocale = config.baseLocaleForXml;
 
     final l10nPath = path.join(path.current, l10nSubpath);
     final l10nDir = Directory(l10nPath);
 
-    final locale = config.baseLocaleForXml;
     final sourceFileName = L10nUtils.getArbFile(config, locale);
     final file = File(path.join(l10nDir.path, sourceFileName));
 
     final exists = await file.exists();
     if (!exists) {
-      return error(2, message: 'ABR file for locale $baseLocale is not found');
+      return error(2, message: 'ABR file for locale $locale is not found');
     }
 
     return _proccessArb(file, config.getXmlFilesPath(locale));
   }
 
-  Future<int> _exportJson() async {
+  Future<int> _exportJson(String locale) async {
     final config = l10nConfig;
     final jsonBaseDirPath = argResults[_argSource] as String;
 
@@ -106,7 +116,6 @@ class ToXmlCommand extends L10nCommandBase {
               'alex l10n to_xml --from=json --source=/path/to/json/localization/dir');
     }
 
-    final locale = config.baseLocaleForXml;
     final locales = [locale, locale.replaceAll('_', '-')];
     final checkedPaths = <String>[];
     Directory jsonDir;
@@ -145,11 +154,9 @@ class ToXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _exportIos() async {
+  Future<int> _exportIos(String locale) async {
     final config = l10nConfig;
     final provider = L10nIosPathProvider(path.current);
-
-    final locale = config.baseLocaleForXml;
 
     final outputDirPath = config.getXmlFilesPath(locale);
 

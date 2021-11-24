@@ -1,3 +1,7 @@
+## 0.5.6 - 2021-11-24
+
+* L10n: `to_xml` supports `locale` argument.
+
 ## 0.5.5 - 2021-11-12
 
 * Release Start: check if has build number in version string
