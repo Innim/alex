@@ -95,6 +95,14 @@ or
 alex f f -i{issueId}
 ```
 
+Also you can run command without issue id:
+
+```
+alex f f
+```
+
+Then alex will print all current feature branches and ask for issue id in interactive mode.
+
 ### l10n
 
 Work with localization files.
