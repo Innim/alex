@@ -4,7 +4,6 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/src/changelog/changelog.dart';
-import 'package:meta/meta.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
 import 'package:version/version.dart';
@@ -19,9 +18,9 @@ import 'package:alex/src/pub_spec.dart';
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
   static const String flagDemo = "demo";
-  FileSystem fs;
-  GitCommands git;
-  String _packageDir;
+  late FileSystem fs;
+  late GitCommands git;
+  String? _packageDir;
 
   StartReleaseCommand() : super("start", "Start new release") {
     argParser.addFlag(flagDemo, help: "Runs command in demonstration mode");
@@ -29,7 +28,9 @@ class StartReleaseCommand extends AlexCommand {
 
   @override
   Future<int> run() async {
-    final isDemo = argResults[flagDemo] as bool;
+    final args = argResults!;
+    final isDemo = args[flagDemo] as bool;
+
     if (!isDemo) {
       fs = const IOFileSystem();
       git = GitCommands(GitClient());
@@ -56,7 +57,7 @@ class StartReleaseCommand extends AlexCommand {
 
     printInfo('Upgrading CHANGELOG.md...');
 
-    final changeLog = await upgradeChangeLog(version);
+    final changeLog = await upgradeChangeLog(version) ?? '';
 
     printInfo("Change log: \n$changeLog");
 
@@ -104,7 +105,7 @@ $changeLog
     return 0;
   }
 
-  Future<String> upgradeChangeLog(Version version) async {
+  Future<String?> upgradeChangeLog(Version version) async {
     final changelog = Changelog(fs);
 
     // nothin to do if up to date
@@ -117,7 +118,7 @@ $changeLog
     return changelog.getLastVersionChangelog();
   }
 
-  Future<String> getReleaseNotes(Version version, String changeLog) async {
+  Future<String?> getReleaseNotes(Version version, String changeLog) async {
     const port = 4024;
     final data = getRawReleaseNotes(port, changeLog);
 
@@ -131,7 +132,7 @@ $changeLog
     final patch = version.patch;
     final v = "$major.$minor.$patch";
 
-    String result;
+    String? result;
 
     for (final entry in entries) {
       final ln = entry.lang;
@@ -233,9 +234,8 @@ $changeLog
 
   String buildEntry(
       String template, String id, String text, String name, ItemType type,
-      {@required bool isRequired}) {
-    assert(isRequired != null);
-    String prefix;
+      {required bool isRequired}) {
+    final String prefix;
     switch (type) {
       case ItemType.appStore:
         prefix = '[App Store] ';
@@ -244,6 +244,8 @@ $changeLog
         prefix = '[Google Play] ';
         break;
       case ItemType.byDefault:
+      // ignore: no_default_cases
+      default:
         prefix = '';
         break;
     }
@@ -325,13 +327,13 @@ class Entry {
     for (final type in ItemType.values) type: ""
   };
 
-  Entry(this.lang, {@required this.isRequired}) : assert(isRequired != null);
+  Entry(this.lang, {required this.isRequired});
 
-  bool update(String id, String value) {
+  bool update(String id, String? value) {
     if (value != null && value.isNotEmpty) {
       for (final type in values.keys) {
         if (id == getId(type, lang)) {
-          values[type] = value != null ? value.trim() : "";
+          values[type] = value.trim();
           return true;
         }
       }
@@ -344,7 +346,7 @@ class Entry {
     if (isRequired) {
       final res = values.entries.every(
               (kv) => kv.value.isNotEmpty || kv.key == ItemType.byDefault) ||
-          values[ItemType.byDefault].isNotEmpty;
+          values[ItemType.byDefault]!.isNotEmpty;
 
       return res;
     } else {
@@ -372,20 +374,20 @@ class ItemType {
   static List<ItemType> values = [byDefault, appStore, googlePlay];
 
   final String id;
-  final int _maxChars;
+  final int? _maxChars;
 
-  const ItemType._(this.id, [this._maxChars]) : assert(id != null);
+  const ItemType._(this.id, [this._maxChars]);
 
   int get maxChars {
     if (_maxChars != null) {
-      return _maxChars;
+      return _maxChars!;
     }
 
     var value = -1;
 
     for (final item in values) {
       if (item._maxChars != null) {
-        value = value != -1 ? min(value, item._maxChars) : item._maxChars;
+        value = value != -1 ? min(value, item._maxChars!) : item._maxChars!;
       }
     }
 

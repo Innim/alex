@@ -13,9 +13,10 @@ class CiConfig {
 
   final Config _config;
 
-  CiConfig._(this._config) : assert(_config != null);
+  CiConfig._(this._config);
 
   List<String> get localizationLanguageList {
-    return _config.get("Build", "LOCALIZATION_LANGUAGE_LIST").split(" ");
+    return _config.get("Build", "LOCALIZATION_LANGUAGE_LIST")?.split(" ") ??
+        const [];
   }
 }

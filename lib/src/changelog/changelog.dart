@@ -20,7 +20,7 @@ class Changelog {
   ];
 
   final FileSystem fs;
-  Future<String> _content;
+  Future<String>? _content;
 
   Changelog(this.fs);
 
@@ -35,7 +35,7 @@ class Changelog {
 
   Future<void> save() async {
     if (_content != null) {
-      await fs.writeString(_filepath, await _content);
+      await fs.writeString(_filepath, await _content!);
     }
   }
 
@@ -72,7 +72,7 @@ class Changelog {
     _update(res.toString());
   }
 
-  Future<String> getLastVersionChangelog() async {
+  Future<String?> getLastVersionChangelog() async {
     final str = await content;
 
     const marker = "## v";
@@ -87,7 +87,7 @@ class Changelog {
     return str.substring(curIndex);
   }
 
-  Future<void> releaseVersion(Version version, {DateTime date}) async {
+  Future<void> releaseVersion(Version version, {DateTime? date}) async {
     date ??= DateTime.now();
     final dateStr = DateFormat("yyyy-MM-dd").format(date);
 

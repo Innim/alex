@@ -15,8 +15,8 @@ class HelloWorldCommand extends AlexCommand {
     return 0;
   }
 
-  String readLine() {
+  String? readLine() {
     final line = console.readLineSync();
-    return line.trim();
+    return line?.trim();
   }
 }

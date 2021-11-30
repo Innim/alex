@@ -8,7 +8,7 @@ class AlexConfig {
   static const _defaultConfigFile = 'alex.yaml';
   static const _mainConfigFile = 'pubspec.yaml';
 
-  static AlexConfig _instance;
+  static AlexConfig? _instance;
 
   /// Returns instance of loaded configuration.
   static AlexConfig get instance {
@@ -16,11 +16,11 @@ class AlexConfig {
       load();
     }
 
-    return _instance;
+    return _instance!;
   }
 
   /// Load configuration.
-  static void load([String configFile]) {
+  static void load([String? configFile]) {
     assert(_instance == null);
 
     if (configFile != null) {
@@ -33,7 +33,7 @@ class AlexConfig {
     }
   }
 
-  static bool _tryLoadConfigFile(String path, [String section]) {
+  static bool _tryLoadConfigFile(String path, [String? section]) {
     final file = File(path);
     if (file.existsSync()) {
       final config = _loadConfigFile(file, section);
@@ -44,9 +44,9 @@ class AlexConfig {
     }
   }
 
-  static AlexConfig _loadConfigFile(File file, String section) {
+  static AlexConfig _loadConfigFile(File file, String? section) {
     final yamlString = file.readAsStringSync();
-    var yamlMap = loadYaml(yamlString) as YamlMap;
+    var yamlMap = loadYaml(yamlString) as YamlMap?;
     if (yamlMap == null) {
       throw Exception("Can't parse ${file.path}");
     }
@@ -57,7 +57,7 @@ class AlexConfig {
             "Can't find section $section in config file ${file.path}");
       }
 
-      yamlMap = yamlMap[section] as YamlMap;
+      yamlMap = yamlMap[section] as YamlMap?;
 
       if (yamlMap == null) {
         throw Exception(
@@ -70,9 +70,9 @@ class AlexConfig {
 
   final YamlMap _data;
 
-  L10nConfig _l10n;
+  L10nConfig? _l10n;
 
-  AlexConfig._(this._data) : assert(_data != null);
+  AlexConfig._(this._data);
 
   L10nConfig get l10n {
     const key = 'l10n';
@@ -127,7 +127,7 @@ class L10nConfig {
   /// If empty - than name of original arb file without locale suffix will used.
   ///
   /// See [baseLocaleForXml].
-  final String xmlOutputName;
+  final String? xmlOutputName;
 
   L10nConfig({
     this.outputDir = _defaultOutputDir,
@@ -137,26 +137,20 @@ class L10nConfig {
     this.baseLocaleForXml = _defaultBaseLocaleForXml,
     this.xmlOutputDir = _defaultXmlOutputDir,
     this.xmlOutputName,
-  })  : assert(outputDir != null),
-        assert(sourceFile != null),
-        assert(translationFilesPattern != null),
-        assert(baseLocaleForArb != null),
-        assert(baseLocaleForXml != null),
-        assert(xmlOutputDir != null);
+  });
 
   factory L10nConfig.fromYaml(YamlMap data) {
-    assert(data != null);
     return L10nConfig(
-      outputDir: data['output_dir'] as String ?? _defaultOutputDir,
-      sourceFile: data['source_file'] as String ?? _defaultSourceFile,
-      translationFilesPattern: data['translation_files_pattern'] as String ??
+      outputDir: data['output_dir'] as String? ?? _defaultOutputDir,
+      sourceFile: data['source_file'] as String? ?? _defaultSourceFile,
+      translationFilesPattern: data['translation_files_pattern'] as String? ??
           _defaultTranslationFilesPattern,
       baseLocaleForArb:
-          data['base_locale_for_abr'] as String ?? _defaultBaseLocaleForArb,
+          data['base_locale_for_abr'] as String? ?? _defaultBaseLocaleForArb,
       baseLocaleForXml:
-          data['base_locale_for_xml'] as String ?? _defaultBaseLocaleForXml,
-      xmlOutputDir: data['xml_output_dir'] as String ?? _defaultXmlOutputDir,
-      xmlOutputName: data['xml_output_name'] as String,
+          data['base_locale_for_xml'] as String? ?? _defaultBaseLocaleForXml,
+      xmlOutputDir: data['xml_output_dir'] as String? ?? _defaultXmlOutputDir,
+      xmlOutputName: data['xml_output_name'] as String?,
     );
   }
 

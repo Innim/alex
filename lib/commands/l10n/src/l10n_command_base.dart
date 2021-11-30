@@ -13,7 +13,7 @@ import 'package:path/path.dart' as path;
 abstract class L10nCommandBase extends AlexCommand {
   static final _localeRegionRegEx = RegExp('[a-z]{2}_[A-Z]{2}');
 
-  String _intlGeneratorPackage;
+  String? _intlGeneratorPackage;
 
   L10nCommandBase(String name, String description) : super(name, description);
 
@@ -21,7 +21,7 @@ abstract class L10nCommandBase extends AlexCommand {
 
   @protected
   Future<ProcessResult> runIntl(String cmd, List<String> arguments,
-      {String workingDir, bool prependWithPubGet = false}) async {
+      {String? workingDir, bool prependWithPubGet = false}) async {
     final packageName = await _getIntlGeneratorPackageName();
     return runPub('$packageName:$cmd', arguments,
         workingDir: workingDir, prependWithPubGet: prependWithPubGet);
@@ -30,7 +30,7 @@ abstract class L10nCommandBase extends AlexCommand {
   @protected
   Future<ProcessResult> runIntlOrFail(String cmd, List<String> arguments,
       {bool printStdOut = true,
-      String workingDir,
+      String? workingDir,
       bool prependWithPubGet = false}) async {
     return runOrFail(
         () => runIntl(cmd, arguments,
@@ -69,7 +69,7 @@ abstract class L10nCommandBase extends AlexCommand {
   }
 
   Future<String> _getIntlGeneratorPackageName() async {
-    if (_intlGeneratorPackage != null) return _intlGeneratorPackage;
+    if (_intlGeneratorPackage != null) return _intlGeneratorPackage!;
 
     final needle = ['intl_translation', 'intl_generator'];
 

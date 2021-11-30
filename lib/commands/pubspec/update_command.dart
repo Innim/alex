@@ -28,12 +28,14 @@ class UpdateCommand extends PubspecCommandBase {
 
   @override
   Future<int> run() async {
-    var dependency = argResults[_argDependency] as String;
-    if (dependency?.isEmpty ?? true) {
+    final args = argResults!;
+    var dependency = args[_argDependency] as String?;
+
+    if (dependency == null || dependency.isEmpty) {
       printInfo('Enter package name to update:');
       dependency = console.readLineSync();
 
-      if (dependency?.isEmpty ?? true) {
+      if (dependency == null || dependency.isEmpty) {
         return error(1,
             message: 'Nothing to update - dependency name is not provider. '
                 'You can pass package name as '
@@ -91,7 +93,7 @@ class UpdateCommand extends PubspecCommandBase {
     final content = StringBuffer();
     final needle = '$dependency:';
     var done = false;
-    int indent;
+    int? indent;
     for (final line in pubspecLockFile.readAsLinesSync()) {
       if (!done) {
         if (indent != null) {
@@ -126,8 +128,8 @@ class UpdateCommand extends PubspecCommandBase {
     final specs =
         list.toMap((f) => f, (f) => Spec.byString(f.readAsStringSync()));
     list.sort((a, b) {
-      final aSpec = specs[a];
-      final bSpec = specs[b];
+      final aSpec = specs[a]!;
+      final bSpec = specs[b]!;
 
       final aName = aSpec.name;
       final bName = bSpec.name;

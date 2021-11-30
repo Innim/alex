@@ -56,7 +56,7 @@ class ArbDecoder {
   // }
 
   L10nPluralEntry _convertPlural(String key, Plural value) {
-    String toStr(Message val) {
+    String? toStr(Message? val) {
       if (val == null) return null;
       return val.expanded((msg, chunk) {
         if (chunk is String) return chunk;

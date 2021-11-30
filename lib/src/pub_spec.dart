@@ -21,10 +21,9 @@ class Spec {
 
   final PubspecYaml _yamlMap;
 
-  Spec(this._yamlMap) : assert(_yamlMap != null);
+  Spec(this._yamlMap);
 
   factory Spec.byString(String yaml) {
-    assert(yaml != null);
     return Spec(yaml.toPubspecYaml());
   }
 
@@ -34,8 +33,8 @@ class Spec {
   /// Returns version.
   ///
   /// Throws exception if no version found.
-  Version get version =>
-      _yamlMap.version.iif(some: Version.parse, none: () => null);
+  Version get version => _yamlMap.version.iif(
+      some: Version.parse, none: () => throw StateError('Version not found'));
 
   /// Updates version.
   Spec setVersion(Version value) {

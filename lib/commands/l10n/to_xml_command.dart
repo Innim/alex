@@ -64,11 +64,11 @@ class ToXmlCommand extends L10nCommandBase {
 
   @override
   Future<int> run() async {
+    final args = argResults!;
     final config = l10nConfig;
 
-    final target = argResults[_argFrom] as String;
-    final baseLocale =
-        argResults[_argLocale] as String ?? config.baseLocaleForXml;
+    final target = args[_argFrom] as String;
+    final baseLocale = args[_argLocale] as String? ?? config.baseLocaleForXml;
 
     try {
       switch (target) {
@@ -107,10 +107,11 @@ class ToXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _exportJson(String locale) async {
+    final args = argResults!;
     final config = l10nConfig;
-    final jsonBaseDirPath = argResults[_argSource] as String;
+    final jsonBaseDirPath = args[_argSource] as String?;
 
-    if (jsonBaseDirPath?.isEmpty ?? true) {
+    if (jsonBaseDirPath == null || jsonBaseDirPath.isEmpty) {
       return error(1,
           message: 'Required parameter $_argSource: '
               'alex l10n to_xml --from=json --source=/path/to/json/localization/dir');
@@ -118,7 +119,7 @@ class ToXmlCommand extends L10nCommandBase {
 
     final locales = [locale, locale.replaceAll('_', '-')];
     final checkedPaths = <String>[];
-    Directory jsonDir;
+    Directory? jsonDir;
 
     for (final l in locales) {
       final curPath = path.join(jsonBaseDirPath, l);
@@ -223,7 +224,7 @@ Filename: $baseName
       if (key.startsWith('@')) {
         final strKey = key.substring(1);
         if (res.containsKey(strKey)) {
-          res[strKey].meta = value as Map<String, Object>;
+          res[strKey]!.meta = value as Map<String, Object>;
         }
       } else {
         res[key] = _StrData(key, value as String);
@@ -237,7 +238,7 @@ Filename: $baseName
 
   Future<String> _toXml(
       Map<String, _StrData> data, String outputDir, String outputName,
-      {String header}) async {
+      {String? header}) async {
     final xml = StringBuffer();
 
     xml.writeln('<?xml version="1.0" encoding="utf-8"?>');
@@ -273,12 +274,12 @@ Filename: $baseName
 class _StrData {
   final String key;
   final String value;
-  Map<String, Object> meta;
+  Map<String, Object>? meta;
 
   _StrData(this.key, this.value);
 
   void add2Xml(StringBuffer xml) {
-    final desc = meta != null ? meta['description'] as String : null;
+    final desc = meta != null ? meta!['description'] as String : null;
     if (desc?.isNotEmpty ?? false) xml.writeln('<!-- $desc -->');
 
     final parsed = arbDecoder.decodeValue(key, value);

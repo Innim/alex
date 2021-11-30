@@ -27,7 +27,7 @@ class ArbExporter extends L10nExporter {
 
     data.forEach((key, value) {
       final metaKey = '@$key';
-      final baseMeta = baseArb[metaKey] as Map<String, Object>;
+      final baseMeta = baseArb[metaKey] as Map<String, Object>?;
       if (baseMeta == null) throw MissedMetaException(key);
 
       final parameters =
@@ -45,7 +45,7 @@ class ArbExporter extends L10nExporter {
             arbDecoder.decodeValue(key, baseStr) as L10nPluralEntry;
 
         final val = StringBuffer(prefix)..write(pluralPrefix)..write(' ');
-        <String, String>{
+        <String, String?>{
           '=0': value.zero,
           '=1': value.one,
           '=2': value.two,
@@ -55,7 +55,7 @@ class ArbExporter extends L10nExporter {
         }.forEach((attr, value) {
           final baseVal = baseValue.find(attr);
           final allowed = baseVal == null
-              ? {}
+              ? <String>{}
               : parameters
                   .where((param) => baseVal.contains('{$param}'))
                   .toSet();
@@ -83,7 +83,7 @@ class ArbExporter extends L10nExporter {
   }
 
   void _addPlural(StringBuffer res, String key, Set<String> allowedParams,
-      String val, String attr) {
+      String? val, String attr) {
     if (val != null) {
       res
         ..write(attr)

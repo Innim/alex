@@ -51,10 +51,11 @@ class ImportXmlCommand extends L10nCommandBase {
 
   @override
   Future<int> run() async {
-    final sourcePath = argResults[_argPath] as String;
-    final fileForImport = argResults[_argFile] as String;
-    final importAll = argResults[_argAll] as bool;
-    final importNew = argResults[_argNew] as bool;
+    final args = argResults!;
+    final sourcePath = args[_argPath] as String?;
+    final fileForImport = args[_argFile] as String?;
+    final importAll = args[_argAll] as bool;
+    final importNew = args[_argNew] as bool;
 
     if (sourcePath == null) {
       printUsage();
@@ -78,12 +79,13 @@ class ImportXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _importFromGooglePlay(L10nConfig config, String sourcePath,
-      {String fileForImport,
-      bool importAll = false,
-      List<String> locales}) async {
-    assert(importAll != null);
-
+  Future<int> _importFromGooglePlay(
+    L10nConfig config,
+    String sourcePath, {
+    String? fileForImport,
+    bool importAll = false,
+    List<String>? locales,
+  }) async {
     final filename = importAll
         ? null
         : (fileForImport == null
@@ -101,7 +103,7 @@ class ImportXmlCommand extends L10nCommandBase {
 
     Future<void> import(
             Directory sourceDir, String sourceFilename, String googlePlayLocale,
-            [String gpProjectUid, String targetFilename]) =>
+            [String? gpProjectUid, String? targetFilename]) =>
         _importFile(
             config,
             imported,
@@ -115,7 +117,7 @@ class ImportXmlCommand extends L10nCommandBase {
 
     // In some cases source filename may be just base filename
     // but we don't know for sure
-    bool useBaseName;
+    bool? useBaseName;
 
     // if multiple files - than it's in subdirectory,
     // if single file - it's directly in root
@@ -134,7 +136,7 @@ class ImportXmlCommand extends L10nCommandBase {
                 !File(path.join(item.path, compositeFilename)).existsSync() &&
                     File(path.join(item.path, filename)).existsSync();
 
-            final sourceFilename = useBaseName ? filename : compositeFilename;
+            final sourceFilename = useBaseName ? filename! : compositeFilename;
 
             await import(item, sourceFilename, googlePlayLocale);
           } else {
@@ -186,11 +188,11 @@ class ImportXmlCommand extends L10nCommandBase {
       Set<String> imported,
       Directory sourceDir,
       String sourceFilename,
-      String projectUid,
+      String? projectUid,
       String translationUid,
       String googlePlayLocale,
-      String targetFilename,
-      List<String> allowedLocales) async {
+      String? targetFilename,
+      List<String>? allowedLocales) async {
     var locale = _convertGooglePlayLocale(googlePlayLocale);
 
     if (allowedLocales != null && !allowedLocales.contains(locale)) {

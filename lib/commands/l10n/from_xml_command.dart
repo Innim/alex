@@ -74,13 +74,15 @@ class FromXmlCommand extends L10nCommandBase {
 
   @override
   Future<int> run() async {
+    final args = argResults!;
     final config = l10nConfig;
 
-    final target = argResults[_argTo] as String;
-    final locale = argResults[_argLocale] as String;
+    final target = args[_argTo] as String;
+    final locale = args[_argLocale] as String?;
 
-    final locales =
-        locale?.isNotEmpty ?? false ? [locale] : await getLocales(config);
+    final locales = locale != null && locale.isNotEmpty
+        ? [locale]
+        : await getLocales(config);
 
     if (locales.isEmpty) {
       return success(
@@ -233,8 +235,8 @@ class FromXmlCommand extends L10nCommandBase {
     );
 
     printVerbose(filesByProject.keys
-        .where((k) => filesByProject[k].isNotEmpty)
-        .map((k) => '$k: ${filesByProject[k].join(', ')}')
+        .where((k) => filesByProject[k]!.isNotEmpty)
+        .map((k) => '$k: ${filesByProject[k]!.join(', ')}')
         .join('; '));
 
     for (final locale in locales) {
@@ -242,9 +244,9 @@ class FromXmlCommand extends L10nCommandBase {
 
       var updated = 0;
       for (final projectName in filesByProject.keys) {
-        for (final fileName in filesByProject[projectName]) {
+        for (final fileName in filesByProject[projectName]!) {
           final xmlData = await _loadMap(config, fileName, locale);
-          final keysMap = keysMapByXmlBasename[fileName];
+          final keysMap = keysMapByXmlBasename[fileName]!;
 
           MapEntry<String, L10nEntry> mapKeys(String key, L10nEntry value) {
             final iosKey = keysMap[key];
@@ -279,10 +281,11 @@ class FromXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _importToJson(List<String> locales) async {
+    final args = argResults!;
     final config = l10nConfig;
-    final jsonDirPath = argResults[_argDir] as String;
+    final jsonDirPath = args[_argDir] as String?;
 
-    if (jsonDirPath?.isEmpty ?? true) {
+    if (jsonDirPath == null || jsonDirPath.isEmpty) {
       return error(1,
           message: 'Required parameter $_argDir: '
               'alex l10n from_xml --to=json --dir=/path/to/json/localization/dir');
@@ -297,7 +300,7 @@ class FromXmlCommand extends L10nCommandBase {
 
     String jsonLocale(String locale) =>
         localeMap[locale] ?? locale.replaceAll('_', '-');
-    String getPath(String locale, [String fileBasename]) => path.join(
+    String getPath(String locale, [String? fileBasename]) => path.join(
         jsonDirPath,
         jsonLocale(locale),
         fileBasename != null ? path.setExtension(fileBasename, ext) : null);
@@ -377,7 +380,7 @@ class FromXmlCommand extends L10nCommandBase {
     final resources = xml.findAllElements('resources').first;
     for (final child in resources.children) {
       if (child is XmlElement) {
-        final name = child.getAttribute('name');
+        final name = child.getAttribute('name')!;
         final element = child.name.toString();
 
         switch (element) {
@@ -385,11 +388,11 @@ class FromXmlCommand extends L10nCommandBase {
             handle(name, L10nEntry.text(_textFromXml(child.text)));
             break;
           case 'plurals':
-            final map = child.children
-                .whereType<XmlElement>()
-                .toMap<String, String>(
-                    (dynamic el) => (el as XmlElement).getAttribute('quantity'),
-                    (dynamic el) => _textFromXml((el as XmlElement).text));
+            final map =
+                child.children.whereType<XmlElement>().toMap<String, String>(
+                      (el) => el.getAttribute('quantity')!,
+                      (el) => _textFromXml(el.text),
+                    );
             handle(name, L10nEntry.pluralFromMap(map));
             break;
           default:

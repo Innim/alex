@@ -43,7 +43,7 @@ class GitClient extends Git {
       print.info('"$desc" failed. Git exit code: $code.');
     }
 
-    String message;
+    String? message;
 
     if (error.isNotEmpty) {
       if (printIfError) print.error("git stderr:\n$error\n");
@@ -74,7 +74,7 @@ class ConsoleGit extends Git {
 class GitCommands {
   final Git _client;
 
-  GitCommands(this._client) : assert(_client != null);
+  GitCommands(this._client);
 
   void ensureCleanStatus() {
     ensure(() => status("check status of current branch", porcelain: true),
@@ -91,7 +91,7 @@ class GitCommands {
     }, "Current directory has no valid upstream setting.");
   }
 
-  void gitflowReleaseStart(String name, [String desc]) {
+  void gitflowReleaseStart(String name, [String? desc]) {
     // gitflowRelease(
     //     "start '$name' $branchDevelop", desc ?? "git flow release $name");
     final branch = "release/$name";
@@ -100,7 +100,7 @@ class GitCommands {
   }
 
   void gitflowReleaseFinish(String name,
-      {String desc, bool failOnMergeConflict = false}) {
+      {String? desc, bool failOnMergeConflict = false}) {
     // TODO: unused desc
     // gitflowRelease("finish -m \"merge\" '$name'", desc ?? "git flow finish $name");
     final branch = "release/$name";
@@ -162,8 +162,9 @@ class GitCommands {
     } on RunException catch (e) {
       if (!failOnMergeConflict &&
           e.exitCode == 1 &&
-          e.message.contains(
-              'Automatic merge failed; fix conflicts and then commit the result.')) {
+          (e.message?.contains(
+                  'Automatic merge failed; fix conflicts and then commit the result.') ??
+              false)) {
         print.info('alex will continue after merge would be resolved');
         do {
           sleep(const Duration(seconds: 1));
@@ -212,7 +213,7 @@ class GitCommands {
     _git(["commit", "-m", message], "committing changes");
   }
 
-  String status(String desc, {bool porcelain = false, String errorMsg}) {
+  String status(String desc, {bool porcelain = false, String? errorMsg}) {
     // TODO: join -> split((
     return git(["status", if (porcelain) "--porcelain"].join(" "), desc);
   }
@@ -221,7 +222,7 @@ class GitCommands {
     return git("checkout $branch", "check out $branch branch");
   }
 
-  String getCurrentBranch([String desc]) {
+  String getCurrentBranch([String? desc]) {
     return git("branch --show-current", desc ?? "get current branch");
   }
 
@@ -249,7 +250,7 @@ class GitCommands {
       _client.execute(args, desc, printIfError: printIfError);
 }
 
-void fail([String message]) {
+void fail([String? message]) {
   throw RunException.err(message);
 }
 

@@ -12,8 +12,8 @@ class IosStringsDecoder {
         final matches = _keyValueStrRegEx.allMatches(line);
         if (matches.isNotEmpty) {
           final match = matches.first;
-          final key = match.group(1);
-          final value = match.group(2);
+          final key = match.group(1)!;
+          final value = match.group(2)!;
 
           data[key] = value;
         }

@@ -1,6 +1,6 @@
 class RunException implements Exception {
   final int exitCode;
-  final String message;
+  final String? message;
 
   const RunException({this.exitCode = 2, this.message});
   const RunException.withCode(this.exitCode, [this.message]);

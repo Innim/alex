@@ -34,8 +34,10 @@ class FinishCommand extends FeatureCommandBase {
 
   @override
   Future<int> run() async {
-    final isDemo = argResults.getBool(_argDemo);
-    var issueId = argResults.getInt(_argIssue);
+    final args = argResults!;
+
+    final isDemo = args.getBool(_argDemo);
+    var issueId = args.getInt(_argIssue);
 
     try {
       final console = this.console;
@@ -73,7 +75,9 @@ class FinishCommand extends FeatureCommandBase {
         do {
           final issueIdStr = console.readLineSync();
 
-          if (issueIdStr.isNotEmpty) issueId = int.tryParse(issueIdStr);
+          if (issueIdStr != null && issueIdStr.isNotEmpty) {
+            issueId = int.tryParse(issueIdStr);
+          }
           // ignore: invariant_booleans
         } while (issueId == null);
       }
@@ -86,7 +90,7 @@ class FinishCommand extends FeatureCommandBase {
       printInfo('Finish feature $branch');
 
       // priotiry - remote if exist
-      final branchName = branch.remoteName ?? branch.localName;
+      final branchName = (branch.remoteName ?? branch.localName)!;
 
       // TODO: Merge develop in remote feature branch?
 
@@ -146,7 +150,7 @@ class FinishCommand extends FeatureCommandBase {
     return res;
   }
 
-  Future<_Branch> _getBranch(Iterable<_Branch> branches, int issueId) async {
+  Future<_Branch?> _getBranch(Iterable<_Branch> branches, int issueId) async {
     final res = branches.where((b) => b.isIssueFeature(issueId));
     if (res.isEmpty) return null;
 
@@ -172,13 +176,13 @@ class FinishCommand extends FeatureCommandBase {
     printInfo('Enter changelog line:');
     final line = console.readLineSync();
 
-    if (line.isEmpty) {
+    if (line == null || line.isEmpty) {
       printInfo('No changelog record');
       return false;
     }
 
     // Can be in section Added, Fixed or even Pre-release.
-    int section;
+    int? section;
     do {
       printInfo('''
 Which section to add:
@@ -188,7 +192,7 @@ Which section to add:
 ?''');
 
       final sectionInput = console.readLineSync();
-      if (sectionInput?.trim()?.isEmpty ?? true) {
+      if (sectionInput == null || sectionInput.trim().isEmpty) {
         printInfo('Use default Added');
         section = 1;
       } else {
@@ -222,21 +226,23 @@ Which section to add:
 class _Branch {
   final String name;
   // TODO: multiple remotes
-  final String remoteName;
-  final String localName;
+  final String? remoteName;
+  final String? localName;
 
   factory _Branch(String name) {
-    String baseName;
-    String localName;
-    String remoteName;
+    final String baseName;
+    final String? localName;
+    final String? remoteName;
 
     if (name.startsWith(branchRemotePrefix)) {
       const sep = '/';
       remoteName = name;
       baseName = name.split(sep).sublist(2).join(sep);
+      localName = null;
     } else {
       baseName = name;
       localName = name;
+      remoteName = null;
     }
 
     return _Branch._(baseName, localName, remoteName);
@@ -250,7 +256,7 @@ class _Branch {
       name.startsWith('$branchFeaturePrefix$issueId.');
 
   _Branch merge(_Branch other) => _Branch._(
-        name ?? other.name,
+        name,
         localName ?? other.localName,
         remoteName == null ||
                 (other.remoteName

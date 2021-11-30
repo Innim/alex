@@ -20,10 +20,9 @@ abstract class L10nExporter {
 
   @protected
   Future<bool> writeContentIfChanged(File target, String content,
-      {String Function(String val) clear}) async {
+      {String Function(String val)? clear}) async {
     clear ??= (v) => v;
-    final currentContent =
-        await target.exists() ? await _readArb(target) : '';
+    final currentContent = await target.exists() ? await _readArb(target) : '';
     final hasChanged =
         currentContent.isEmpty || clear(currentContent) != clear(content);
 

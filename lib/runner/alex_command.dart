@@ -13,7 +13,7 @@ abstract class AlexCommand extends Command<int> {
   final String _description;
   final List<String> _aliases;
 
-  Console _console;
+  Console? _console;
 
   final ArgParser _argParser = ArgParser(
     allowTrailingOptions: false,
@@ -39,7 +39,7 @@ abstract class AlexCommand extends Command<int> {
   @protected
   set console(Console value) => _console = value;
 
-  bool get isVerbose => argResults['verbose'] as bool;
+  bool get isVerbose => argResults!['verbose'] as bool;
 
   /// Prints message if verbose flag is on.
   @protected
@@ -57,14 +57,14 @@ abstract class AlexCommand extends Command<int> {
 
   /// Prints 0 code and prints a success message if provided.
   @protected
-  int success({String message}) {
+  int success({String? message}) {
     if (message != null) printInfo(message);
     return 0;
   }
 
   /// Returns error code and prints a error message if provided.
   @protected
-  int error(int code, {String message}) {
+  int error(int code, {String? message}) {
     if (message != null) printError(message);
     return code;
   }
@@ -72,7 +72,6 @@ abstract class AlexCommand extends Command<int> {
   /// Returns error code by exception.
   @protected
   int errorBy(RunException exception) {
-    assert(exception != null);
     return error(exception.exitCode, message: exception.message);
   }
 
@@ -82,9 +81,9 @@ abstract class AlexCommand extends Command<int> {
   Future<ProcessResult> runAndListenOutput(
     String executable,
     List<String> arguments, {
-    Function(String out) onOut,
-    Function(String err) onErr,
-    String workingDir,
+    Function(String out)? onOut,
+    Function(String err)? onErr,
+    String? workingDir,
   }) async {
     final stdout = StringBuffer();
     final stderr = StringBuffer();
@@ -109,9 +108,7 @@ abstract class AlexCommand extends Command<int> {
   @protected
   Future<ProcessResult> runWithImmediatePrint(
       String executable, List<String> arguments,
-      {bool printStdOut = true, bool printErrOut = true, String workingDir}) {
-    assert(printStdOut != null);
-    assert(printErrOut != null);
+      {bool printStdOut = true, bool printErrOut = true, String? workingDir}) {
     return runAndListenOutput(
       executable,
       arguments,
@@ -126,11 +123,8 @@ abstract class AlexCommand extends Command<int> {
   Future<ProcessResult> runPub(String cmd, List<String> arguments,
       {bool immediatePrintStd = true,
       bool immediatePrintErr = true,
-      String workingDir,
+      String? workingDir,
       bool prependWithPubGet = false}) async {
-    assert(immediatePrintStd != null);
-    assert(immediatePrintErr != null);
-
     if (prependWithPubGet) {
       final pubGetRes = await pub('get',
           workingDir: workingDir,
@@ -150,20 +144,16 @@ abstract class AlexCommand extends Command<int> {
   /// Runs `flutter pub` command.
   @protected
   Future<ProcessResult> pub(String cmd,
-      {List<String> arguments = const [],
+      {List<String>? arguments = const [],
       bool immediatePrintStd = true,
       bool immediatePrintErr = true,
-      String workingDir}) async {
-    assert(arguments != null);
-    assert(immediatePrintStd != null);
-    assert(immediatePrintErr != null);
-
+      String? workingDir}) async {
     final executable = _getPlatformSpecificExecutableName('flutter');
     final args = [
       'pub',
       if (isVerbose) '-v',
       cmd,
-      ...arguments,
+      if (arguments != null) ...arguments,
     ];
 
     printVerbose('Run: $executable ${args.join(" ")}');
@@ -181,14 +171,14 @@ abstract class AlexCommand extends Command<int> {
 
   @protected
   Future<ProcessResult> pubGetOrFail(
-      {String path,
+      {String? path,
       bool printStdOut = true,
       bool immediatePrint = true}) async {
     assert(printStdOut || !immediatePrint,
         "You can't disable std output if immediatePrint enabled");
     return pubOrFail(
       'get',
-      arguments: [path],
+      arguments: path != null ? [path] : null,
       printStdOut: printStdOut,
       immediatePrint: immediatePrint,
     );
@@ -196,7 +186,7 @@ abstract class AlexCommand extends Command<int> {
 
   @protected
   Future<ProcessResult> pubOrFail(String cmd,
-      {List<String> arguments,
+      {List<String>? arguments,
       bool printStdOut = true,
       bool immediatePrint = true}) async {
     assert(printStdOut || !immediatePrint,
@@ -256,19 +246,19 @@ extension _StringExtension on String {
 
 class CmdArg {
   final String name;
-  final String abbr;
+  final String? abbr;
 
   const CmdArg(this.name, {this.abbr});
 }
 
 extension CmdArgArgParserExtension on ArgParser {
   void addArg(CmdArg info,
-          {String help,
-          String valueHelp,
-          Iterable<String> allowed,
-          Map<String, String> allowedHelp,
-          String defaultsTo,
-          Function callback,
+          {String? help,
+          String? valueHelp,
+          Iterable<String>? allowed,
+          Map<String, String>? allowedHelp,
+          String? defaultsTo,
+          void Function(String?)? callback,
           bool hide = false}) =>
       addOption(
         info.name,
@@ -285,8 +275,8 @@ extension CmdArgArgParserExtension on ArgParser {
 
 extension CmdArgArgResultsExtension on ArgResults {
   bool getBool(CmdArg arg) => this[arg.name] as bool;
-  int getInt(CmdArg arg) {
-    final val = this[arg.name] as String;
+  int? getInt(CmdArg arg) {
+    final val = this[arg.name] as String?;
     return val == null ? null : int.tryParse(val);
   }
 }

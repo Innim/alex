@@ -1,3 +1,5 @@
+* Migrated to null safety.
+
 ## 0.5.6 - 2021-11-24
 
 * L10n: `to_xml` supports `locale` argument.

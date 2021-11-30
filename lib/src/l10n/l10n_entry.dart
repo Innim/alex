@@ -4,12 +4,12 @@ abstract class L10nEntry {
 
   factory L10nEntry.text(String text) => L10nTextEntry(text);
   factory L10nEntry.plural(
-          {String zero,
-          String one,
-          String two,
-          String few,
-          String many,
-          String other}) =>
+          {String? zero,
+          String? one,
+          String? two,
+          String? few,
+          String? many,
+          String? other}) =>
       L10nPluralEntry(zero, one, two, few, many, other);
 
   factory L10nEntry.pluralFromMap(Map<String, String> valueByQuantity) =>
@@ -35,12 +35,12 @@ class L10nTextEntry extends L10nEntry {
 
 /// Localization entry for plural string.
 class L10nPluralEntry extends L10nEntry {
-  final String zero;
-  final String one;
-  final String two;
-  final String few;
-  final String many;
-  final String other;
+  final String? zero;
+  final String? one;
+  final String? two;
+  final String? few;
+  final String? many;
+  final String? other;
 
   const L10nPluralEntry(
       this.zero, this.one, this.two, this.few, this.many, this.other);
@@ -48,7 +48,7 @@ class L10nPluralEntry extends L10nEntry {
   List<String> get codeAttributeNames =>
       ["zero", "one", "two", "few", "many", "other"];
 
-  String find(String attributeName) {
+  String? find(String attributeName) {
     // https://cldr.unicode.org/index/cldr-spec/plural-rules#h.m2v80lrdfvr9
     final val = this[attributeName];
     return val ?? other;
@@ -60,7 +60,7 @@ class L10nPluralEntry extends L10nEntry {
         'many: $many, other: $other)';
   }
 
-  String operator [](String attributeName) {
+  String? operator [](String attributeName) {
     switch (attributeName) {
       case "zero":
       case "=0":

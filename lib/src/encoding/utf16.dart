@@ -27,7 +27,7 @@ const _unicodeUtfBomHi = 0xfe;
 
 /// Identifies whether a List of bytes starts (based on offset) with a
 /// little-endian byte-order marker (BOM).
-bool _hasUtf16LEBom(List<int> bytes, {int offset = 0, int length}) {
+bool _hasUtf16LEBom(List<int> bytes, {int offset = 0, int? length}) {
   final end = length != null ? offset + length : bytes.length;
   return (offset + 2) <= end &&
       bytes[offset] == _unicodeUtfBomLo &&

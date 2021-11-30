@@ -62,7 +62,7 @@ class IosStringsExporter extends L10nExporter {
       String iosLocale, String targetFileName) async {
     File _getTargetFile(String l) =>
         provider.getLocalizationFile(projectName, l, targetFileName);
-    Future<File> _checkAltLocale(String altLocale) async {
+    Future<File?> _checkAltLocale(String altLocale) async {
       final altRes = _getTargetFile(altLocale);
       final altExist = await altRes.exists();
       return altExist ? altRes : null;
