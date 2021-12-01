@@ -1,3 +1,5 @@
+* `pub update`: trim dependency name.
+
 ## 1.0.0 - 2021-12-01
 
 * Migrated to null safety.

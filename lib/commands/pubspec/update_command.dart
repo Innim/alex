@@ -29,13 +29,13 @@ class UpdateCommand extends PubspecCommandBase {
   @override
   Future<int> run() async {
     final args = argResults!;
-    var dependency = args[_argDependency] as String?;
+    var dependency = _getDepName(args[_argDependency] as String?);
 
-    if (dependency == null || dependency.isEmpty) {
+    if (dependency == null) {
       printInfo('Enter package name to update:');
-      dependency = console.readLineSync();
+      dependency = _getDepName(console.readLineSync());
 
-      if (dependency == null || dependency.isEmpty) {
+      if (dependency == null) {
         return error(1,
             message: 'Nothing to update - dependency name is not provider. '
                 'You can pass package name as '
@@ -138,6 +138,12 @@ class UpdateCommand extends PubspecCommandBase {
       if (bSpec.dependsOn(aName)) return -1;
       return 0;
     });
+  }
+
+  String? _getDepName(String? value) {
+    if (value == null) return null;
+    final res = value.trim();
+    return res.isEmpty ? null : res;
   }
 }
 
