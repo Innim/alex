@@ -111,17 +111,20 @@ class UpdateCommand extends PubspecCommandBase {
       content.writeln(line);
     }
 
-    if (indent == null) {
-      printVerbose('Dependency <$dependency> is not in $_pubspecLockFileName');
-    } else {
+    final found = indent != null;
+    if (found) {
       printVerbose('Remove <$dependency> entry from $_pubspecLockFileName');
       pubspecLockFile.writeAsStringSync(content.toString());
+    } else {
+      printVerbose('Dependency <$dependency> is not in $_pubspecLockFileName');
     }
 
     // Run pub get to get write updated entry
+    // (get it anyway, event if dependency is not found,
+    // because transitive dependencies may been updated)
     await pubGetOrFail(path: dirPath);
 
-    return true;
+    return found;
   }
 
   void _sortPubpecs(List<File> list) {
