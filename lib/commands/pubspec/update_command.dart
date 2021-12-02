@@ -62,8 +62,9 @@ class UpdateCommand extends PubspecCommandBase {
         }
 
         if (updated == 0) {
-          printInfo(
-              'Dependency <$dependency> is not found in any of pubspec files.');
+          return error(1,
+              message:
+                  'Dependency <$dependency> is not found in any of pubspec files.');
         } else {
           printInfo('Updated $updated pubspec files.');
         }
