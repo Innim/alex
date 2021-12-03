@@ -28,6 +28,7 @@ class FromXmlCommand extends L10nCommandBase {
   static const _targetJson = 'json';
 
   static const _argLocale = 'locale';
+  static const _argName = 'name';
   static const _argDir = 'dir';
 
   FromXmlCommand() : super('from_xml', 'Import translations from xml.') {
@@ -69,6 +70,14 @@ class FromXmlCommand extends L10nCommandBase {
         help: 'Locale for import from xml. '
             'If not specified - all locales will be imported.',
         valueHelp: 'LOCALE',
+      )
+      ..addOption(
+        _argName,
+        abbr: 'n',
+        help: 'File name without extension for import from xml. '
+            'If not specified - all matching files will be imported. '
+            'Supported by targets: $_targetJson.',
+        valueHelp: 'FILENAME',
       );
   }
 
@@ -79,6 +88,7 @@ class FromXmlCommand extends L10nCommandBase {
 
     final target = args[_argTo] as String;
     final locale = args[_argLocale] as String?;
+    final name = (args[_argName] as String?)?.trim();
 
     final locales = locale != null && locale.isNotEmpty
         ? [locale]
@@ -90,6 +100,7 @@ class FromXmlCommand extends L10nCommandBase {
     }
 
     printVerbose('Import for locales: ${locales.join(', ')}.');
+    if (name != null) printVerbose('Import file <$name>');
 
     try {
       int res;
@@ -104,7 +115,7 @@ class FromXmlCommand extends L10nCommandBase {
           res = await _importToIos(locales);
           break;
         case _targetJson:
-          res = await _importToJson(locales);
+          res = await _importToJson(locales, name);
           break;
         case _targetGoogleDocs:
           // TODO: parameter for filename
@@ -280,7 +291,7 @@ class FromXmlCommand extends L10nCommandBase {
         message: 'Locales ${locales.join(', ')} exported to iOS strings.');
   }
 
-  Future<int> _importToJson(List<String> locales) async {
+  Future<int> _importToJson(List<String> locales, String? name) async {
     final args = argResults!;
     final config = l10nConfig;
     final jsonDirPath = args[_argDir] as String?;
@@ -315,6 +326,18 @@ class FromXmlCommand extends L10nCommandBase {
         names.add(path.withoutExtension(basename));
       }
     }
+
+    if (names.isEmpty || name != null && !names.contains(name)) {
+      return error(1,
+          // ignore: prefer_interpolation_to_compose_strings
+          message: "Can't find any matching files for export. " +
+              (names.isNotEmpty
+                  ? '\nFound following candidates: ${names.join(', ')}.'
+                      '\nLooking for: $name'
+                  : 'No candidates in base locale directory.'));
+    }
+
+    if (name != null) names.removeWhere((n) => n != name);
 
     printVerbose('Files to export: ${names.join(', ')}');
 
