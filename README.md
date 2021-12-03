@@ -45,6 +45,13 @@ There are more than one solution for this. You can just install separate Dart SD
 
 Or, if you don't want to do it, you can edit specified file (`~/Development/flutter/.pub-cache/bin/alex` in this example). All you need to change in it - it's use `flutter pub` instead of `pub`, so replace `pub global run alex:alex "$@"` with `flutter pub global run alex:alex "$@"`, save the file, and you are all set.
 
+#### Fix problems with cyrillic encoding on Windows
+
+When entering Cyrillic characters (while saving changelog) they may not be displayed correctly or may not be displayed at all.
+To avoid this, it is recommended to use the external git bash terminal (C:\Program Files\Git), in the settings of which you must specify encoding (Options -> Text -> Character set -> UTF-8).
+
+![](https://raw.githubusercontent.com/Innim/alex/master/readme_images/bash.png)
+
 ### Usage
 
 `alex` is working in the current directory. So if you want to work with a specific project, you should run the command in project's root directory.
@@ -94,12 +101,6 @@ or
 ```
 alex f f -i{issueId}
 ```
-### Fix problems with cyrillic encoding on Windows
-
-When saving the changelog, the characters may not be displayed correctly or may not be displayed at all.
-To avoid this, it is recommended to use the external git bash terminal, in the settings of which you must specify encoding (Options -> Text -> Character set -> UTF-8).
-
-![](https://raw.githubusercontent.com/Innim/alex/master/readme_images/bash.png)
 
 ### l10n
 
