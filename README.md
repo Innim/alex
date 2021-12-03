@@ -94,6 +94,12 @@ or
 ```
 alex f f -i{issueId}
 ```
+### Fix problems with cyrillic encoding on Windows
+
+When saving the changelog, the characters may not be displayed correctly or may not be displayed at all.
+To avoid this, it is recommended to use the external git bash terminal, in the settings of which you must specify encoding (Options -> Text -> Character set -> UTF-8).
+
+![](https://raw.githubusercontent.com/Innim/alex/master/readme_images/bash.png)
 
 ### l10n
 
