@@ -13,6 +13,7 @@ import 'src/demo.dart';
 class FinishCommand extends FeatureCommandBase {
   static const _argDemo = CmdArg('demo');
   static const _argIssue = CmdArg('issue', abbr: 'i');
+  static const _argChangelog = CmdArg('changelog', abbr: 'c');
 
   FinishCommand()
       : super(
@@ -27,7 +28,14 @@ class FinishCommand extends FeatureCommandBase {
       )
       ..addArg(
         _argIssue,
-        help: 'Issue number, which used for branch name.',
+        help: 'Issue number, which used for branch name. '
+            'Optional, you can provide it in interactive mode.',
+        valueHelp: 'NUMBER',
+      )
+      ..addArg(
+        _argChangelog,
+        help: 'Line to add in CHANGELOG.md. '
+            'Optional, you can provide it in interactive mode.',
         valueHelp: 'NUMBER',
       );
   }
@@ -38,6 +46,7 @@ class FinishCommand extends FeatureCommandBase {
 
     final isDemo = args.getBool(_argDemo);
     var issueId = args.getInt(_argIssue);
+    final changelog = args.getString(_argChangelog);
 
     try {
       final console = this.console;
@@ -98,7 +107,7 @@ class FinishCommand extends FeatureCommandBase {
       git.gitflowFeatureFinish(branchName, deleteBranch: false);
 
       printVerbose('Add entry in changelog');
-      final changed = await _updateChangelog(console, fs);
+      final changed = await _updateChangelog(console, fs, changelog);
 
       if (changed) {
         printVerbose('Commit changelog');
@@ -158,7 +167,8 @@ class FinishCommand extends FeatureCommandBase {
     return res.first;
   }
 
-  Future<bool> _updateChangelog(Console console, FileSystem fs) async {
+  Future<bool> _updateChangelog(
+      Console console, FileSystem fs, String? changelogLine) async {
     final changelog = Changelog(fs);
 
     if (!(await changelog.exists)) {
@@ -173,8 +183,14 @@ class FinishCommand extends FeatureCommandBase {
     }
 
     // TODO: get changelog entry candidate from task
-    printInfo('Enter changelog line:');
-    final line = console.readLineSync();
+    final String? line;
+    if (changelogLine == null || changelogLine.isEmpty) {
+      printInfo('Enter changelog line:');
+      line = console.readLineSync();
+    } else {
+      line = changelogLine;
+      printInfo('Changelog line: $line');
+    }
 
     if (line == null || line.isEmpty) {
       printInfo('No changelog record');

@@ -2,6 +2,7 @@
   * trim dependency name;
   * error if dependency is not found in any of pubspec files.
 * L10n: `from_xml` supports `name` argument for `json` target.
+* Finish Feature: Ability to provide changelog line as a command argument.
 
 ## 1.0.0 - 2021-12-01
 

@@ -275,8 +275,13 @@ extension CmdArgArgParserExtension on ArgParser {
 
 extension CmdArgArgResultsExtension on ArgResults {
   bool getBool(CmdArg arg) => this[arg.name] as bool;
+
   int? getInt(CmdArg arg) {
     final val = this[arg.name] as String?;
     return val == null ? null : int.tryParse(val);
+  }
+
+  String? getString(CmdArg arg) {
+    return this[arg.name] as String?;
   }
 }

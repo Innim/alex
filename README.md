@@ -110,6 +110,13 @@ alex f f
 
 Then alex will print all current feature branches and ask for issue id in interactive mode.
 
+If you have a problem with interactive mode (for example encoding issues on Window),
+you can provide changelog line as an argument:
+
+```
+alex f f -i{issueId} -c'Some new feature'
+```
+
 ### l10n
 
 Work with localization files.
