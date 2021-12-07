@@ -1,3 +1,5 @@
+## 1.0.1 - 2021-12-01
+
 * `pub update`: 
   * trim dependency name;
   * error if dependency is not found in any of pubspec files.
