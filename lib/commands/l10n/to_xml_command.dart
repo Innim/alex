@@ -219,13 +219,13 @@ Filename: $baseName
 
   Future<int> _proccessArb(File file, String outputDir) async {
     final src = await file.readAsString();
-    final data = _jsonDecoder.decode(src) as Map<String, Object>;
+    final data = _jsonDecoder.decode(src) as Map<String, dynamic>;
     final res = <String, _StrData>{};
     data.forEach((key, value) {
       if (key.startsWith('@')) {
         final strKey = key.substring(1);
         if (res.containsKey(strKey)) {
-          res[strKey]!.meta = value as Map<String, Object>;
+          res[strKey]!.meta = value as Map<String, dynamic>;
         }
       } else {
         res[key] = _StrData(key, value as String);
@@ -275,12 +275,12 @@ Filename: $baseName
 class _StrData {
   final String key;
   final String value;
-  Map<String, Object>? meta;
+  Map<String, dynamic>? meta;
 
   _StrData(this.key, this.value);
 
   void add2Xml(StringBuffer xml) {
-    final desc = meta != null ? meta!['description'] as String : null;
+    final desc = meta != null ? meta!['description'] as String? : null;
     if (desc?.isNotEmpty ?? false) xml.writeln('<!-- $desc -->');
 
     final parsed = arbDecoder.decodeValue(key, value);

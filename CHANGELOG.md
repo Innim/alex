@@ -1,4 +1,7 @@
+## 1.0.1+1 - 2021-12-08
+
 * `l10n to_xml`:
+  * **Fixed**: cast error on ARB processing.
   * **Fixed**: exceptions during execution are not handled.
   * More detailed log on exception in verbose mode.
 
