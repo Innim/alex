@@ -73,17 +73,18 @@ class ToXmlCommand extends L10nCommandBase {
     try {
       switch (target) {
         case _sourceArb:
-          return _exportArb(baseLocale);
+          return await _exportArb(baseLocale);
         case _sourceJson:
-          return _exportJson(baseLocale);
+          return await _exportJson(baseLocale);
         case _sourceIos:
-          return _exportIos(baseLocale);
+          return await _exportIos(baseLocale);
         default:
           return error(1, message: 'Unknown target: $target');
       }
     } on RunException catch (e) {
       return errorBy(e);
-    } catch (e) {
+    } catch (e, st) {
+      printVerbose('Exception: $e\nStackTrace: $st');
       return error(2, message: 'Failed by: $e');
     }
   }

@@ -1,4 +1,8 @@
-## 1.0.1 - 2021-12-01
+* `l10n to_xml`:
+  * **Fixed**: exceptions during execution are not handled.
+  * More detailed log on exception in verbose mode.
+
+## 1.0.1 - 2021-12-07
 
 * `pub update`: 
   * trim dependency name;
