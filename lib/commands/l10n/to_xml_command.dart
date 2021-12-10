@@ -193,7 +193,7 @@ Filename: $baseName
     printVerbose('Export $name');
 
     final json = await file.readAsString();
-    final map = jsonDecode(json) as Map<String, Object>;
+    final map = jsonDecode(json) as Map<String, dynamic>;
 
     final data =
         map.map((key, value) => MapEntry(key, _StrData(key, value as String)));

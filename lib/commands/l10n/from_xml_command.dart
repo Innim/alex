@@ -127,7 +127,8 @@ class FromXmlCommand extends L10nCommandBase {
       return res;
     } on RunException catch (e) {
       return errorBy(e);
-    } catch (e) {
+    } catch (e, st) {
+      printVerbose('Exception: $e\nStackTrace: $st');
       return error(2, message: 'Failed by: $e');
     }
   }
@@ -138,7 +139,7 @@ class FromXmlCommand extends L10nCommandBase {
     final baseArbFile = File(path.join(
         L10nUtils.getDirPath(config), L10nUtils.getArbMessagesFile(config)));
     final baseArb =
-        jsonDecode(await baseArbFile.readAsString()) as Map<String, Object>;
+        jsonDecode(await baseArbFile.readAsString()) as Map<String, dynamic>;
 
     final fileName = config.getMainXmlFileName();
 

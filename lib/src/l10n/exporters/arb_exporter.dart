@@ -12,7 +12,7 @@ class ArbExporter extends L10nExporter {
 
   static final _lastModifiedLineRegex = RegExp('[ ]*"@@last_modified":.*');
 
-  final Map<String, Object> baseArb;
+  final Map<String, dynamic> baseArb;
   final String targetPath;
 
   ArbExporter(
@@ -27,11 +27,11 @@ class ArbExporter extends L10nExporter {
 
     data.forEach((key, value) {
       final metaKey = '@$key';
-      final baseMeta = baseArb[metaKey] as Map<String, Object>?;
+      final baseMeta = baseArb[metaKey] as Map<String, dynamic>?;
       if (baseMeta == null) throw MissedMetaException(key);
 
       final parameters =
-          (baseMeta['placeholders'] as Map<String, Object>).keys.toSet();
+          (baseMeta['placeholders'] as Map<String, dynamic>).keys.toSet();
 
       if (value is L10nTextEntry) {
         map[key] = _processText(key, parameters, value.text);

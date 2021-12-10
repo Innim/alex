@@ -1,3 +1,9 @@
+## 1.0.1+2 - 2021-12-10
+
+* `l10n from_xml`:
+  * **Fixed**: cast error on ARB/JSON processing.
+  * More detailed log on exception in verbose mode.
+
 ## 1.0.1+1 - 2021-12-08
 
 * `l10n to_xml`:
