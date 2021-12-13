@@ -35,8 +35,9 @@ class FinishCommand extends FeatureCommandBase {
       ..addArg(
         _argChangelog,
         help: 'Line to add in CHANGELOG.md. '
-            'Optional, you can provide it in interactive mode.',
-        valueHelp: 'NUMBER',
+            'Optional, you can provide it in interactive mode. '
+            'Example: alex finish feature -${_argChangelog.abbr}"Some new feature"',
+        valueHelp: 'CHANGELOG',
       );
   }
 
