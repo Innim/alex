@@ -114,8 +114,10 @@ If you have a problem with interactive mode (for example encoding issues on Wind
 you can provide changelog line as an argument:
 
 ```
-alex f f -i{issueId} -c'Some new feature'
+alex f f -i{issueId} -c"Some new feature"
 ```
+
+It's important to use double quote (`"`) on Windows, but on macOS or Linux you can also use a single quote (`'`).
 
 ### l10n
 
