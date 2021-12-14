@@ -1,4 +1,8 @@
-* [Finish Feature] **Fixed**: Description for `changelog` argument.
+## 1.0.2 - 2021-12-14
+
+* [Finish Feature] 
+  * Adds issue ID for changelog line.
+  * **Fixed**: Description for `changelog` argument.
 
 ## 1.0.1+2 - 2021-12-10
 
