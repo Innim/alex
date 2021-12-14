@@ -255,7 +255,7 @@ void fail([String? message]) {
 }
 
 extension GitCommandsExtension on GitCommands {
-  void ensureCleanAndChekoutDevelop() {
+  void ensureCleanAndCheckoutDevelop() {
     ensureCleanStatus();
 
     if (getCurrentBranch() != branchDevelop) {

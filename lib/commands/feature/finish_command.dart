@@ -71,7 +71,7 @@ class FinishCommand extends FeatureCommandBase {
       }
 
       printVerbose('Pull develop and check status');
-      git.ensureCleanAndChekoutDevelop();
+      git.ensureCleanAndCheckoutDevelop();
 
       final branches = await _getFeatureBranches(git);
 

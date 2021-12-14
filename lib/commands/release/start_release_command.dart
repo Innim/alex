@@ -40,7 +40,7 @@ class StartReleaseCommand extends AlexCommand {
       git = GitCommands(DemoGit());
     }
 
-    git.ensureCleanAndChekoutDevelop();
+    git.ensureCleanAndCheckoutDevelop();
 
     final spec = await Spec.pub(fs);
     final version = spec.version;
