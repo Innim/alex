@@ -35,6 +35,41 @@ const addAddedResultWithAddedAndFixed = '''
 - Old bug fix 2.
 ''';
 
+const addAddedWithIssueIdResultWithAddedAndFixed = '''
+## Next release
+
+### Added 
+
+- Some new feature.
+- New added line. (#123)
+
+### Fixed
+
+- Some bug fix.
+
+## v0.8.0+4064 - 2021-09-24
+
+### Added
+
+- Feature 1.
+- Feature 2.
+
+### Fixed
+
+- Bug fix.
+
+## v0.7.9+4060 - 2021-08-30
+
+### Added
+
+- Old feature.
+
+### Fixed
+
+- Old bug fix 1.
+- Old bug fix 2.
+''';
+
 const addAddedResultWithEmpty = '''
 ## Next release
 

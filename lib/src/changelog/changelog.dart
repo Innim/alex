@@ -95,14 +95,16 @@ class Changelog {
         "$_nextVersionHeader\n\n$_versionHeaderPrefix$version - $dateStr"));
   }
 
-  Future<void> addAddedEntry(String line) => _addEntry(_addedSubheader, line);
-  Future<void> addFixedEntry(String line) => _addEntry(_fixedSubheader, line);
-  Future<void> addPreReleaseEntry(String line) =>
-      _addEntry(_preReleaseSubheader, line);
+  Future<void> addAddedEntry(String line, [int? issueId]) =>
+      _addEntry(_addedSubheader, line, issueId);
+  Future<void> addFixedEntry(String line, [int? issueId]) =>
+      _addEntry(_fixedSubheader, line, issueId);
+  Future<void> addPreReleaseEntry(String line, [int? issueId]) =>
+      _addEntry(_preReleaseSubheader, line, issueId);
 
   String get _filepath => _filename;
 
-  Future<void> _addEntry(String subheader, String line) async {
+  Future<void> _addEntry(String subheader, String line, int? issueId) async {
     const sep = '\n';
     const entryStart = '- ';
     const entryEnd = '.';
@@ -162,9 +164,29 @@ class Changelog {
     }
 
     final entry = StringBuffer();
-    if (!line.trimLeft().startsWith(entryStart)) entry.write(entryStart);
-    entry.write(line);
-    if (!line.trimRight().endsWith(entryEnd)) entry.write(entryEnd);
+
+    var str = line;
+    String? issueSuffix;
+    if (issueId != null) {
+      issueSuffix = '(#$issueId)';
+      var clearedStr = str.trimRight();
+      var clearedEnd = clearedStr.length;
+      for (var i = clearedEnd - 1; i >= 0; i--) {
+        if (clearedStr[i] != '.') break;
+        clearedEnd--;
+      }
+      clearedStr = clearedStr.substring(0, clearedEnd);
+      if (clearedStr.endsWith(issueSuffix)) {
+        str = clearedStr
+            .substring(0, clearedStr.length - issueSuffix.length)
+            .trimRight();
+      }
+    }
+
+    if (!str.trimLeft().startsWith(entryStart)) entry.write(entryStart);
+    entry.write(str);
+    if (!str.trimRight().endsWith(entryEnd)) entry.write(entryEnd);
+    if (issueSuffix != null) entry..write(' ')..write(issueSuffix);
 
     lines.insert(targetIndex, entry.toString());
 

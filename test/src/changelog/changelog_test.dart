@@ -137,6 +137,54 @@ void main() {
 
       expect(await changelog.content, addAddedResultWithEmpty);
     });
+
+    test('should add issueId to line if provided', () async {
+      final changelog =
+          Changelog(_FileSystemMock(nextReleaseWithAddedAndFixed));
+
+      await changelog.addAddedEntry('New added line', 123);
+
+      expect(
+        await changelog.content,
+        addAddedWithIssueIdResultWithAddedAndFixed,
+      );
+    });
+
+    test('should not add issueId if already exist', () async {
+      final changelog =
+          Changelog(_FileSystemMock(nextReleaseWithAddedAndFixed));
+
+      await changelog.addAddedEntry('New added line. (#123)', 123);
+
+      expect(
+        await changelog.content,
+        addAddedWithIssueIdResultWithAddedAndFixed,
+      );
+    });
+
+    test('should add dot before issueId', () async {
+      final changelog =
+          Changelog(_FileSystemMock(nextReleaseWithAddedAndFixed));
+
+      await changelog.addAddedEntry('New added line (#123)', 123);
+
+      expect(
+        await changelog.content,
+        addAddedWithIssueIdResultWithAddedAndFixed,
+      );
+    });
+
+    test('should remove dot after issueId', () async {
+      final changelog =
+          Changelog(_FileSystemMock(nextReleaseWithAddedAndFixed));
+
+      await changelog.addAddedEntry('New added line (#123).', 123);
+
+      expect(
+        await changelog.content,
+        addAddedWithIssueIdResultWithAddedAndFixed,
+      );
+    });
   });
 }
 
