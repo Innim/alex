@@ -12,7 +12,8 @@ class DemoGit extends Git {
       case "remote":
         return "https://github.com/demo/demo.git";
       case "branch":
-        if (args[1] == '-a') {
+        final a = args[1];
+        if (a == '-a') {
           return '''
   feature/612.subscriptions
   feature/615.up-version-fb
@@ -22,6 +23,9 @@ class DemoGit extends Git {
   remotes/origin/feature/614.redmi-update-fix
   remotes/origin/feature/615.up-version-fb
 ''';
+        }
+        if (a == '--show-current') {
+          return 'feature/615.up-version-fb';
         }
     }
 

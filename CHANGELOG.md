@@ -1,3 +1,6 @@
+
+* [Finish Feature] Returns to the original branch after finish.
+
 ## 1.0.2 - 2021-12-14
 
 * [Finish Feature] 

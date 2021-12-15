@@ -70,6 +70,8 @@ class FinishCommand extends FeatureCommandBase {
             message: 'You should run command from project root directory.');
       }
 
+      final prevBranch = git.getCurrentBranch();
+      printVerbose('Current branch: $prevBranch');
       printVerbose('Pull develop and check status');
       git.ensureCleanAndCheckoutDevelop();
 
@@ -102,7 +104,7 @@ class FinishCommand extends FeatureCommandBase {
       // priotiry - remote if exist
       final branchName = (branch.remoteName ?? branch.localName)!;
 
-      // TODO: Merge develop in remote feature branch?
+      // TODO: Merge develop in remote feature branch if conflict
 
       printVerbose('Merge feature branch in develop');
       git.gitflowFeatureFinish(branchName, deleteBranch: false);
@@ -122,10 +124,15 @@ class FinishCommand extends FeatureCommandBase {
       printVerbose('Remove feature branch');
       git.branchDelete(branchName);
 
-      printVerbose('Merge develop in branchTest');
+      printVerbose('Merge develop in $branchTest');
       git.mergeDevelopInTest();
 
       // TODO: handle merge conflicts
+
+      if (prevBranch != branchDevelop && prevBranch != branch.localName) {
+        printVerbose('Return to the branch $prevBranch');
+        git.checkout(prevBranch);
+      }
 
       return success(message: 'Finished 🏁');
     } on RunException catch (e) {
