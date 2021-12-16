@@ -1,3 +1,4 @@
+## 1.0.3 - 2021-12-16
 
 * [Finish Feature] Returns to the original branch after finish.
 * [L10n] Ability to provide different target filename for `import_xml`. 
