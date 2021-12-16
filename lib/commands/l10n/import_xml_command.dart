@@ -10,6 +10,7 @@ import 'package:path/path.dart' as path;
 class ImportXmlCommand extends L10nCommandBase {
   static const _argPath = 'path';
   static const _argFile = 'file';
+  static const _argTarget = 'target';
   static const _argAll = 'all';
   static const _argNew = 'new';
 
@@ -39,6 +40,15 @@ class ImportXmlCommand extends L10nCommandBase {
             'You can use --$_argAll to import all files.',
         valueHelp: 'FILENAME',
       )
+      ..addOption(
+        _argTarget,
+        abbr: 't',
+        help: 'Target filename, which will be imported (without extension). '
+            'For example if translation file has incorrect name "intl_en", '
+            'you can provider expected target name "intl" with this argument. '
+            "Can't be used if --$_argAll passed.",
+        valueHelp: 'FILENAME',
+      )
       ..addFlag(
         _argAll,
         help: 'Import all files from provided path.',
@@ -54,6 +64,7 @@ class ImportXmlCommand extends L10nCommandBase {
     final args = argResults!;
     final sourcePath = args[_argPath] as String?;
     final fileForImport = args[_argFile] as String?;
+    final targetFileName = args[_argTarget] as String?;
     final importAll = args[_argAll] as bool;
     final importNew = args[_argNew] as bool;
 
@@ -62,16 +73,39 @@ class ImportXmlCommand extends L10nCommandBase {
       return success();
     }
 
-    printVerbose(
-        'Import ${fileForImport ?? 'main'} transalations from: $sourcePath.');
+    if (importAll) {
+      printVerbose('Import all translations from: $sourcePath.');
+      if (fileForImport != null) {
+        return error(1,
+            message:
+                "You can't use argument --$_argFile along with --$_argAll");
+      }
+
+      if (targetFileName != null) {
+        return error(1,
+            message:
+                "You can't use argument --$_argTarget along with --$_argAll");
+      }
+    } else {
+      printVerbose(
+          // ignore: prefer_interpolation_to_compose_strings
+          'Import ${fileForImport ?? 'main'} translations from: $sourcePath' +
+              (targetFileName != null ? ' to $targetFileName.' : '.'));
+    }
 
     final config = l10nConfig;
 
     final locales = importNew ? null : await getLocales(config);
 
     try {
-      return _importFromGooglePlay(config, sourcePath,
-          fileForImport: fileForImport, importAll: importAll, locales: locales);
+      return _importFromGooglePlay(
+        config,
+        sourcePath,
+        fileForImport: fileForImport,
+        targetFileName: targetFileName,
+        importAll: importAll,
+        locales: locales,
+      );
     } on RunException catch (e) {
       return errorBy(e);
     } catch (e) {
@@ -83,20 +117,26 @@ class ImportXmlCommand extends L10nCommandBase {
     L10nConfig config,
     String sourcePath, {
     String? fileForImport,
+    String? targetFileName,
     bool importAll = false,
     List<String>? locales,
   }) async {
-    final filename = importAll
+    final srcFilename = importAll
         ? null
         : (fileForImport == null
             ? config.getMainXmlFileName()
             : _getFilenameByBaseName(fileForImport));
+    final destFilename = importAll
+        ? null
+        : (targetFileName == null
+            ? srcFilename
+            : _getFilenameByBaseName(targetFileName));
 
     final sourceDir = await _requireDirectory(sourcePath);
 
     final translationUid = path.basename(sourcePath);
     final projectUid =
-        filename != null ? path.withoutExtension(filename) : null;
+        srcFilename != null ? path.withoutExtension(srcFilename) : null;
 
     // TODO: check that all locales (rather than base and gp base) presented
     final imported = <String>{};
@@ -112,7 +152,7 @@ class ImportXmlCommand extends L10nCommandBase {
             gpProjectUid ?? projectUid,
             translationUid,
             googlePlayLocale,
-            targetFilename ?? filename,
+            targetFilename ?? destFilename,
             locales);
 
     // In some cases source filename may be just base filename
@@ -134,9 +174,10 @@ class ImportXmlCommand extends L10nCommandBase {
 
             useBaseName ??=
                 !File(path.join(item.path, compositeFilename)).existsSync() &&
-                    File(path.join(item.path, filename)).existsSync();
+                    File(path.join(item.path, srcFilename)).existsSync();
 
-            final sourceFilename = useBaseName ? filename! : compositeFilename;
+            final sourceFilename =
+                useBaseName ? srcFilename! : compositeFilename;
 
             await import(item, sourceFilename, googlePlayLocale);
           } else {
