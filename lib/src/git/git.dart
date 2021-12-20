@@ -87,8 +87,9 @@ class GitCommands {
     // TODO: not sure that's correct
     ensure(() => remoteGetUrl("ensure that upstream remote is valid"), (r) {
       // print("r: " + r);
-      return !(r.startsWith("http") && r.length > 8);
-    }, "Current directory has no valid upstream setting.");
+      return !(r.startsWith("http") && r.length > 8 ||
+          r.startsWith('git@') && r.endsWith('.git'));
+    }, "Current directory has no valid upstream setting. Check remote URL.");
   }
 
   void gitflowReleaseStart(String name, [String? desc]) {

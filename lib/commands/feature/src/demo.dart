@@ -10,6 +10,7 @@ class DemoGit extends Git {
 
     switch (args[0]) {
       case "remote":
+        // return 'git@git.innim.ru:demo/demo-client.git';
         return "https://github.com/demo/demo.git";
       case "branch":
         final a = args[1];

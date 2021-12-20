@@ -1,3 +1,7 @@
+## 1.0.4 - 2021-12-20
+
+* Support for SSH GIT remote URL.
+
 ## 1.0.3 - 2021-12-16
 
 * [Finish Feature] Returns to the original branch after finish.
