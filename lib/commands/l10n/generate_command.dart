@@ -9,7 +9,8 @@ import 'package:path/path.dart' as path;
 /// Command to generate dart files by arb files.
 class GenerateCommand extends L10nCommandBase {
   GenerateCommand()
-      : super('generate', 'Generate strings dart files by arb files.');
+      : super('generate', 'Generate strings dart files by arb files.',
+            const ['gen']);
 
   @override
   Future<int> run() async {

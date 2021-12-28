@@ -1,3 +1,7 @@
+## 1.0.5 - 2021-12-28
+
+* Aliases for `l10n` (`l`) and `l10n generate` (`l10n gen`).
+
 ## 1.0.4 - 2021-12-20
 
 * Support for SSH GIT remote URL.

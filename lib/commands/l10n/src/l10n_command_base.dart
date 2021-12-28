@@ -15,7 +15,9 @@ abstract class L10nCommandBase extends AlexCommand {
 
   String? _intlGeneratorPackage;
 
-  L10nCommandBase(String name, String description) : super(name, description);
+  L10nCommandBase(String name, String description,
+      [List<String> aliases = const []])
+      : super(name, description, aliases);
 
   L10nConfig get l10nConfig => AlexConfig.instance.l10n;
 
