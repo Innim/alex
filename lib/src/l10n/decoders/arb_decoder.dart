@@ -32,7 +32,7 @@ class ArbDecoder {
   Object _decodeValue(String value) {
     var parsed = _pluralAndGenderParser.parse(value).value as Object;
     if (parsed is LiteralString && parsed.string.isEmpty) {
-      parsed = _plainParser.parse(value).value;
+      parsed = _plainParser.parse(value).value as Object;
     }
 
     return parsed;
@@ -58,7 +58,7 @@ class ArbDecoder {
   L10nPluralEntry _convertPlural(String key, Plural value) {
     String? toStr(Message? val) {
       if (val == null) return null;
-      return val.expanded((msg, chunk) {
+      return val.expanded((dynamic msg, dynamic chunk) {
         if (chunk is String) return chunk;
         if (chunk is LiteralString) return chunk.string;
 

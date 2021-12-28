@@ -195,8 +195,8 @@ Filename: $baseName
     final json = await file.readAsString();
     final map = jsonDecode(json) as Map<String, dynamic>;
 
-    final data =
-        map.map((key, value) => MapEntry(key, _StrData(key, value as String)));
+    final data = map.map(
+        (key, dynamic value) => MapEntry(key, _StrData(key, value as String)));
 
     // TODO: add some unique prefix
 
@@ -221,7 +221,7 @@ Filename: $baseName
     final src = await file.readAsString();
     final data = _jsonDecoder.decode(src) as Map<String, dynamic>;
     final res = <String, _StrData>{};
-    data.forEach((key, value) {
+    data.forEach((key, dynamic value) {
       if (key.startsWith('@')) {
         final strKey = key.substring(1);
         if (res.containsKey(strKey)) {
