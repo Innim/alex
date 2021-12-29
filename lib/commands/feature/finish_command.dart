@@ -115,7 +115,7 @@ class FinishCommand extends FeatureCommandBase {
       if (changed) {
         printVerbose('Commit changelog');
         git.addAll();
-        git.commit("Changelog: issue #$issueId.");
+        git.commit("Changelog: issue #$issueId.\n\nBy alex.");
       }
 
       printVerbose('Push develop');
@@ -294,7 +294,10 @@ class _Branch {
   String toString() {
     final sb = StringBuffer(name);
     if (remoteName != null) {
-      sb..write(' [')..write(remoteName)..write(']');
+      sb
+        ..write(' [')
+        ..write(remoteName)
+        ..write(']');
     }
     return sb.toString();
   }
