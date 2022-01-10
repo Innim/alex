@@ -1,3 +1,7 @@
+## 1.0.5+1 - 2022-01-10
+
+* More detailed error when parse XML failed.
+
 ## 1.0.5 - 2021-12-28
 
 * Aliases for `l10n` (`l`) and `l10n generate` (`l10n gen`).

@@ -434,7 +434,13 @@ class FromXmlCommand extends L10nCommandBase {
   Future<XmlDocument> _loadXml(
       L10nConfig config, String fileBaseName, String locale) async {
     final file = _getXmlFile(config, fileBaseName, locale);
-    return XmlDocument.parse(await file.readAsString());
+    try {
+      return XmlDocument.parse(await file.readAsString());
+    } catch (e, st) {
+      printVerbose('Exception during load xml from ${file.path}: $e\n$st');
+      throw RunException.err(
+          'Failed load XML for <$locale> [${file.path}]: $e');
+    }
   }
 
   File _getXmlFile(L10nConfig config, String fileBaseName, String locale) {
