@@ -133,6 +133,15 @@ class GitCommands {
     git('tag -m "$tag" -a $tag', "set tag $tag");
   }
 
+  String getCurrentCommit(String branch) {
+    return git('rev-parse $branch', "get current commit for $branch");
+  }
+
+  String getLastCommonCommit(String branchA, String branchB) {
+    return git('merge-base $branchA $branchB',
+        "get last common commit for $branchA and $branchB");
+  }
+
   String remoteGetUrl(String desc, [String remote = defaultRemote]) {
     return git("remote get-url $remote", desc);
   }
