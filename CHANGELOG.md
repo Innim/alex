@@ -1,3 +1,7 @@
+## 1.0.6 - 2022-02-07
+
+* [Finish Feature] Removes local feature branch if it's merged in remote.
+
 ## 1.0.5+1 - 2022-01-10
 
 * More detailed error when parse XML failed.

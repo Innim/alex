@@ -121,6 +121,22 @@ class FinishCommand extends FeatureCommandBase {
       printVerbose('Push develop');
       git.push(branchDevelop);
 
+      if (branchName == branch.remoteName && branch.localName != null) {
+        final localName = branch.localName!;
+        printVerbose('Check local feature branch $localName');
+
+        final localCommit = git.getCurrentCommit(localName);
+        final commonCommit = git.getLastCommonCommit(localName, branchName);
+
+        if (localCommit == commonCommit) {
+          printVerbose('Remove local feature branch');
+          git.branchDelete(localName);
+        } else {
+          printVerbose('Local branch different from remote. '
+              'Do not delete $localName');
+        }
+      }
+
       printVerbose('Remove feature branch');
       git.branchDelete(branchName);
 
