@@ -13,11 +13,12 @@ class ExtractCommand extends L10nCommandBase {
 
   @override
   Future<int> doRun() async {
-    final config = l10nConfig;
+    final config = getConfigAndSetWorkingDir();
+    final l10nConfig = config.l10n;
 
     try {
-      final outputDir = config.outputDir;
-      final sourcePath = config.sourceFile;
+      final outputDir = l10nConfig.outputDir;
+      final sourcePath = l10nConfig.sourceFile;
 
       await runIntlOrFail(
         'extract_to_arb',
