@@ -1,6 +1,10 @@
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
+import 'package:path/path.dart' as p;
+
+import 'pub_spec.dart';
 
 /// Run configuration.
 class AlexConfig {
@@ -9,6 +13,7 @@ class AlexConfig {
   static const _mainConfigFile = 'pubspec.yaml';
 
   static AlexConfig? _instance;
+  static final _logger = Logger('alex_config');
 
   /// Returns instance of loaded configuration.
   static AlexConfig get instance {
@@ -20,24 +25,38 @@ class AlexConfig {
   }
 
   /// Load configuration.
-  static void load([String? configFile]) {
+  static void load({String? path, bool recursive = true}) {
     assert(_instance == null);
 
-    if (configFile != null) {
-      _tryLoadConfigFile(configFile);
+    if (path != null) {
+      _tryLoadConfigFile(path);
     } else {
-      if (!_tryLoadConfigFile(_defaultConfigFile) &&
-          !_tryLoadConfigFile(_mainConfigFile, _configSection)) {
-        throw Exception('Config file is not found');
+      final dirs = recursive
+          ? Spec.getPubspecsSync().map((e) => p.dirname(e.path))
+          : const ['./'];
+
+      for (final dir in dirs) {
+        if (_tryLoadConfigFile(p.join(dir, _defaultConfigFile)) ||
+            _tryLoadConfigFile(p.join(dir, _mainConfigFile), _configSection)) {
+          return;
+        }
       }
+
+      throw Exception(
+          'Config file or section alex in pubspec.yaml are not found');
     }
   }
 
   static bool _tryLoadConfigFile(String path, [String? section]) {
     final file = File(path);
     if (file.existsSync()) {
-      final config = _loadConfigFile(file, section);
-      _instance = config;
+      try {
+        final config = _loadConfigFile(file, section);
+        _instance = config;
+      } catch (e) {
+        _logger.fine('Config was not loaded due $e');
+        return false;
+      }
       return true;
     } else {
       return false;
@@ -65,14 +84,15 @@ class AlexConfig {
       }
     }
 
-    return AlexConfig._(yamlMap);
+    return AlexConfig._(file.path, yamlMap);
   }
 
+  final String _path;
   final YamlMap _data;
 
   L10nConfig? _l10n;
 
-  AlexConfig._(this._data);
+  AlexConfig._(this._path, this._data);
 
   L10nConfig get l10n {
     const key = 'l10n';
@@ -80,9 +100,11 @@ class AlexConfig {
         ? L10nConfig.fromYaml(_data[key] as YamlMap)
         : L10nConfig();
   }
+
+  String get rootPath => p.dirname(_path);
 }
 
-/// Configutation for manage localization.
+/// Configuration for manage localization.
 class L10nConfig {
   static const String _defaultOutputDir = 'lib/application/l10n';
   static const String _defaultSourceFile = 'lib/application/localization.dart';
@@ -91,7 +113,7 @@ class L10nConfig {
   static const String _defaultBaseLocaleForXml = 'en';
   static const String _defaultXmlOutputDir = 'lib/application/l10n/xml';
 
-  /// Path to the outpur directory for arb files.
+  /// Path to the output directory for arb files.
   final String outputDir;
 
   /// Path to the source dart file.
@@ -117,7 +139,7 @@ class L10nConfig {
   /// See [xmlOutputDir].
   final String baseLocaleForXml;
 
-  /// Path to the outpur directory for xml files.
+  /// Path to the output directory for xml files.
   ///
   /// See [baseLocaleForXml].
   final String xmlOutputDir;

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:alex/src/config.dart';
 import 'package:alex/src/console/console.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/internal/print.dart' as print;
@@ -7,6 +8,7 @@ import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
+import 'package:path/path.dart' as p;
 
 /// Базовый класс команды.
 abstract class AlexCommand extends Command<int> {
@@ -44,6 +46,9 @@ abstract class AlexCommand extends Command<int> {
   @protected
   bool get isVerbose => argResults!['verbose'] as bool;
 
+  @protected
+  AlexConfig get config => AlexConfig.instance;
+
   @override
   @nonVirtual
   Future<int> run() async {
@@ -53,6 +58,17 @@ abstract class AlexCommand extends Command<int> {
 
   @protected
   Future<int> doRun();
+
+  @protected
+  AlexConfig getConfigAndSetWorkingDir() {
+    final config = this.config;
+    if (!p.equals(Directory.current.path, config.rootPath)) {
+      printVerbose('Set current dir: ${config.rootPath}');
+      Directory.current = config.rootPath;
+    }
+    return config;
+  }
+
   /// Prints message if verbose flag is on.
   @protected
   void printVerbose(String message) {
