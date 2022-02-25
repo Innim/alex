@@ -84,7 +84,9 @@ class FromXmlCommand extends L10nCommandBase {
   @override
   Future<int> doRun() async {
     final args = argResults!;
-    final config = l10nConfig;
+    final runDirPath = path.current;
+    final config = findConfigAndSetWorkingDir();
+    final l10nConfig = config.l10n;
 
     final target = args[_argTo] as String;
     final locale = args[_argLocale] as String?;
@@ -92,34 +94,36 @@ class FromXmlCommand extends L10nCommandBase {
 
     final locales = locale != null && locale.isNotEmpty
         ? [locale]
-        : await getLocales(config);
+        : await getLocales(l10nConfig);
 
     if (locales.isEmpty) {
       return success(
-          message: 'No locales found. Check ${config.xmlOutputDir} folder');
+          message: 'No locales found. Check ${l10nConfig.xmlOutputDir} folder');
     }
 
     printVerbose('Import for locales: ${locales.join(', ')}.');
     if (name != null) printVerbose('Import file <$name>');
 
+    final dirs = {path.current, runDirPath};
+
     try {
       int res;
       switch (target) {
         case _targetArb:
-          res = await _importToArb(locales);
+          res = await _importToArb(l10nConfig, locales);
           break;
         case _targetAndroid:
-          res = await _importToAndroid(locales);
+          res = await _importToAndroid(l10nConfig, locales, dirs);
           break;
         case _targetIos:
-          res = await _importToIos(locales);
+          res = await _importToIos(l10nConfig, locales, dirs);
           break;
         case _targetJson:
-          res = await _importToJson(locales, name);
+          res = await _importToJson(l10nConfig, locales, name);
           break;
         case _targetGoogleDocs:
           // TODO: parameter for filename
-          res = await _importToGoogleDocs('screenshot1', locales);
+          res = await _importToGoogleDocs(l10nConfig, 'screenshot1', locales);
           break;
         default:
           res = error(1, message: 'Unknown target: $target');
@@ -133,9 +137,7 @@ class FromXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _importToArb(List<String> locales) async {
-    final config = l10nConfig;
-
+  Future<int> _importToArb(L10nConfig config, List<String> locales) async {
     final baseArbFile = File(path.join(
         L10nUtils.getDirPath(config), L10nUtils.getArbMessagesFile(config)));
     final baseArb =
@@ -174,11 +176,11 @@ class FromXmlCommand extends L10nCommandBase {
             'You can "alex l10n generate" to generate dart code.');
   }
 
-  Future<int> _importToAndroid(List<String> locales) async {
-    final config = l10nConfig;
-    const resPath = 'android/app/src/main/res/';
+  Future<int> _importToAndroid(
+      L10nConfig config, List<String> locales, Set<String> dirs) async {
     const dirName = 'values';
     const filename = 'strings.xml';
+    final resPath = _findAndroidResPath(dirs);
 
     // http://developer.android.com/reference/java/util/Locale.html
     // Note that Java uses several deprecated two-letter codes.
@@ -218,11 +220,11 @@ class FromXmlCommand extends L10nCommandBase {
         message: 'Locales ${locales.join(', ')} copied to android resources.');
   }
 
-  Future<int> _importToIos(List<String> locales) async {
-    final config = l10nConfig;
-    final provider = L10nIosPathProvider(path.current);
+  Future<int> _importToIos(
+      L10nConfig config, List<String> locales, Set<String> dirs) async {
+    final provider = L10nIosPathProvider.from(dirs);
 
-    final baseLocale = l10nConfig.baseLocaleForXml;
+    final baseLocale = config.baseLocaleForXml;
     final filesByProject = <String, Set<String>>{};
     final keysMapByXmlBasename = <String, Map<String, String>>{};
 
@@ -233,7 +235,7 @@ class FromXmlCommand extends L10nCommandBase {
         final xmlBasename =
             provider.getXmlFileName(name, withoutExtension: true);
 
-        final xmlFile = _getXmlFile(l10nConfig, xmlBasename, baseLocale);
+        final xmlFile = _getXmlFile(config, xmlBasename, baseLocale);
         if (await xmlFile.exists()) {
           final files =
               filesByProject[projectName] ?? (filesByProject[projectName] = {});
@@ -292,9 +294,9 @@ class FromXmlCommand extends L10nCommandBase {
         message: 'Locales ${locales.join(', ')} exported to iOS strings.');
   }
 
-  Future<int> _importToJson(List<String> locales, String? name) async {
+  Future<int> _importToJson(
+      L10nConfig config, List<String> locales, String? name) async {
     final args = argResults!;
-    final config = l10nConfig;
     final jsonDirPath = args[_argDir] as String?;
 
     if (jsonDirPath == null || jsonDirPath.isEmpty) {
@@ -365,8 +367,7 @@ class FromXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _importToGoogleDocs(
-      String fileBaseName, List<String> locales) async {
-    final config = l10nConfig;
+      L10nConfig config, String fileBaseName, List<String> locales) async {
     final baseLocale = config.baseLocaleForXml;
     final keys = await _loadKeys(config, fileBaseName, baseLocale);
 
@@ -377,6 +378,18 @@ class FromXmlCommand extends L10nCommandBase {
     }
 
     return success();
+  }
+
+  String _findAndroidResPath(Set<String> dirs) {
+    const resRelativePath = 'android/app/src/main/res/';
+
+    for (final dirPath in dirs) {
+      final resPath = path.join(dirPath, resRelativePath);
+      if (Directory(resPath).existsSync()) return resPath;
+      printVerbose("Skip $dirPath: doesn't contain android project folder");
+    }
+
+    throw Exception("Can't find valid directory for android among provided");
   }
 
   Future<List<String>> _loadKeys(

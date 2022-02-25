@@ -24,7 +24,7 @@ class L10nIosPathProvider {
       _logger.fine("Skip $dirPath: doesn't contain ios project folder");
     }
 
-    throw Exception("Can't find valid directory among provided");
+    throw Exception("Can't find valid directory for ios among provided");
   }
 
   String get iosProjectPath => path.join(projectPath, 'ios');
