@@ -16,6 +16,7 @@ dependencies:
   intl: ^0.17.0
   intl_generator: ^0.2.0+0
   list_ext: ^1.0.4
+  logging: ^1.0.2
   meta: ^1.7.0
   open_url: ^2.0.0
   path: ^1.8.0

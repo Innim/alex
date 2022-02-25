@@ -5,6 +5,7 @@ import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/internal/print.dart' as print;
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
+import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 
 /// Базовый класс команды.
@@ -14,6 +15,7 @@ abstract class AlexCommand extends Command<int> {
   final List<String> _aliases;
 
   Console? _console;
+  final _logger = Logger('alex');
 
   final ArgParser _argParser = ArgParser(
     allowTrailingOptions: false,
@@ -44,16 +46,16 @@ abstract class AlexCommand extends Command<int> {
   /// Prints message if verbose flag is on.
   @protected
   void printVerbose(String message) {
-    if (isVerbose) print.verbose(message);
+    if (isVerbose) _logger.fine(message);
   }
 
   /// Prints some info message in output.
   @protected
-  void printInfo(String message) => print.info(message);
+  void printInfo(String message) => _logger.info(message);
 
   /// Prints error message in error output.
   @protected
-  void printError(String message) => print.error(message);
+  void printError(String message) => _logger.severe(message);
 
   /// Prints 0 code and prints a success message if provided.
   @protected
