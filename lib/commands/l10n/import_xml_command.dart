@@ -93,13 +93,14 @@ class ImportXmlCommand extends L10nCommandBase {
               (targetFileName != null ? ' to $targetFileName.' : '.'));
     }
 
-    final config = l10nConfig;
+    final config = findConfigAndSetWorkingDir();
+    final l10nConfig = config.l10n;
 
-    final locales = importNew ? null : await getLocales(config);
+    final locales = importNew ? null : await getLocales(l10nConfig);
 
     try {
       return _importFromGooglePlay(
-        config,
+        l10nConfig,
         sourcePath,
         fileForImport: fileForImport,
         targetFileName: targetFileName,
