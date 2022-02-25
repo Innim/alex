@@ -50,7 +50,7 @@ class UpdateCommand extends PubspecCommandBase {
       final pubspecFiles = await getPubspecs();
       if (pubspecFiles.isNotEmpty) {
         printVerbose('Sort pubspec files consider mutual dependencies');
-        _sortPubpecs(pubspecFiles);
+        _sortPubspecs(pubspecFiles);
 
         printVerbose('Update pubspec files');
         var updated = 0;
@@ -128,7 +128,7 @@ class UpdateCommand extends PubspecCommandBase {
     return found;
   }
 
-  void _sortPubpecs(List<File> list) {
+  void _sortPubspecs(List<File> list) {
     final specs =
         list.toMap((f) => f, (f) => Spec.byString(f.readAsStringSync()));
     list.sort((a, b) {

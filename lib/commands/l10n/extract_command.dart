@@ -44,5 +44,6 @@ class ExtractCommand extends L10nCommandBase {
             'You can send $mainFile to the translators');
   }
 
-  File _arb(String fileName) => File(path.join(l10nConfig.outputDir, fileName));
+  File _arb(String fileName) =>
+      File(path.join(config.l10n.outputDir, fileName));
 }

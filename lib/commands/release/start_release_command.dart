@@ -108,7 +108,7 @@ $changeLog
   Future<String?> upgradeChangeLog(Version version) async {
     final changelog = Changelog(fs);
 
-    // nothin to do if up to date
+    // nothing to do if up to date
     // TODO: check that this is exactly a last version
     if (!(await changelog.hasVersion(version))) {
       await changelog.releaseVersion(version);

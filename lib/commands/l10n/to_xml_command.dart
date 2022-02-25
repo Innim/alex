@@ -104,7 +104,7 @@ class ToXmlCommand extends L10nCommandBase {
       return error(2, message: 'ABR file for locale $locale is not found');
     }
 
-    return _proccessArb(file, config.getXmlFilesPath(locale));
+    return _processArb(file, config.getXmlFilesPath(locale));
   }
 
   Future<int> _exportJson(String locale) async {
@@ -217,7 +217,7 @@ Filename: $baseName
     return _toXml(res, outputDir, outputName, header: headerComment);
   }
 
-  Future<int> _proccessArb(File file, String outputDir) async {
+  Future<int> _processArb(File file, String outputDir) async {
     final src = await file.readAsString();
     final data = _jsonDecoder.decode(src) as Map<String, dynamic>;
     final res = <String, _StrData>{};

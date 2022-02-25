@@ -165,7 +165,7 @@ class ImportXmlCommand extends L10nCommandBase {
       final name = path.basename(item.path);
       if (name.startsWith(translationUid)) {
         if (item is Directory) {
-          // file pathes like:
+          // file paths like:
           // d_11f922c9b/d_11f922c9b_ko/d_11f922c9b_ko_intl.xml
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
           final uidWithName = '${translationUid}_$googlePlayLocale';
@@ -198,7 +198,7 @@ class ImportXmlCommand extends L10nCommandBase {
             }
           }
         } else if (item is File && item.path.endsWith('.xml')) {
-          // file pathes like:
+          // file paths like:
           // d_11f922f82/d_11f922f82_ar_intl.xml
           // intl/intl_de.xml
           final googlePlayLocale = path
@@ -304,7 +304,7 @@ class ImportXmlCommand extends L10nCommandBase {
   }
 
   String _convertLang(String lang) {
-    // Some locales on Goolge Play Translations
+    // Some locales on Google Play Translations
     // use different lang code
     // than we have in an app.
     const langMap = <String, String>{
