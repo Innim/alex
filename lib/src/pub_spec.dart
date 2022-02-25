@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:alex/src/fs/fs.dart';
@@ -12,6 +13,8 @@ import 'package:version/version.dart';
 /// Some specification.
 class Spec {
   static const fileName = "pubspec.yaml";
+  static final _pubspecSearch = Glob("**$fileName");
+  static final _logger = Logger('pubspec');
 
   /// Returns specification of a project in current directory.
   static Future<Spec> pub(FileSystem fs) async {
@@ -23,21 +26,40 @@ class Spec {
   /// Returns `true` if pubspec is exists in current directory.
   static Future<bool> exists(FileSystem fs) => fs.existsFile(fileName);
 
-  static Future<List<File>> getPubspecs() async {
-    final logger = Logger('pubspec');
+  static List<File> getPubspecsSync() {
     final projectPath = p.current;
-    final pubspecSearch = Glob("**$fileName");
     final pubspecFiles = <File>[];
-    await for (final file
-        in pubspecSearch.list(root: projectPath, followLinks: false)) {
-      if (file is File && p.basename(file.path) == fileName) {
-        logger.finest('Found ${file.path}');
-        pubspecFiles.add(file as File);
-      }
+
+    for (final file
+        in _pubspecSearch.listSync(root: projectPath, followLinks: false)) {
+      _getPubspecsBody(file, pubspecFiles);
     }
 
+    return _getPubspecsEnd(pubspecFiles);
+  }
+
+  static Future<List<File>> getPubspecs() async {
+    final projectPath = p.current;
+    final pubspecFiles = <File>[];
+
+    await for (final file
+        in _pubspecSearch.list(root: projectPath, followLinks: false)) {
+      _getPubspecsBody(file, pubspecFiles);
+    }
+
+    return _getPubspecsEnd(pubspecFiles);
+  }
+
+  static void _getPubspecsBody(FileSystemEntity file, List<File> pubspecFiles) {
+    if (file is File && p.basename(file.path) == fileName) {
+      _logger.finest('Found ${file.path}');
+      pubspecFiles.add(file);
+    }
+  }
+
+  static List<File> _getPubspecsEnd(List<File> pubspecFiles) {
     if (pubspecFiles.isEmpty) {
-      logger.info('Pubspec files are not found');
+      _logger.info('Pubspec files are not found');
     }
 
     return pubspecFiles;
