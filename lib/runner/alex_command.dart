@@ -65,7 +65,7 @@ abstract class AlexCommand extends Command<int> {
 
     final config = this.config;
     if (!p.equals(Directory.current.path, config.rootPath)) {
-      printVerbose('Set current dir: ${config.rootPath}');
+      printInfo('Set current dir: ${config.rootPath}');
       Directory.current = config.rootPath;
     }
     return config;

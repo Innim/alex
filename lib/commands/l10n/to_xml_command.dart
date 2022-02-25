@@ -65,19 +65,23 @@ class ToXmlCommand extends L10nCommandBase {
   @override
   Future<int> doRun() async {
     final args = argResults!;
-    final config = l10nConfig;
+    final runDirPath = path.current;
+    final config = findConfigAndSetWorkingDir();
+    final l10nConfig = config.l10n;
 
     final target = args[_argFrom] as String;
-    final baseLocale = args[_argLocale] as String? ?? config.baseLocaleForXml;
+    final baseLocale =
+        args[_argLocale] as String? ?? l10nConfig.baseLocaleForXml;
 
     try {
       switch (target) {
         case _sourceArb:
-          return await _exportArb(baseLocale);
+          return await _exportArb(l10nConfig, baseLocale);
         case _sourceJson:
-          return await _exportJson(baseLocale);
+          return await _exportJson(l10nConfig, baseLocale);
         case _sourceIos:
-          return await _exportIos(baseLocale);
+          return await _exportIos(
+              l10nConfig, baseLocale, {path.current, runDirPath});
         default:
           return error(1, message: 'Unknown target: $target');
       }
@@ -89,8 +93,7 @@ class ToXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _exportArb(String locale) async {
-    final config = l10nConfig;
+  Future<int> _exportArb(L10nConfig config, String locale) async {
     final l10nSubpath = config.outputDir;
 
     final l10nPath = path.join(path.current, l10nSubpath);
@@ -104,12 +107,12 @@ class ToXmlCommand extends L10nCommandBase {
       return error(2, message: 'ABR file for locale $locale is not found');
     }
 
-    return _processArb(file, config.getXmlFilesPath(locale));
+    return _processArb(
+        file, config.getXmlFilesPath(locale), config.getMainXmlFileName());
   }
 
-  Future<int> _exportJson(String locale) async {
+  Future<int> _exportJson(L10nConfig config, String locale) async {
     final args = argResults!;
-    final config = l10nConfig;
     final jsonBaseDirPath = args[_argSource] as String?;
 
     if (jsonBaseDirPath == null || jsonBaseDirPath.isEmpty) {
@@ -156,9 +159,9 @@ class ToXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _exportIos(String locale) async {
-    final config = l10nConfig;
-    final provider = L10nIosPathProvider(path.current);
+  Future<int> _exportIos(
+      L10nConfig config, String locale, Set<String> dirs) async {
+    final provider = L10nIosPathProvider.from(dirs);
 
     final outputDirPath = config.getXmlFilesPath(locale);
 
@@ -217,7 +220,8 @@ Filename: $baseName
     return _toXml(res, outputDir, outputName, header: headerComment);
   }
 
-  Future<int> _processArb(File file, String outputDir) async {
+  Future<int> _processArb(
+      File file, String outputDir, String outputName) async {
     final src = await file.readAsString();
     final data = _jsonDecoder.decode(src) as Map<String, dynamic>;
     final res = <String, _StrData>{};
@@ -232,8 +236,7 @@ Filename: $baseName
       }
     });
 
-    final relativePath =
-        await _toXml(res, outputDir, l10nConfig.getMainXmlFileName());
+    final relativePath = await _toXml(res, outputDir, outputName);
     return success(message: 'Success! Strings written in $relativePath');
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
+import 'package:logging/logging.dart';
 import 'package:recase/recase.dart';
 import 'package:path/path.dart' as path;
 
@@ -9,11 +10,24 @@ class L10nIosPathProvider {
   static const _xmlPrefix = 'ios_';
   static const _stringsExt = '.strings';
 
+  static final _logger = Logger('is_path_provider');
+
   final String projectPath;
 
   const L10nIosPathProvider(this.projectPath);
 
-  String get iosProjectPath => path.join(path.current, 'ios');
+  factory L10nIosPathProvider.from(Set<String> dirs) {
+    for (final dirPath in dirs) {
+      final provider = L10nIosPathProvider(dirPath);
+      _logger.finest('Check $dirPath');
+      if (provider.iosProjectDir.existsSync()) return provider;
+      _logger.fine("Skip $dirPath: doesn't contain ios project folder");
+    }
+
+    throw Exception("Can't find valid directory among provided");
+  }
+
+  String get iosProjectPath => path.join(projectPath, 'ios');
 
   Directory get iosProjectDir => Directory(iosProjectPath);
 
