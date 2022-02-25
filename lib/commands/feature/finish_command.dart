@@ -101,7 +101,7 @@ class FinishCommand extends FeatureCommandBase {
 
       printInfo('Finish feature $branch');
 
-      // priotiry - remote if exist
+      // priority - remote if exist
       final branchName = (branch.remoteName ?? branch.localName)!;
 
       // TODO: Merge develop in remote feature branch if conflict
@@ -170,9 +170,9 @@ class FinishCommand extends FeatureCommandBase {
     final map = <String, _Branch>{};
 
     for (final branch in branches) {
-      final existen = map[branch.name];
-      if (existen != null) {
-        map[branch.name] = existen.merge(branch);
+      final existing = map[branch.name];
+      if (existing != null) {
+        map[branch.name] = existing.merge(branch);
       } else {
         map[branch.name] = branch;
       }
@@ -187,7 +187,7 @@ class FinishCommand extends FeatureCommandBase {
     final res = branches.where((b) => b.isIssueFeature(issueId));
     if (res.isEmpty) return null;
 
-    // TODO: if more than one - give a choise
+    // TODO: if more than one - give a choice
     return res.first;
   }
 
