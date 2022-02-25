@@ -42,7 +42,7 @@ class FinishCommand extends FeatureCommandBase {
   }
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     final args = argResults!;
 
     final isDemo = args.getBool(_argDemo);

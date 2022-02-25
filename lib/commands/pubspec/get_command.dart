@@ -10,7 +10,7 @@ class GetCommand extends PubspecCommandBase {
                 'for all projects and packages in folder (recursively).');
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     printVerbose('Get dependencies');
 
     try {

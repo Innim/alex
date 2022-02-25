@@ -8,7 +8,7 @@ class FeatureCommand extends AlexCommand {
   }
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     printUsage();
     return 0;
   }

@@ -13,7 +13,7 @@ class GenerateCommand extends L10nCommandBase {
             const ['gen']);
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     final config = l10nConfig;
     final arbFiles = await _getArbFiles(config);
 

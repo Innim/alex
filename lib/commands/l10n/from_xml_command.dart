@@ -82,7 +82,7 @@ class FromXmlCommand extends L10nCommandBase {
   }
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     final args = argResults!;
     final config = l10nConfig;
 

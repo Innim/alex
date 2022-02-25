@@ -6,7 +6,7 @@ class GenerateCommand extends CodeCommandBase {
   GenerateCommand() : super('gen', 'Run code generation.');
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     printInfo('Start code generation...');
 
     try {

@@ -27,7 +27,7 @@ class StartReleaseCommand extends AlexCommand {
   }
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     final args = argResults!;
     final isDemo = args[flagDemo] as bool;
 
@@ -251,7 +251,9 @@ $changeLog
     }
 
     final display = type == ItemType.byDefault ? "block" : "none";
-    final itemNameSb = StringBuffer()..write(prefix)..write(name);
+    final itemNameSb = StringBuffer()
+      ..write(prefix)
+      ..write(name);
     if (isRequired) itemNameSb.write('*');
 
     return template

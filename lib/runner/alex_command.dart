@@ -41,8 +41,18 @@ abstract class AlexCommand extends Command<int> {
   @protected
   set console(Console value) => _console = value;
 
+  @protected
   bool get isVerbose => argResults!['verbose'] as bool;
 
+  @override
+  @nonVirtual
+  Future<int> run() async {
+    print.setupRootLogger(isVerbose: isVerbose);
+    return doRun();
+  }
+
+  @protected
+  Future<int> doRun();
   /// Prints message if verbose flag is on.
   @protected
   void printVerbose(String message) {

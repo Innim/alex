@@ -6,4 +6,10 @@ class ReleaseCommand extends AlexCommand {
   ReleaseCommand() : super('release', 'App release commands') {
     addSubcommand(StartReleaseCommand());
   }
+
+  @override
+  Future<int> doRun() async {
+    printUsage();
+    return 0;
+  }
 }

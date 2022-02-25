@@ -12,7 +12,7 @@ class ExtractCommand extends L10nCommandBase {
       : super('extract', 'Extract strings from Dart code to arb file.');
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     final config = l10nConfig;
 
     try {

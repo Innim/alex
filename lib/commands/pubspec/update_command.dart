@@ -27,7 +27,7 @@ class UpdateCommand extends PubspecCommandBase {
   }
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     final args = argResults!;
     var dependency = _getDepName(args[_argDependency] as String?);
 

@@ -6,7 +6,7 @@ class HelloWorldCommand extends AlexCommand {
   }
 
   @override
-  Future<int> run() async {
+  Future<int> doRun() async {
     printInfo('Enter you name: ');
 
     final name = readLine();
