@@ -25,7 +25,7 @@ class AlexConfig {
   }
 
   /// Load configuration.
-  static void load({String? path, bool recursive = true}) {
+  static void load({String? path, bool recursive = false}) {
     assert(_instance == null);
 
     if (path != null) {

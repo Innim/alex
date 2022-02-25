@@ -14,18 +14,19 @@ class GenerateCommand extends L10nCommandBase {
 
   @override
   Future<int> doRun() async {
-    final config = l10nConfig;
-    final arbFiles = await _getArbFiles(config);
+    final config = findConfigAndSetWorkingDir();
+    final l10nConfig = config.l10n;
+    final arbFiles = await _getArbFiles(l10nConfig);
 
     try {
       await runIntlOrFail(
         'generate_from_arb',
         [
-          '--output-dir=${config.outputDir}',
+          '--output-dir=${l10nConfig.outputDir}',
           '--codegen_mode=release',
           '--use-deferred-loading',
           '--no-suppress-warnings',
-          config.sourceFile,
+          l10nConfig.sourceFile,
           ...arbFiles,
         ],
         prependWithPubGet: true,

@@ -60,7 +60,9 @@ abstract class AlexCommand extends Command<int> {
   Future<int> doRun();
 
   @protected
-  AlexConfig getConfigAndSetWorkingDir() {
+  AlexConfig findConfigAndSetWorkingDir() {
+    AlexConfig.load(recursive: true);
+
     final config = this.config;
     if (!p.equals(Directory.current.path, config.rootPath)) {
       printVerbose('Set current dir: ${config.rootPath}');

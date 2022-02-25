@@ -13,7 +13,7 @@ class ExtractCommand extends L10nCommandBase {
 
   @override
   Future<int> doRun() async {
-    final config = getConfigAndSetWorkingDir();
+    final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
 
     try {
