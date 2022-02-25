@@ -1,3 +1,6 @@
+## 1.1.0 - 2022-02-25
+
+* [L10n] Working with alex configuration defined in pubspec.yaml within subfolder.
 * Prints stack trace in debug.
 
 ## 1.0.6 - 2022-02-07

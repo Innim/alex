@@ -19,8 +19,6 @@ abstract class L10nCommandBase extends AlexCommand {
       [List<String> aliases = const []])
       : super(name, description, aliases);
 
-  L10nConfig get l10nConfig => AlexConfig.instance.l10n;
-
   @protected
   Future<ProcessResult> runIntl(String cmd, List<String> arguments,
       {String? workingDir, bool prependWithPubGet = false}) async {
