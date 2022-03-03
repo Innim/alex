@@ -17,7 +17,7 @@ class GetCommand extends PubspecCommandBase {
       final pubspecFiles = await getPubspecs();
       if (pubspecFiles.isNotEmpty) {
         for (final file in pubspecFiles) {
-          await pubGetOrFail(path: p.dirname(file.path));
+          await flutter.pubGetOrFail(path: p.dirname(file.path));
         }
 
         printInfo('Got dependencies for ${pubspecFiles.length} pubspec files.');

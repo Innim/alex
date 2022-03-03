@@ -123,7 +123,7 @@ class UpdateCommand extends PubspecCommandBase {
     // Run pub get to get write updated entry
     // (get it anyway, event if dependency is not found,
     // because transitive dependencies may been updated)
-    await pubGetOrFail(path: dirPath);
+    await flutter.pubGetOrFail(path: dirPath);
 
     return found;
   }

@@ -23,7 +23,7 @@ abstract class L10nCommandBase extends AlexCommand {
   Future<ProcessResult> runIntl(String cmd, List<String> arguments,
       {String? workingDir, bool prependWithPubGet = false}) async {
     final packageName = await _getIntlGeneratorPackageName();
-    return runPub('$packageName:$cmd', arguments,
+    return flutter.runPub('$packageName:$cmd', arguments,
         workingDir: workingDir, prependWithPubGet: prependWithPubGet);
   }
 
@@ -32,7 +32,7 @@ abstract class L10nCommandBase extends AlexCommand {
       {bool printStdOut = true,
       String? workingDir,
       bool prependWithPubGet = false}) async {
-    return runOrFail(
+    return flutter.runOrFail(
         () => runIntl(cmd, arguments,
             workingDir: workingDir, prependWithPubGet: prependWithPubGet),
         printStdOut: printStdOut);

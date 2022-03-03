@@ -10,7 +10,7 @@ class GenerateCommand extends CodeCommandBase {
     printInfo('Start code generation...');
 
     try {
-      await runPubOrFail(
+      await flutter.runPubOrFail(
         'build_runner',
         [
           'build',
