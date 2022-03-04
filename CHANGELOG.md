@@ -1,3 +1,7 @@
+## 1.2.0 - 2022-03-04
+
+* Support for Dart 2.15 hosted dependency short format.
+
 ## 1.1.0 - 2022-02-25
 
 * [L10n] Working with alex configuration defined in pubspec.yaml within subfolder.

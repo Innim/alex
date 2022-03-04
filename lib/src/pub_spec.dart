@@ -7,7 +7,7 @@ import 'package:glob/list_local_fs.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:plain_optional/plain_optional.dart';
-import 'package:pubspec_yaml/pubspec_yaml.dart';
+import 'package:pubspec_yaml_2/pubspec_yaml_2.dart';
 import 'package:version/version.dart';
 
 /// Some specification.

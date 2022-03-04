@@ -323,13 +323,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
-  pubspec_yaml:
+  pubspec_yaml_2:
     dependency: "direct main"
     description:
-      name: pubspec_yaml
+      name: pubspec_yaml_2
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.1.0"
+    version: "3.2.0"
   quiver:
     dependency: transitive
     description:
@@ -427,7 +427,7 @@ packages:
       name: sum_types
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.3.0"
+    version: "0.3.1"
   term_glyph:
     dependency: transitive
     description:
