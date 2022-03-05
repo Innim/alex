@@ -164,11 +164,18 @@ class FlutterCmd extends CmdBase {
     logger.fine('Checking FVM');
 
     try {
-      final res = await cmd.run(_fvmCmd(), arguments: ['--version']);
+      final res = await cmd.run(
+        _fvmCmd(),
+        arguments: ['--version'],
+        immediatePrintStd: false,
+        immediatePrintErr: false,
+      );
 
       if (res.exitCode == 0) {
         logger.info('Use FVM v${res.stdout}');
         return true;
+      } else {
+        logger.fine('Failed: ${res.stderr} [code: ${res.exitCode}]');
       }
     } on ProcessException catch (e) {
       logger.fine('Failed: ${e.message} [code: ${e.errorCode}]');

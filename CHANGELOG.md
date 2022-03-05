@@ -1,3 +1,7 @@
+## 1.3.0+1 - 2022-03-05
+
+* Disable output for checking FVM.
+
 ## 1.3.0 - 2022-03-05
 
 * Use [`fvm`](https://fvm.app) if installed.
