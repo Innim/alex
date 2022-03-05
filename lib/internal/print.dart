@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:alex/src/const.dart';
 import 'package:logging/logging.dart';
 
 /// Prints some info message in output.
@@ -11,7 +10,7 @@ void error(String message) => stderr.writeln(message);
 
 /// Prints error message in error output.
 void exception(Object message, [StackTrace? stackTrace]) =>
-    error(message.toString() + (isDebug ? '\n$stackTrace' : ''));
+    error(message.toString()); // + (isDebug ? '\n$stackTrace' : ''));
 
 /// Prints some verbose message in output.
 // ignore: avoid_print
