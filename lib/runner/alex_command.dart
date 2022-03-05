@@ -49,7 +49,7 @@ abstract class AlexCommand extends Command<int> {
   Cmd get cmd => _cmd ??= Cmd();
 
   @protected
-  FlutterCmd get flutter => _flutter ??= FlutterCmd(cmd);
+  FlutterCmd get flutter => _flutter ??= FlutterCmd(cmd, isVerbose: isVerbose);
 
   @protected
   set console(Console value) => _console = value;
