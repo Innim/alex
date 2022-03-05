@@ -1,3 +1,7 @@
+## 1.3.0 - 2022-03-05
+
+* Use [`fvm`](https://fvm.app) if installed.
+
 ## 1.2.0 - 2022-03-04
 
 * Support for Dart 2.15 hosted dependency short format.

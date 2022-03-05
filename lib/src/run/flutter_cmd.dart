@@ -9,11 +9,49 @@ class FlutterCmd extends CmdBase {
   @override
   final Logger logger;
 
+  bool? _hasFvm;
+
   FlutterCmd(
     this.cmd, {
     this.isVerbose = false,
     Logger? logger,
   }) : logger = logger ?? Logger('flutter');
+
+  /// Runs `flutter` command.
+  Future<ProcessResult> run(
+    String command, {
+    List<String>? arguments,
+    bool immediatePrintStd = true,
+    bool immediatePrintErr = true,
+    String? workingDir,
+  }) async {
+    const flutter = 'flutter';
+
+    final String executable;
+    final args = <String>[];
+
+    final hasFvm = _hasFvm ??= await _checkIfHasFvm();
+    if (hasFvm) {
+      executable = _fvmCmd();
+      args.add(flutter);
+    } else {
+      executable = _getPlatformSpecificExecutableName(flutter);
+    }
+
+    if (isVerbose) args.add('-v');
+    args.add(command);
+    if (arguments != null) args.addAll(arguments);
+
+    logger.fine('Run: $executable ${args.join(" ")}');
+
+    return cmd.run(
+      executable,
+      arguments: args,
+      workingDir: workingDir,
+      immediatePrintStd: immediatePrintStd,
+      immediatePrintErr: immediatePrintErr,
+    );
+  }
 
   /// Runs `flutter pub` command.
   Future<ProcessResult> pub(
@@ -23,19 +61,13 @@ class FlutterCmd extends CmdBase {
     bool immediatePrintErr = true,
     String? workingDir,
   }) async {
-    final executable = _getPlatformSpecificExecutableName('flutter');
-    final args = <String>[
+    return run(
       'pub',
-      if (isVerbose) '-v',
-      command,
-      if (arguments != null) ...arguments,
-    ];
-
-    logger.fine('Run: $executable ${args.join(" ")}');
-
-    return cmd.run(
-      executable,
-      arguments: args,
+      arguments: <String>[
+        // if (isVerbose) '-v',
+        command,
+        if (arguments != null) ...arguments,
+      ],
       workingDir: workingDir,
       immediatePrintStd: immediatePrintStd,
       immediatePrintErr: immediatePrintErr,
@@ -124,5 +156,25 @@ class FlutterCmd extends CmdBase {
     }
 
     return name;
+  }
+
+  String _fvmCmd() => _getPlatformSpecificExecutableName('fvm');
+
+  Future<bool> _checkIfHasFvm() async {
+    logger.fine('Checking FVM');
+
+    try {
+      final res = await cmd.run(_fvmCmd(), arguments: ['--version']);
+
+      if (res.exitCode == 0) {
+        logger.info('Use FVM v${res.stdout}');
+        return true;
+      }
+    } on ProcessException catch (e) {
+      logger.fine('Failed: ${e.message} [code: ${e.errorCode}]');
+    }
+
+    logger.fine('No FVM');
+    return false;
   }
 }
