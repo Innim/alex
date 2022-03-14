@@ -69,9 +69,8 @@ class Spec {
 
   Spec(this._yamlMap);
 
-  factory Spec.byString(String yaml) {
-    return Spec(yaml.toPubspecYaml());
-  }
+  factory Spec.byString(String yaml) => Spec(yaml.toPubspecYaml());
+  factory Spec.byFile(File yaml) => Spec.byString(yaml.readAsStringSync());
 
   /// Returns name.
   String get name => _yamlMap.name;

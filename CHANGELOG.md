@@ -1,3 +1,7 @@
+## 1.4.0 - 2022-03-14
+
+* [Code] `code gen` command supports run generation for subproject from root folder.
+
 ## 1.3.0+1 - 2022-03-05
 
 * Disable output for checking FVM.

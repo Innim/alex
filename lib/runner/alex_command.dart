@@ -75,11 +75,16 @@ abstract class AlexCommand extends Command<int> {
     AlexConfig.load(recursive: true);
 
     final config = this.config;
-    if (!p.equals(Directory.current.path, config.rootPath)) {
-      printInfo('Set current dir: ${config.rootPath}');
-      Directory.current = config.rootPath;
-    }
+    setCurrentDir(config.rootPath);
     return config;
+  }
+
+  @protected
+  void setCurrentDir(String path) {
+    if (!p.equals(Directory.current.path, path)) {
+      printInfo('Set current dir: $path');
+      Directory.current = path;
+    }
   }
 
   /// Prints message if verbose flag is on.
