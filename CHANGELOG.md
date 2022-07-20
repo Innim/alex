@@ -1,3 +1,7 @@
+## 1.4.0+1 - 2022-07-20
+
+* [L10n] More details in error message if no files for import was found.
+
 ## 1.4.0 - 2022-03-14
 
 * [Code] `code gen` command supports run generation for subproject from root folder.

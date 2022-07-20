@@ -139,6 +139,12 @@ class ImportXmlCommand extends L10nCommandBase {
     final projectUid =
         srcFilename != null ? path.withoutExtension(srcFilename) : null;
 
+    printVerbose('Start import.\n'
+        '\tTranslation UID: $translationUid,\n'
+        '\tProject UID: $projectUid,\n'
+        '\tSource: $srcFilename,\n'
+        '\tDestination: $destFilename.');
+
     // TODO: check that all locales (rather than base and gp base) presented
     final imported = <String>{};
 
@@ -164,6 +170,7 @@ class ImportXmlCommand extends L10nCommandBase {
     // if single file - it's directly in root
     await for (final item in sourceDir.list()) {
       final name = path.basename(item.path);
+      printVerbose('Processing: $name');
       if (name.startsWith(translationUid)) {
         if (item is Directory) {
           // file paths like:
@@ -208,12 +215,21 @@ class ImportXmlCommand extends L10nCommandBase {
               .split('_')
               .first;
           await import(sourceDir, name, googlePlayLocale);
+        } else {
+          printVerbose('Skipped because of invalid extension');
         }
+      } else {
+        printVerbose('Skipped because of discrepancy with translation UID');
       }
     }
 
     if (imported.isEmpty) {
-      return error(2, message: 'There is no files for import in $sourcePath');
+      final folderNameHint = projectUid != null ? ' ($projectUid)' : '';
+      return error(2,
+          message: 'There is no files for import in $sourcePath\n'
+              'Please, check the name of containing folder - '
+              'it should be order UID if translation came from Google Play '
+              'or base name of imported file$folderNameHint.');
     } else {
       final importedLocales = imported.join(", ");
       // TODO: писать сколько всего должно быть? или может даже ошибку выдать?
