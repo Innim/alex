@@ -370,7 +370,7 @@ class Entry {
 
 class ItemType {
   static const ItemType byDefault = ItemType._("default");
-  static const ItemType appStore = ItemType._("appstore", 255);
+  static const ItemType appStore = ItemType._("appstore", 4000);
   static const ItemType googlePlay = ItemType._("googleplay", 500);
 
   static List<ItemType> values = [byDefault, appStore, googlePlay];
