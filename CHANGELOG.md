@@ -1,3 +1,7 @@
+## 1.4.0+2 - 2022-09-01
+
+* [Release] For iOS increased What's New section length to 4000 characters.
+
 ## 1.4.0+1 - 2022-07-20
 
 * [L10n] More details in error message if no files for import was found.
