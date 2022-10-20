@@ -8,6 +8,7 @@ import 'package:alex/src/pub_spec.dart';
 import 'package:meta/meta.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
 
 /// Base command for localization feature.
 abstract class L10nCommandBase extends AlexCommand {
@@ -84,5 +85,41 @@ abstract class L10nCommandBase extends AlexCommand {
     }
 
     return res;
+  }
+}
+
+extension XmlDocumentExtension on XmlDocument {
+  XmlElement get resources => findAllElements('resources').first;
+
+  void forEachResource(void Function(XmlElement child) callback) {
+    for (final child in resources.children) {
+      if (child is XmlElement) callback(child);
+    }
+  }
+}
+
+extension XmlElementExtension on XmlElement {
+  String get attributeName => getAttribute('name')!;
+
+  bool compare(XmlElement other) {
+    if (attributeName == other.attributeName) {
+      final name = this.name.toString();
+      if (name == other.name.toString()) {
+        switch (name) {
+          case 'string':
+            return text.replaceAll('\r', '') == other.text.replaceAll('\r', '');
+          case 'plurals':
+            final myChildren = children.whereType<XmlElement>();
+            final otherChildren = other.children.whereType<XmlElement>();
+            return !myChildren.any((e) =>
+                otherChildren.firstWhereOrNull((oe) =>
+                    oe.getAttribute('quantity') == e.getAttribute('quantity') &&
+                    oe.text == e.text) ==
+                null);
+        }
+      }
+    }
+
+    return false;
   }
 }

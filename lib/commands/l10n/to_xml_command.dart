@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
 
 import 'src/l10n_command_base.dart';
 
@@ -20,6 +21,7 @@ class ToXmlCommand extends L10nCommandBase {
   static const _argFrom = 'from';
   static const _argSource = 'source';
   static const _argLocale = 'locale';
+  static const _argDiffPath = 'diff-path';
 
   static const _sourceArb = 'abr';
   static const _sourceJson = 'json';
@@ -59,6 +61,10 @@ class ToXmlCommand extends L10nCommandBase {
         help: 'Locale to export. By default this is '
             'base_locale_for_xml from alex configuration.',
         valueHelp: 'DIR_PATH',
+      )
+      ..addOption(
+        _argDiffPath,
+        help: 'Path to file with list of changes',
       );
   }
 
@@ -261,6 +267,10 @@ Filename: $baseName
     });
     xml.writeln('</resources>');
 
+    if (argResults?[_argDiffPath] != null) {
+      _addChangedPartsXml(xml.toString(), outputDir, outputName);
+    }
+
     final outputFileName = path.setExtension(outputName, '.xml');
     final dir = Directory(outputDir);
     if (!await dir.exists()) {
@@ -272,6 +282,54 @@ Filename: $baseName
 
     final relativePath = path.relative(output.path);
     return relativePath;
+  }
+
+  void _addChangedPartsXml(String xml, String dirName, String fileName) {
+    final XmlDocument xmlDoc;
+    try {
+      xmlDoc = XmlDocument.parse(xml.toString());
+    } catch (e, st) {
+      printVerbose('Exception during parse xml: $e\n$st');
+      throw RunException.err('Failed parse XML: $e');
+    }
+
+    final oldFile =
+        File(path.join(dirName, path.setExtension(fileName, '.xml')));
+    if (oldFile.existsSync()) {
+      XmlDocument? oldXml;
+      try {
+        oldXml = XmlDocument.parse(oldFile.readAsStringSync());
+      } catch (e, st) {
+        printVerbose(
+            'Exception during parsing xml from ${oldFile.path}: $e\n$st');
+        throw RunException.err('Failed parsing XML from ${oldFile.path}: $e');
+      }
+
+      final oldRes = oldXml.resources.children;
+      final partsElements = <XmlElement>{};
+      xmlDoc.forEachResource((child) {
+        if (!oldRes.any((e) => e is XmlElement && e.compare(child))) {
+          partsElements.add(child.copy());
+        }
+      });
+
+      final partsXmlDoc = XmlDocument([
+        XmlElement(XmlName.fromString('resources')),
+      ]);
+      partsXmlDoc.resources.children..addAll(partsElements);
+
+      final partsBuffer = StringBuffer();
+      partsBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
+      partsBuffer.write(partsXmlDoc.toXmlString(
+          pretty: true,
+          preserveWhitespace: (node) => node.getAttribute('name') != null));
+      final partsFileName =
+          path.setExtension('${path.withoutExtension(fileName)}_diffs', '.xml');
+      final dir = Directory(argResults![_argDiffPath] as String);
+      if (!dir.existsSync()) dir.createSync(recursive: true);
+      final output = File(path.join(dir.path, partsFileName));
+      output.writeAsStringSync(partsBuffer.toString());
+    }
   }
 }
 
