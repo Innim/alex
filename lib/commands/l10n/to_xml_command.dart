@@ -296,27 +296,21 @@ Filename: $baseName
     final oldFile =
         File(path.join(dirName, path.setExtension(fileName, '.xml')));
     if (oldFile.existsSync()) {
-      XmlDocument? oldXml;
-      try {
-        oldXml = XmlDocument.parse(oldFile.readAsStringSync());
-      } catch (e, st) {
-        printVerbose(
-            'Exception during parsing xml from ${oldFile.path}: $e\n$st');
-        throw RunException.err('Failed parsing XML from ${oldFile.path}: $e');
-      }
-
+      final oldXml = getXML(oldFile);
       final oldRes = oldXml.resources.children;
       final partsElements = <XmlElement>{};
       xmlDoc.forEachResource((child) {
-        if (!oldRes.any((e) => e is XmlElement && e.compare(child))) {
-          partsElements.add(child.copy());
+        if (child is XmlElement) {
+          if (!oldRes.any((e) => e is XmlElement && e.compare(child))) {
+            partsElements.add(child.copy());
+          }
         }
       });
 
       final partsXmlDoc = XmlDocument([
         XmlElement(XmlName.fromString('resources')),
       ]);
-      partsXmlDoc.resources.children..addAll(partsElements);
+      partsXmlDoc.resources.children.addAll(partsElements);
 
       final partsBuffer = StringBuffer();
       partsBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');

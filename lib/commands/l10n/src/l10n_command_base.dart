@@ -58,6 +58,16 @@ abstract class L10nCommandBase extends AlexCommand {
     return locales;
   }
 
+  XmlDocument getXML(File file) {
+    try {
+      return XmlDocument.parse(file.readAsStringSync());
+    } catch (e, st) {
+      printVerbose(
+          'Exception during parsing xml from ${file.path}: $e\n$st');
+      throw RunException.err('Failed parsing XML from ${file.path}: $e');
+    }
+  }
+
   bool _isLocaleName(String value) {
     // TODO: check by whitelist?
     if (value.length == 2) return true;
@@ -91,9 +101,9 @@ abstract class L10nCommandBase extends AlexCommand {
 extension XmlDocumentExtension on XmlDocument {
   XmlElement get resources => findAllElements('resources').first;
 
-  void forEachResource(void Function(XmlElement child) callback) {
+  void forEachResource(void Function(XmlNode child) callback) {
     for (final child in resources.children) {
-      if (child is XmlElement) callback(child);
+       callback(child);
     }
   }
 }

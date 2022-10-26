@@ -4,6 +4,8 @@ import 'package:alex/alex.dart';
 import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
+import 'package:list_ext/list_ext.dart';
 
 /// Command to import translations from Google Play
 /// to the project's xml files.
@@ -280,9 +282,63 @@ class ImportXmlCommand extends L10nCommandBase {
         createIfNotExist: true);
     final targetFile = File(path.join(targetDir.path, targetFilename));
     printVerbose('Copy ${sourceFile.path} to ${targetFile.path}');
-    await sourceFile.copy(targetFile.path);
+    if (_isDiffs(sourceFilename)) {
+      await _importDifference(config, sourceFile, targetFile);
+    } else {
+      await sourceFile.copy(targetFile.path);
+    }
 
     imported.add(locale);
+  }
+
+  bool _isDiffs(String sourceFilename) =>
+      path.withoutExtension(sourceFilename).endsWith('_diffs');
+
+  Future<void> _importDifference(
+      L10nConfig config, File source, File target) async {
+    final baseLocale = config.baseLocaleForXml;
+    final baseFile = File(path.join(config.getXmlFilesPath(baseLocale),
+        path.setExtension(config.getMainXmlFileName(), '.xml')));
+    if (baseFile.existsSync()) {
+      final baseXML = getXML(baseFile);
+      final sourceXML = getXML(source);
+      final targetXML = getXML(target);
+
+      final sourceElements = sourceXML.resources.children.toList();
+      final targetElements = targetXML.resources.children.toList();
+
+      final outputElements = <XmlNode>{};
+
+      baseXML.forEachResource((child) {
+        if (child is XmlElement) {
+          final element = sourceElements.firstWhereOrNull((e) =>
+                  e is XmlElement && e.attributeName == child.attributeName) ??
+              targetElements.firstWhereOrNull((e) =>
+                  e is XmlElement && e.attributeName == child.attributeName);
+          if (element != null) {
+            outputElements.add(element.copy());
+          }
+        } else {
+          outputElements.add(child.copy());
+        }
+      });
+
+      final outputXml = XmlDocument([
+        XmlElement(XmlName.fromString('resources')),
+      ]);
+      outputXml.resources.children.addAll(outputElements);
+
+      final outputBuffer = StringBuffer();
+      outputBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
+      outputBuffer.write(outputXml.toXmlString(
+          pretty: true,
+          preserveWhitespace: (node) => node.getAttribute('name') != null));
+
+      await target.writeAsString(outputBuffer.toString());
+      print(outputBuffer.toString());
+    } else {
+      printError('Base XML not found from ${baseFile.path}');
+    }
   }
 
   // TODO: may be move to some utils or base class
