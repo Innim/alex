@@ -335,7 +335,6 @@ class ImportXmlCommand extends L10nCommandBase {
           preserveWhitespace: (node) => node.getAttribute('name') != null));
 
       await target.writeAsString(outputBuffer.toString());
-      print(outputBuffer.toString());
     } else {
       printError('Base XML not found from ${baseFile.path}');
     }
