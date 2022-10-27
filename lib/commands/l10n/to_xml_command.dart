@@ -64,7 +64,9 @@ class ToXmlCommand extends L10nCommandBase {
       )
       ..addOption(
         _argDiffPath,
+        abbr: 'd',
         help: 'Path to file with list of changes',
+        valueHelp: 'DIR_PATH',
       );
   }
 
@@ -267,8 +269,9 @@ Filename: $baseName
     });
     xml.writeln('</resources>');
 
-    if (argResults?[_argDiffPath] != null) {
-      _addChangedPartsXml(xml.toString(), outputDir, outputName);
+    final diffPath = argResults?[_argDiffPath] as String?;
+    if (diffPath != null) {
+      _addChangedPartsXml(xml.toString(), outputDir, outputName, diffPath);
     }
 
     final outputFileName = path.setExtension(outputName, '.xml');
@@ -284,7 +287,8 @@ Filename: $baseName
     return relativePath;
   }
 
-  void _addChangedPartsXml(String xml, String dirName, String fileName) {
+  void _addChangedPartsXml(
+      String xml, String dirName, String fileName, String diffPath) {
     final XmlDocument xmlDoc;
     try {
       xmlDoc = XmlDocument.parse(xml.toString());
@@ -295,13 +299,16 @@ Filename: $baseName
 
     final oldFile =
         File(path.join(dirName, path.setExtension(fileName, '.xml')));
+
+    StringBuffer? partsBuffer;
+
     if (oldFile.existsSync()) {
       final oldXml = getXML(oldFile);
       final oldRes = oldXml.resources.children;
       final partsElements = <XmlElement>{};
       xmlDoc.forEachResource((child) {
         if (child is XmlElement) {
-          if (!oldRes.any((e) => e is XmlElement && e.compare(child))) {
+          if (!oldRes.any((e) => e is XmlElement && e.isEquals(child))) {
             partsElements.add(child.copy());
           }
         }
@@ -312,18 +319,21 @@ Filename: $baseName
       ]);
       partsXmlDoc.resources.children.addAll(partsElements);
 
-      final partsBuffer = StringBuffer();
+      partsBuffer = StringBuffer();
       partsBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
       partsBuffer.write(partsXmlDoc.toXmlString(
           pretty: true,
           preserveWhitespace: (node) => node.getAttribute('name') != null));
-      final partsFileName =
-          path.setExtension('${path.withoutExtension(fileName)}_diffs', '.xml');
-      final dir = Directory(argResults![_argDiffPath] as String);
-      if (!dir.existsSync()) dir.createSync(recursive: true);
-      final output = File(path.join(dir.path, partsFileName));
-      output.writeAsStringSync(partsBuffer.toString());
+    } else {
+      printInfo('${oldFile.path} not found. All strings was added as new.');
     }
+
+    final partsFileName = path.setExtension(
+        '${path.withoutExtension(fileName)}${L10nUtils.diffsSuffix}', '.xml');
+    final dir = Directory(diffPath);
+    if (!dir.existsSync()) dir.createSync(recursive: true);
+    final output = File(path.join(dir.path, partsFileName));
+    output.writeAsStringSync(partsBuffer?.toString() ?? xml);
   }
 }
 

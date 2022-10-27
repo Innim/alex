@@ -62,8 +62,7 @@ abstract class L10nCommandBase extends AlexCommand {
     try {
       return XmlDocument.parse(file.readAsStringSync());
     } catch (e, st) {
-      printVerbose(
-          'Exception during parsing xml from ${file.path}: $e\n$st');
+      printVerbose('Exception during parsing xml from ${file.path}: $e\n$st');
       throw RunException.err('Failed parsing XML from ${file.path}: $e');
     }
   }
@@ -103,21 +102,26 @@ extension XmlDocumentExtension on XmlDocument {
 
   void forEachResource(void Function(XmlNode child) callback) {
     for (final child in resources.children) {
-       callback(child);
+      callback(child);
     }
   }
+}
+
+extension XmlNodeExtension on XmlNode {
+  String? get attributeName => getAttribute('name');
 }
 
 extension XmlElementExtension on XmlElement {
   String get attributeName => getAttribute('name')!;
 
-  bool compare(XmlElement other) {
+  bool isEquals(XmlElement other) {
     if (attributeName == other.attributeName) {
       final name = this.name.toString();
       if (name == other.name.toString()) {
         switch (name) {
           case 'string':
-            return text.replaceAll('\r', '') == other.text.replaceAll('\r', '');
+            return text.replaceAll('\r\n', '\n') ==
+                other.text.replaceAll('\r\n', '\n');
           case 'plurals':
             final myChildren = children.whereType<XmlElement>();
             final otherChildren = other.children.whereType<XmlElement>();

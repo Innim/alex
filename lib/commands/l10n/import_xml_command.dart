@@ -292,7 +292,7 @@ class ImportXmlCommand extends L10nCommandBase {
   }
 
   bool _isDiffs(String sourceFilename) =>
-      path.withoutExtension(sourceFilename).endsWith('_diffs');
+      path.withoutExtension(sourceFilename).endsWith(L10nUtils.diffsSuffix);
 
   Future<void> _importDifference(
       L10nConfig config, File source, File target) async {
@@ -323,6 +323,10 @@ class ImportXmlCommand extends L10nCommandBase {
         }
       });
 
+      final notImported = sourceElements.where((e) =>
+          !outputElements.any((oe) => oe.attributeName == e.attributeName));
+      notImported.forEach((e) => printInfo('Skip key [${e.attributeName}]'));
+
       final outputXml = XmlDocument([
         XmlElement(XmlName.fromString('resources')),
       ]);
@@ -336,7 +340,7 @@ class ImportXmlCommand extends L10nCommandBase {
 
       await target.writeAsString(outputBuffer.toString());
     } else {
-      printError('Base XML not found from ${baseFile.path}');
+      throw RunException.warn('Base XML not found from ${baseFile.path}');
     }
   }
 
