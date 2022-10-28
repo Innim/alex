@@ -8,6 +8,7 @@ import 'package:alex/src/pub_spec.dart';
 import 'package:meta/meta.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:path/path.dart' as path;
+import 'package:xml/xml.dart';
 
 /// Base command for localization feature.
 abstract class L10nCommandBase extends AlexCommand {
@@ -57,6 +58,15 @@ abstract class L10nCommandBase extends AlexCommand {
     return locales;
   }
 
+  XmlDocument getXML(File file) {
+    try {
+      return XmlDocument.parse(file.readAsStringSync());
+    } catch (e, st) {
+      printVerbose('Exception during parsing xml from ${file.path}: $e\n$st');
+      throw RunException.err('Failed parsing XML from ${file.path}: $e');
+    }
+  }
+
   bool _isLocaleName(String value) {
     // TODO: check by whitelist?
     if (value.length == 2) return true;
@@ -84,5 +94,46 @@ abstract class L10nCommandBase extends AlexCommand {
     }
 
     return res;
+  }
+}
+
+extension XmlDocumentExtension on XmlDocument {
+  XmlElement get resources => findAllElements('resources').first;
+
+  void forEachResource(void Function(XmlNode child) callback) {
+    for (final child in resources.children) {
+      callback(child);
+    }
+  }
+}
+
+extension XmlNodeExtension on XmlNode {
+  String? get attributeName => getAttribute('name');
+}
+
+extension XmlElementExtension on XmlElement {
+  String get attributeName => getAttribute('name')!;
+
+  bool isEquals(XmlElement other) {
+    if (attributeName == other.attributeName) {
+      final name = this.name.toString();
+      if (name == other.name.toString()) {
+        switch (name) {
+          case 'string':
+            return text.replaceAll('\r\n', '\n') ==
+                other.text.replaceAll('\r\n', '\n');
+          case 'plurals':
+            final myChildren = children.whereType<XmlElement>();
+            final otherChildren = other.children.whereType<XmlElement>();
+            return !myChildren.any((e) =>
+                otherChildren.firstWhereOrNull((oe) =>
+                    oe.getAttribute('quantity') == e.getAttribute('quantity') &&
+                    oe.text == e.text) ==
+                null);
+        }
+      }
+    }
+
+    return false;
   }
 }

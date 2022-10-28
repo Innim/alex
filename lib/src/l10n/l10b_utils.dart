@@ -4,6 +4,7 @@ import 'package:path/path.dart' as path;
 /// Localization utils.
 class L10nUtils {
   static const arbMessagesSuffix = 'messages';
+  static const diffsSuffix = '_diffs';
   static const _localeVar = '{locale}';
 
   /// Returns path of directory with localization files.

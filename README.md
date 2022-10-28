@@ -148,6 +148,13 @@ Json localization can be used for a backend localization.
 alex l10n --from=json --source=/path/to/json/localization/dir
 ```
 
+Also you can export only difference (new and changed strings) to xml.
+You should specify the path to the directory for files with changes.
+
+```
+alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
+```
+
 #### Import translations from XML
 
 It's for working with translations from Google Play.
@@ -171,6 +178,8 @@ alex l10n from_xml --to=ios
 ```
 
 Localization xml files for iOS should start with `ios_` prefix.
+
+If the files have the suffix `_diff` then they will be imported as a list of changes.
 
 #### Import translation from Google Play to project XML files
 

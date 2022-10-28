@@ -1,3 +1,7 @@
+## 1.4.1 - 2022-10-26
+
+* [L10n] import and export only difference strings of xml file.
+
 ## 1.4.0+2 - 2022-09-01
 
 * [Release] For iOS increased What's New section length to 4000 characters.
