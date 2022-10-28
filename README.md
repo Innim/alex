@@ -148,8 +148,8 @@ Json localization can be used for a backend localization.
 alex l10n --from=json --source=/path/to/json/localization/dir
 ```
 
-Also you can export new and changed strings to xml.
-You should specify the path to the directory of files with changes.
+Also you can export only difference (new and changed strings) to xml.
+You should specify the path to the directory for files with changes.
 
 ```
 alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
