@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:alex/alex.dart';
@@ -9,6 +10,8 @@ import 'package:path/path.dart' as path;
 
 import 'extract_command.dart';
 import 'src/l10n_command_base.dart';
+
+const _jsonDecoder = JsonCodec();
 
 /// Command to extract strings from Dart code to arb file.
 class CheckTranslateCommand extends L10nCommandBase {
@@ -66,9 +69,9 @@ class CheckTranslateCommand extends L10nCommandBase {
 
   Future<int> _compareFiles(
       File mainFile, File toCompareFile, String locale) async {
-    final mainData = jsonDecoder.decode(await mainFile.readAsString())
+    final mainData = _jsonDecoder.decode(await mainFile.readAsString())
         as Map<String, dynamic>;
-    final compareData = jsonDecoder.decode(await toCompareFile.readAsString())
+    final compareData = _jsonDecoder.decode(await toCompareFile.readAsString())
         as Map<String, dynamic>;
     final notTranslatedKeys = <String>[];
     mainData.forEach((key, value) {
