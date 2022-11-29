@@ -4,7 +4,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/src/changelog/changelog.dart';
-import 'package:alex/src/l10n/comparers/ArbComparer.dart';
+import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
 import 'package:version/version.dart';

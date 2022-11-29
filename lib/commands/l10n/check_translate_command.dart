@@ -1,5 +1,6 @@
 
-import 'package:alex/src/l10n/comparers/ArbComparer.dart';
+import 'package:alex/src/l10n/comparers/arb_comparer.dart';
+
 import 'src/l10n_command_base.dart';
 
 /// Command to extract strings from Dart code to arb file.
