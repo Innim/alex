@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/src/changelog/changelog.dart';
+import 'package:alex/src/l10n/comparers/ArbComparer.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
 import 'package:version/version.dart';
@@ -17,6 +18,8 @@ import 'package:alex/src/pub_spec.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
+    static const _argLocale = 'locale';
+  static const _defaultLocale = 'en';
   static const String flagDemo = "demo";
   late FileSystem fs;
   late GitCommands git;
@@ -24,6 +27,14 @@ class StartReleaseCommand extends AlexCommand {
 
   StartReleaseCommand() : super("start", "Start new release") {
     argParser.addFlag(flagDemo, help: "Runs command in demonstration mode");
+    argParser
+      ..addOption(
+        _argLocale,
+        abbr: 'l',
+        help: 'Locale for import from xml. '
+            'If not specified - all locales will be imported.',
+        valueHelp: 'LOCALE',
+      );
   }
 
   @override
@@ -50,6 +61,32 @@ class StartReleaseCommand extends AlexCommand {
       return error(1,
           message: 'Invalid version "$vs": '
               'you should define build number (after +).');
+    }
+
+  final config = findConfigAndSetWorkingDir();
+    final l10nConfig = config.l10n;
+    final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
+    final comparer = ArbComparer(l10nConfig, baseLocale);
+    final checkTranslateResult = await comparer.compare(
+      () async {
+        printInfo('Running extract to arb...');
+        final outputDir = l10nConfig.outputDir;
+        final sourcePath = l10nConfig.sourceFile;
+        await runIntlOrFail(
+          'extract_to_arb',
+          [
+            '--output-dir=$outputDir',
+            sourcePath,
+          ],
+          prependWithPubGet: true,
+        );
+      },
+      success: success,
+      error: error,
+      errorBy: errorBy,
+    );
+    if(checkTranslateResult != 0) {
+      return checkTranslateResult;
     }
 
     printInfo('Start new release <v$vs>');

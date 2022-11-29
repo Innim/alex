@@ -140,7 +140,11 @@ alex l10n generate
 ```
 alex l10n to_xml
 ```
+#### Check translations for all locale strings (en by default)
 
+```
+alex l10n check_translate -l<locale>
+```
 Also you can export json localization to xml.
 Json localization can be used for a backend localization.
 
