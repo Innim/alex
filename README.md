@@ -140,11 +140,6 @@ alex l10n generate
 ```
 alex l10n to_xml
 ```
-#### Check translations for all locale strings (en by default)
-
-```
-alex l10n check_translate -l<locale>
-```
 Also you can export json localization to xml.
 Json localization can be used for a backend localization.
 
@@ -157,6 +152,12 @@ You should specify the path to the directory for files with changes.
 
 ```
 alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
+```
+
+#### Check availability translations for all strings in locale ("en" by default)
+
+```
+alex l10n check_translate -l<locale>
 ```
 
 #### Import translations from XML

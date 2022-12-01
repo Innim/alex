@@ -4,6 +4,8 @@ import 'package:alex/src/config.dart';
 import 'package:alex/src/console/console.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/internal/print.dart' as print;
+import 'package:alex/src/fs/fs.dart';
+import 'package:alex/src/pub_spec.dart';
 import 'package:alex/src/run/cmd.dart';
 import 'package:alex/src/run/flutter_cmd.dart';
 import 'package:args/args.dart';
@@ -13,8 +15,6 @@ import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
-import '../src/fs/fs.dart';
-import '../src/pub_spec.dart';
 
 /// Базовый класс команды.
 abstract class AlexCommand extends Command<int> {

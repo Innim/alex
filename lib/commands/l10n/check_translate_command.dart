@@ -3,18 +3,18 @@ import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 
 import 'src/l10n_command_base.dart';
 
-/// Command to extract strings from Dart code to arb file.
+/// Command to checks availability translations into a specific language, the default is English.
 class CheckTranslateCommand extends L10nCommandBase {
   static const _argLocale = 'locale';
   static const _defaultLocale = 'en';
   CheckTranslateCommand()
       : super('check_translate',
-            'Checks for translations into a specific language, the default is English.') {
+            'Checks availability translations into a specific language, the default is English.') {
     argParser
       ..addOption(
         _argLocale,
         abbr: 'l',
-        help: 'Locale for check translations. '
+        help: 'Locale for check availability translations. '
             'If not specified - "en" locale will be check.',
         valueHelp: 'LOCALE',
       );
