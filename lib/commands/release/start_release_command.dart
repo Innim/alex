@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:alex/commands/l10n/src/mixins/intl_mixin.dart';
 import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
@@ -19,7 +20,7 @@ import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
 
 /// Команда запуска релизной сборки.
-class StartReleaseCommand extends AlexCommand {
+class StartReleaseCommand extends AlexCommand  with IntlMixim{
   static const _argLocale = 'check_locale';
   static const _defaultLocale = 'en';
   static const String flagDemo = "demo";

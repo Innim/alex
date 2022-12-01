@@ -2,9 +2,10 @@ import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 
 import 'src/l10n_command_base.dart';
+import 'src/mixins/intl_mixin.dart';
 
 /// Command to checks availability translations into a specific language, the default is English.
-class CheckTranslateCommand extends L10nCommandBase {
+class CheckTranslateCommand extends L10nCommandBase with IntlMixim {
   static const _argLocale = 'locale';
   static const _defaultLocale = 'en';
   CheckTranslateCommand()
