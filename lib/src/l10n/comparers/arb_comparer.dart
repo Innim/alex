@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:path/path.dart' as path;
 import 'package:alex/alex.dart';
-
-import '../../exception/run_exception.dart';
 
 const _jsonDecoder = JsonCodec();
 
@@ -12,12 +11,7 @@ class ArbComparer {
   final String locale;
   const ArbComparer(this.l10nConfig, this.locale);
 
-  Future<int> compare(
-    Future<void> Function() extractArb, {
-    required int Function({String? message}) success,
-    required int Function(int, {String? message}) error,
-    required int Function(RunException exception) errorBy,
-  }) async {
+  Future<List<String>> compare(Future<void> Function() extractArb) async {
     final l10nSubpath = l10nConfig.outputDir;
 
     final l10nPath = path.join(path.current, l10nSubpath);
@@ -28,25 +22,15 @@ class ArbComparer {
 
     final exists = await toCompareFile.exists();
     if (exists) {
-      try {
-        await extractArb.call();
-      } on RunException catch (e) {
-        return errorBy(e);
-      }
+      await extractArb.call();
       final mainFile = await L10nUtils.getMainArb(l10nConfig);
       final notTranslatedKeys =
           await _compareArb(mainFile, toCompareFile, locale);
-
-      if (notTranslatedKeys.isEmpty) {
-        return success(
-            message: 'All strings has translete for locale: $locale');
-      } else {
-        return error(2,
-            message:
-                'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
-      }
+      return notTranslatedKeys;
+    } else {
+      throw RunException.fileNotFound(
+          'ABR file for locale $locale is not found');
     }
-    return error(2, message: 'ABR file for locale $locale is not found');
   }
 
   Future<List<String>> _compareArb(

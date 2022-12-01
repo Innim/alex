@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/src/changelog/changelog.dart';
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
@@ -18,7 +19,7 @@ import 'package:alex/src/pub_spec.dart';
 
 /// Команда запуска релизной сборки.
 class StartReleaseCommand extends AlexCommand {
-    static const _argLocale = 'locale';
+  static const _argLocale = 'check_locale';
   static const _defaultLocale = 'en';
   static const String flagDemo = "demo";
   late FileSystem fs;
@@ -31,8 +32,8 @@ class StartReleaseCommand extends AlexCommand {
       ..addOption(
         _argLocale,
         abbr: 'l',
-        help: 'Locale for import from xml. '
-            'If not specified - all locales will be imported.',
+        help: 'Locale to check translations before release. '
+            'If not specified - "en" locale will be check.',
         valueHelp: 'LOCALE',
       );
   }
@@ -63,30 +64,33 @@ class StartReleaseCommand extends AlexCommand {
               'you should define build number (after +).');
     }
 
-  final config = findConfigAndSetWorkingDir();
+    final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
     final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
     final comparer = ArbComparer(l10nConfig, baseLocale);
-    final checkTranslateResult = await comparer.compare(
-      () async {
-        printInfo('Running extract to arb...');
-        final outputDir = l10nConfig.outputDir;
-        final sourcePath = l10nConfig.sourceFile;
-        await runIntlOrFail(
-          'extract_to_arb',
-          [
-            '--output-dir=$outputDir',
-            sourcePath,
-          ],
-          prependWithPubGet: true,
-        );
-      },
-      success: success,
-      error: error,
-      errorBy: errorBy,
-    );
-    if(checkTranslateResult != 0) {
-      return checkTranslateResult;
+    try {
+      final notTranslatedKeys = await comparer.compare(
+        () async {
+          printInfo('Running extract to arb...');
+          final outputDir = l10nConfig.outputDir;
+          final sourcePath = l10nConfig.sourceFile;
+          await runIntlOrFail(
+            'extract_to_arb',
+            [
+              '--output-dir=$outputDir',
+              sourcePath,
+            ],
+            prependWithPubGet: true,
+          );
+        },
+      );
+      if (notTranslatedKeys.isNotEmpty) {
+        return error(2,
+            message:
+                'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $baseLocale');
+      }
+    } on RunException catch (e) {
+      return errorBy(e);
     }
 
     printInfo('Start new release <v$vs>');
