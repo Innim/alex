@@ -12,12 +12,13 @@ import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
+
 /// Базовый класс команды.
 abstract class AlexCommand extends Command<int> {
   final String _name;
   final String _description;
   final List<String> _aliases;
-
+  
   Console? _console;
   Cmd? _cmd;
   FlutterCmd? _flutter;
@@ -150,7 +151,9 @@ abstract class AlexCommand extends Command<int> {
     return ProcessResult(
         process.pid, exitCode, stdout.toString(), stderr.toString());
   }
+
 }
+
 
 class CmdArg {
   final String name;

@@ -3,41 +3,20 @@ import 'dart:io';
 import 'package:alex/alex.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/exception/run_exception.dart';
-import 'package:alex/src/fs/fs.dart';
-import 'package:alex/src/pub_spec.dart';
 import 'package:meta/meta.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
-/// Base command for localization feature.
-abstract class L10nCommandBase extends AlexCommand {
-  static final _localeRegionRegEx = RegExp('[a-z]{2}_[A-Z]{2}');
+import 'mixins/intl_mixin.dart';
 
-  String? _intlGeneratorPackage;
+/// Base command for localization feature.
+abstract class L10nCommandBase extends AlexCommand with IntlMixin {
+  static final _localeRegionRegEx = RegExp('[a-z]{2}_[A-Z]{2}');
 
   L10nCommandBase(String name, String description,
       [List<String> aliases = const []])
       : super(name, description, aliases);
-
-  @protected
-  Future<ProcessResult> runIntl(String cmd, List<String> arguments,
-      {String? workingDir, bool prependWithPubGet = false}) async {
-    final packageName = await _getIntlGeneratorPackageName();
-    return flutter.runPub('$packageName:$cmd', arguments,
-        workingDir: workingDir, prependWithPubGet: prependWithPubGet);
-  }
-
-  @protected
-  Future<ProcessResult> runIntlOrFail(String cmd, List<String> arguments,
-      {bool printStdOut = true,
-      String? workingDir,
-      bool prependWithPubGet = false}) async {
-    return flutter.runOrFail(
-        () => runIntl(cmd, arguments,
-            workingDir: workingDir, prependWithPubGet: prependWithPubGet),
-        printStdOut: printStdOut);
-  }
 
   @protected
   Future<List<String>> getLocales(L10nConfig config) async {
@@ -76,24 +55,6 @@ abstract class L10nCommandBase extends AlexCommand {
     }
 
     return false;
-  }
-
-  Future<String> _getIntlGeneratorPackageName() async {
-    if (_intlGeneratorPackage != null) return _intlGeneratorPackage!;
-
-    final needle = ['intl_translation', 'intl_generator'];
-
-    // TODO: may be better to check pubspec.lock?
-    final spec = await Spec.pub(const IOFileSystem());
-
-    final res = needle.firstWhereOrNull(spec.hasDevDependency);
-    if (res == null) {
-      throw RunException.err(
-          "Can't found any of generation packages: ${needle.join(', ')}. "
-          "Did you forget to add a dependency?");
-    }
-
-    return res;
   }
 }
 
