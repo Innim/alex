@@ -7,7 +7,6 @@ import 'package:alex/commands/l10n/src/mixins/intl_mixin.dart';
 import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
-import 'package:args/args.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
 import 'package:version/version.dart';
@@ -20,7 +19,7 @@ import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
 
 /// Команда запуска релизной сборки.
-class StartReleaseCommand extends AlexCommand  with IntlMixim{
+class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _argLocale = 'check_locale';
   static const _defaultLocale = 'en';
   static const String flagDemo = "demo";
@@ -34,7 +33,8 @@ class StartReleaseCommand extends AlexCommand  with IntlMixim{
       ..addOption(
         _argLocale,
         abbr: 'l',
-        help: 'Locale to check before release if translations exist for all strings. '
+        help:
+            'Locale to check before release if translations exist for all strings. '
             'If not specified - "en" locale will be check.',
         valueHelp: 'LOCALE',
       );
@@ -65,8 +65,8 @@ class StartReleaseCommand extends AlexCommand  with IntlMixim{
           message: 'Invalid version "$vs": '
               'you should define build number (after +).');
     }
-
-    final checkTranslateResult = await _checkTranslatations(args);
+    final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
+    final checkTranslateResult = await _checkTranslatations(baseLocale);
     if (checkTranslateResult != 0) {
       return checkTranslateResult;
     }
@@ -270,9 +270,7 @@ $changeLog
     }
 
     final display = type == ItemType.byDefault ? "block" : "none";
-    final itemNameSb = StringBuffer()
-      ..write(prefix)
-      ..write(name);
+    final itemNameSb = StringBuffer()..write(prefix)..write(name);
     if (isRequired) itemNameSb.write('*');
 
     return template
@@ -329,36 +327,26 @@ $changeLog
     spec.saveContent(updated);
   }
 
-  Future<int> _checkTranslatations(ArgResults args) async {
+  Future<int> _checkTranslatations(String locale) async {
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
-    final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
-    final comparer = ArbComparer(l10nConfig, baseLocale);
+    final comparer = ArbComparer(l10nConfig, locale);
     try {
       final notTranslatedKeys = await comparer.compare(
         () async {
           printInfo('Running extract to arb...');
-          final outputDir = l10nConfig.outputDir;
-          final sourcePath = l10nConfig.sourceFile;
-          await runIntlOrFail(
-            'extract_to_arb',
-            [
-              '--output-dir=$outputDir',
-              sourcePath,
-            ],
-            prependWithPubGet: true,
-          );
+          await extractLocalisation(l10nConfig);
         },
       );
       if (notTranslatedKeys.isNotEmpty) {
         return error(2,
             message:
-                'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $baseLocale');
+                'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
       }
     } on RunException catch (e) {
       return errorBy(e);
     }
-    return success();
+    return 0;
   }
 
   Future<Entry> _createEntry(String locale) async {

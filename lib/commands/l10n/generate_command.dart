@@ -1,14 +1,13 @@
 import 'dart:io';
 
 import 'package:alex/alex.dart';
-import 'package:alex/commands/l10n/src/mixins/intl_mixin.dart';
 import 'package:alex/src/exception/run_exception.dart';
 
 import 'src/l10n_command_base.dart';
 import 'package:path/path.dart' as path;
 
 /// Command to generate dart files by arb files.
-class GenerateCommand extends L10nCommandBase with IntlMixim{
+class GenerateCommand extends L10nCommandBase {
   GenerateCommand()
       : super('generate', 'Generate strings dart files by arb files.',
             const ['gen']);

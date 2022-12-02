@@ -8,10 +8,11 @@ import 'package:list_ext/list_ext.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
-/// Base command for localization feature.
-abstract class L10nCommandBase extends AlexCommand {
-  static final _localeRegionRegEx = RegExp('[a-z]{2}_[A-Z]{2}');
+import 'mixins/intl_mixin.dart';
 
+/// Base command for localization feature.
+abstract class L10nCommandBase extends AlexCommand with IntlMixin {
+  static final _localeRegionRegEx = RegExp('[a-z]{2}_[A-Z]{2}');
 
   L10nCommandBase(String name, String description,
       [List<String> aliases = const []])
@@ -55,7 +56,6 @@ abstract class L10nCommandBase extends AlexCommand {
 
     return false;
   }
-
 }
 
 extension XmlDocumentExtension on XmlDocument {

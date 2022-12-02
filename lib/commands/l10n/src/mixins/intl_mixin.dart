@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:alex/alex.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/pub_spec.dart';
@@ -8,7 +9,7 @@ import 'package:list_ext/list_ext.dart';
 import 'package:meta/meta.dart';
 
 /// Mixin for work with intl generation.
-mixin IntlMixim {
+mixin IntlMixin {
   @protected
   FlutterCmd get flutter;
 
@@ -31,6 +32,19 @@ mixin IntlMixim {
         () => runIntl(cmd, arguments,
             workingDir: workingDir, prependWithPubGet: prependWithPubGet),
         printStdOut: printStdOut);
+  }
+
+  Future<void> extractLocalisation(L10nConfig l10nConfig) async {
+      final outputDir = l10nConfig.outputDir;
+      final sourcePath = l10nConfig.sourceFile;
+      await runIntlOrFail(
+        'extract_to_arb',
+        [
+          '--output-dir=$outputDir',
+          sourcePath,
+        ],
+        prependWithPubGet: true,
+      );
   }
 
   Future<String> _getIntlGeneratorPackageName() async {

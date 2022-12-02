@@ -2,20 +2,19 @@ import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 
 import 'src/l10n_command_base.dart';
-import 'src/mixins/intl_mixin.dart';
 
-/// Command to checks availability translations into a specific language, the default is English.
-class CheckTranslateCommand extends L10nCommandBase with IntlMixim {
+/// Command to check if translations exist for all strings into a specific language, the default is English.
+class CheckTranslateCommand extends L10nCommandBase {
   static const _argLocale = 'locale';
   static const _defaultLocale = 'en';
   CheckTranslateCommand()
       : super('check_translate',
-            'Checks availability translations into a specific language, the default is English.') {
+            'Check if translations exist for all strings into a specific language, the default is English.') {
     argParser
       ..addOption(
         _argLocale,
         abbr: 'l',
-        help: 'Locale for check availability translations. '
+        help: 'Locale to check if translations exist for all strings. '
             'If not specified - "en" locale will be check.',
         valueHelp: 'LOCALE',
       );
@@ -32,16 +31,7 @@ class CheckTranslateCommand extends L10nCommandBase with IntlMixim {
       final notTranslatedKeys = await comparer.compare(
         () async {
           printInfo('Running extract to arb...');
-          final outputDir = l10nConfig.outputDir;
-          final sourcePath = l10nConfig.sourceFile;
-          await runIntlOrFail(
-            'extract_to_arb',
-            [
-              '--output-dir=$outputDir',
-              sourcePath,
-            ],
-            prependWithPubGet: true,
-          );
+          await extractLocalisation(l10nConfig);
         },
       );
       if (notTranslatedKeys.isEmpty) {
