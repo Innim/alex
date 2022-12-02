@@ -34,7 +34,7 @@ class StartReleaseCommand extends AlexCommand  with IntlMixim{
       ..addOption(
         _argLocale,
         abbr: 'l',
-        help: 'Locale to check availability translations before release. '
+        help: 'Locale to check before release if translations exist for all strings. '
             'If not specified - "en" locale will be check.',
         valueHelp: 'LOCALE',
       );
