@@ -71,7 +71,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       return checkTranslateResult;
     }
 
-    printInfo('Running generate dart files...');
+    printInfo('Running generate localization dart files...');
     final l10nConfig = config.l10n;
     try {
       await generateLocalisation(l10nConfig);
