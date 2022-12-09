@@ -7,6 +7,7 @@ import 'package:alex/src/pub_spec.dart';
 import 'package:alex/src/run/flutter_cmd.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:meta/meta.dart';
+import 'package:path/path.dart' as path;
 
 /// Mixin for work with intl generation.
 mixin IntlMixin {
@@ -35,16 +36,52 @@ mixin IntlMixin {
   }
 
   Future<void> extractLocalisation(L10nConfig l10nConfig) async {
-      final outputDir = l10nConfig.outputDir;
-      final sourcePath = l10nConfig.sourceFile;
-      await runIntlOrFail(
-        'extract_to_arb',
-        [
-          '--output-dir=$outputDir',
-          sourcePath,
-        ],
-        prependWithPubGet: true,
-      );
+    final outputDir = l10nConfig.outputDir;
+    final sourcePath = l10nConfig.sourceFile;
+    await runIntlOrFail(
+      'extract_to_arb',
+      [
+        '--output-dir=$outputDir',
+        sourcePath,
+      ],
+      prependWithPubGet: true,
+    );
+  }
+
+  Future<void> generateLocalisation(L10nConfig l10nConfig) async {
+    final arbFiles = await _getArbFiles(l10nConfig);
+    await runIntlOrFail(
+      'generate_from_arb',
+      [
+        '--output-dir=${l10nConfig.outputDir}',
+        '--codegen_mode=release',
+        '--use-deferred-loading',
+        '--no-suppress-warnings',
+        l10nConfig.sourceFile,
+        ...arbFiles,
+      ],
+      prependWithPubGet: true,
+    );
+  }
+
+  Future<List<String>> _getArbFiles(L10nConfig config) async {
+    final dir = config.outputDir;
+    final l10nDir = Directory(dir);
+    final arbMessagesFile = L10nUtils.getArbMessagesFile(config);
+    final arbParts = L10nUtils.getArbFileParts(config);
+    final arbStart = arbParts[0];
+    final arbEnd = arbParts[1];
+
+    final res = <String>[];
+    await for (final file in l10nDir.list()) {
+      final filename = path.basename(file.path);
+      if (filename != arbMessagesFile &&
+          filename.startsWith(arbStart) &&
+          filename.endsWith(arbEnd)) {
+        res.add(path.join(dir, filename));
+      }
+    }
+    return res;
   }
 
   Future<String> _getIntlGeneratorPackageName() async {

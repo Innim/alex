@@ -71,6 +71,16 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       return checkTranslateResult;
     }
 
+    printInfo('Running extract to arb...');
+    final l10nConfig = config.l10n;
+      try {
+      await generateLocalisation(l10nConfig);
+    } on RunException catch (e) {
+      return errorBy(e);
+    }
+    // Commit translations.
+    _commit("Generated translations.");
+
     printInfo('Start new release <v$vs>');
     git.gitflowReleaseStart(vs);
 
@@ -87,8 +97,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     printInfo("Finishing release...");
 
     // committing changes
-    git.addAll();
-    git.commit("Changelog and release notes");
+    _commit("Changelog and release notes");
 
     // finishing release
     git.gitflowReleaseFinish(vs);
@@ -100,8 +109,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     // increment version
     incrementVersion(spec, version);
 
-    git.addAll();
-    git.commit("Version increment");
+    _commit("Version increment");
 
     git.push(branchDevelop);
     git.push(branchMaster);
@@ -326,6 +334,12 @@ $changeLog
         content.replaceFirst("version: $value", "version: $version");
     spec.saveContent(updated);
   }
+
+void _commit(String commitMessage) {
+   // committing changes
+    git.addAll();
+    git.commit(commitMessage);
+}
 
   Future<int> _checkTranslatations(String locale) async {
     final config = findConfigAndSetWorkingDir();

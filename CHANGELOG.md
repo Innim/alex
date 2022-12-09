@@ -1,3 +1,7 @@
+## 1.5.1 - 2022-12-10
+
+* [Release] Automatically generate and commit translations after check before run release.
+
 ## 1.5.0 - 2022-11-29
 
 * [L10n] Added `check_translate` command to check for translations for all locale strings.
