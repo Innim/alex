@@ -1,10 +1,6 @@
-import 'dart:io';
 
-import 'package:alex/alex.dart';
 import 'package:alex/src/exception/run_exception.dart';
-
 import 'src/l10n_command_base.dart';
-import 'package:path/path.dart' as path;
 
 /// Command to generate dart files by arb files.
 class GenerateCommand extends L10nCommandBase {
