@@ -71,9 +71,9 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       return checkTranslateResult;
     }
 
-    printInfo('Running extract to arb...');
+    printInfo('Running generate dart files...');
     final l10nConfig = config.l10n;
-      try {
+    try {
       await generateLocalisation(l10nConfig);
     } on RunException catch (e) {
       return errorBy(e);
@@ -335,11 +335,11 @@ $changeLog
     spec.saveContent(updated);
   }
 
-void _commit(String commitMessage) {
-   // committing changes
+  void _commit(String commitMessage) {
+    // committing changes
     git.addAll();
     git.commit(commitMessage);
-}
+  }
 
   Future<int> _checkTranslatations(String locale) async {
     final config = findConfigAndSetWorkingDir();

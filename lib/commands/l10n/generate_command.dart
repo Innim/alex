@@ -1,4 +1,3 @@
-
 import 'package:alex/src/exception/run_exception.dart';
 import 'src/l10n_command_base.dart';
 
