@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:alex/alex.dart';
 import 'package:alex/commands/l10n/src/mixins/intl_mixin.dart';
 import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
@@ -336,26 +337,20 @@ $changeLog
     git.commit(commitMessage);
   }
 
-  Future<int> _checkTranslations(String locale) async {
-    final config = findConfigAndSetWorkingDir();
-    final l10nConfig = config.l10n;
+  Future<void> _checkTranslations(String locale, L10nConfig l10nConfig) async {
     final comparer = ArbComparer(l10nConfig, locale);
-    try {
-      final notTranslatedKeys = await comparer.compare(
-        () async {
-          printInfo('Running extract to arb...');
-          await extractLocalisation(l10nConfig);
-        },
-      );
-      if (notTranslatedKeys.isNotEmpty) {
-        return error(2,
-            message:
-                'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
-      }
-    } on RunException catch (e) {
-      return errorBy(e);
+    final notTranslatedKeys = await comparer.compare(
+      () async {
+        printInfo('Running extract to arb...');
+        await extractLocalisation(l10nConfig);
+      },
+    );
+    if (notTranslatedKeys.isNotEmpty) {
+      throw RunException(
+          exitCode: 2,
+          message:
+              'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
     }
-    return 0;
   }
 
   Future<Entry> _createEntry(String locale) async {
@@ -366,20 +361,17 @@ $changeLog
 
   Future<int> _processLocalization(String locale) async {
     final currentPath = p.current;
-    final checkTranslateResult = await _checkTranslations(locale);
-    if (checkTranslateResult != 0) {
-      return checkTranslateResult;
-    }
-    printInfo('Running generate localization dart files...');
+    final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
     try {
+      await _checkTranslations(locale, l10nConfig);
+      printInfo('Running generate localization dart files...');
       await generateLocalisation(l10nConfig);
     } on RunException catch (e) {
       return errorBy(e);
     } finally {
       setCurrentDir(currentPath);
     }
-
     return 0;
   }
 }
