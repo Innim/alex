@@ -66,7 +66,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     }
     final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
     final processLocResult = await _processLocalization(baseLocale);
-    if(processLocResult != 0){
+    if (processLocResult != 0) {
       return processLocResult;
     }
 
@@ -365,7 +365,7 @@ $changeLog
   }
 
   Future<int> _processLocalization(String locale) async {
-    final rootPath = Spec.getPubspecsSync().map((e) => p.dirname(e.path)).first;
+    final currentPath = p.current;
     final checkTranslateResult = await _checkTranslations(locale);
     if (checkTranslateResult != 0) {
       return checkTranslateResult;
@@ -376,8 +376,10 @@ $changeLog
       await generateLocalisation(l10nConfig);
     } on RunException catch (e) {
       return errorBy(e);
+    } finally {
+      setCurrentDir(currentPath);
     }
-    setCurrentDir(rootPath);
+
     return 0;
   }
 }
