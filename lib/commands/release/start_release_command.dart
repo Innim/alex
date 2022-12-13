@@ -44,7 +44,6 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   Future<int> doRun() async {
     final args = argResults!;
     final isDemo = args[flagDemo] as bool;
-    final rootPath = Spec.getPubspecsSync().map((e) => p.dirname(e.path)).first;
     if (!isDemo) {
       fs = const IOFileSystem();
       git = GitCommands(GitClient());
@@ -66,26 +65,18 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
               'you should define build number (after +).');
     }
     final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
-    final checkTranslateResult = await _checkTranslatations(baseLocale);
-    if (checkTranslateResult != 0) {
-      return checkTranslateResult;
+    final processLocResult = await _processLocalization(baseLocale);
+    if(processLocResult != 0){
+      return processLocResult;
     }
 
-    printInfo('Running generate localization dart files...');
-    final l10nConfig = config.l10n;
-    try {
-      await generateLocalisation(l10nConfig);
-    } on RunException catch (e) {
-      return errorBy(e);
-    }
     // Commit translations.
     _commit("Generated translations.");
 
     printInfo('Start new release <v$vs>');
+
     git.gitflowReleaseStart(vs);
 
-     setCurrentDir(rootPath);
-    
     printInfo('Upgrading CHANGELOG.md...');
 
     final changeLog = await upgradeChangeLog(version) ?? '';
@@ -280,7 +271,9 @@ $changeLog
     }
 
     final display = type == ItemType.byDefault ? "block" : "none";
-    final itemNameSb = StringBuffer()..write(prefix)..write(name);
+    final itemNameSb = StringBuffer()
+      ..write(prefix)
+      ..write(name);
     if (isRequired) itemNameSb.write('*');
 
     return template
@@ -343,7 +336,7 @@ $changeLog
     git.commit(commitMessage);
   }
 
-  Future<int> _checkTranslatations(String locale) async {
+  Future<int> _checkTranslations(String locale) async {
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
     final comparer = ArbComparer(l10nConfig, locale);
@@ -369,6 +362,23 @@ $changeLog
     final isDefaultChangelogExists =
         await fs.existsFile(_CIPath.getDefaultChangelogPath(locale));
     return Entry(locale, isRequired: !isDefaultChangelogExists);
+  }
+
+  Future<int> _processLocalization(String locale) async {
+    final rootPath = Spec.getPubspecsSync().map((e) => p.dirname(e.path)).first;
+    final checkTranslateResult = await _checkTranslations(locale);
+    if (checkTranslateResult != 0) {
+      return checkTranslateResult;
+    }
+    printInfo('Running generate localization dart files...');
+    final l10nConfig = config.l10n;
+    try {
+      await generateLocalisation(l10nConfig);
+    } on RunException catch (e) {
+      return errorBy(e);
+    }
+    setCurrentDir(rootPath);
+    return 0;
   }
 }
 
