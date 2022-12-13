@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:alex/alex.dart';
 import 'package:alex/commands/l10n/src/mixins/intl_mixin.dart';
 import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
@@ -44,7 +45,6 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   Future<int> doRun() async {
     final args = argResults!;
     final isDemo = args[flagDemo] as bool;
-
     if (!isDemo) {
       fs = const IOFileSystem();
       git = GitCommands(GitClient());
@@ -66,22 +66,16 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
               'you should define build number (after +).');
     }
     final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
-    final checkTranslateResult = await _checkTranslatations(baseLocale);
-    if (checkTranslateResult != 0) {
-      return checkTranslateResult;
+    final processLocResult = await _processLocalization(baseLocale);
+    if (processLocResult != 0) {
+      return processLocResult;
     }
 
-    printInfo('Running generate localization dart files...');
-    final l10nConfig = config.l10n;
-    try {
-      await generateLocalisation(l10nConfig);
-    } on RunException catch (e) {
-      return errorBy(e);
-    }
     // Commit translations.
     _commit("Generated translations.");
 
     printInfo('Start new release <v$vs>');
+
     git.gitflowReleaseStart(vs);
 
     printInfo('Upgrading CHANGELOG.md...');
@@ -278,7 +272,9 @@ $changeLog
     }
 
     final display = type == ItemType.byDefault ? "block" : "none";
-    final itemNameSb = StringBuffer()..write(prefix)..write(name);
+    final itemNameSb = StringBuffer()
+      ..write(prefix)
+      ..write(name);
     if (isRequired) itemNameSb.write('*');
 
     return template
@@ -341,32 +337,40 @@ $changeLog
     git.commit(commitMessage);
   }
 
-  Future<int> _checkTranslatations(String locale) async {
-    final config = findConfigAndSetWorkingDir();
-    final l10nConfig = config.l10n;
+  Future<void> _checkTranslations(L10nConfig l10nConfig, String locale) async {
     final comparer = ArbComparer(l10nConfig, locale);
-    try {
-      final notTranslatedKeys = await comparer.compare(
-        () async {
-          printInfo('Running extract to arb...');
-          await extractLocalisation(l10nConfig);
-        },
-      );
-      if (notTranslatedKeys.isNotEmpty) {
-        return error(2,
-            message:
-                'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
-      }
-    } on RunException catch (e) {
-      return errorBy(e);
+    final notTranslatedKeys = await comparer.compare(
+      () async {
+        printInfo('Running extract to arb...');
+        await extractLocalisation(l10nConfig);
+      },
+    );
+    if (notTranslatedKeys.isNotEmpty) {
+      throw RunException.err(
+          'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
     }
-    return 0;
   }
 
   Future<Entry> _createEntry(String locale) async {
     final isDefaultChangelogExists =
         await fs.existsFile(_CIPath.getDefaultChangelogPath(locale));
     return Entry(locale, isRequired: !isDefaultChangelogExists);
+  }
+
+  Future<int> _processLocalization(String locale) async {
+    final currentPath = p.current;
+    final config = findConfigAndSetWorkingDir();
+    final l10nConfig = config.l10n;
+    try {
+      await _checkTranslations(l10nConfig, locale);
+      printInfo('Running generate localization dart files...');
+      await generateLocalisation(l10nConfig);
+    } on RunException catch (e) {
+      return errorBy(e);
+    } finally {
+      setCurrentDir(currentPath);
+    }
+    return 0;
   }
 }
 
