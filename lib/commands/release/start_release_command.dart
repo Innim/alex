@@ -44,7 +44,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   Future<int> doRun() async {
     final args = argResults!;
     final isDemo = args[flagDemo] as bool;
-
+    final rootPath = Spec.getPubspecsSync().map((e) => p.dirname(e.path)).first;
     if (!isDemo) {
       fs = const IOFileSystem();
       git = GitCommands(GitClient());
@@ -84,6 +84,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     printInfo('Start new release <v$vs>');
     git.gitflowReleaseStart(vs);
 
+     setCurrentDir(rootPath);
+    
     printInfo('Upgrading CHANGELOG.md...');
 
     final changeLog = await upgradeChangeLog(version) ?? '';

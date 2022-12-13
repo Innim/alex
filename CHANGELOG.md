@@ -1,3 +1,7 @@
+## 1.5.1+1 - 2022-12-10
+
+* Fix  "CHANGELOG.md has unknown structure" error when run release start command.
+
 ## 1.5.1 - 2022-12-10
 
 * [Release] Automatically generate and commit translations after check before run release.
