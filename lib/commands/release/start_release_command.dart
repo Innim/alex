@@ -337,7 +337,7 @@ $changeLog
     git.commit(commitMessage);
   }
 
-  Future<void> _checkTranslations(String locale, L10nConfig l10nConfig) async {
+  Future<void> _checkTranslations(L10nConfig l10nConfig, String locale) async {
     final comparer = ArbComparer(l10nConfig, locale);
     final notTranslatedKeys = await comparer.compare(
       () async {
@@ -346,10 +346,8 @@ $changeLog
       },
     );
     if (notTranslatedKeys.isNotEmpty) {
-      throw RunException(
-          exitCode: 2,
-          message:
-              'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
+      throw RunException.err(
+          'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $locale');
     }
   }
 
@@ -364,7 +362,7 @@ $changeLog
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
     try {
-      await _checkTranslations(locale, l10nConfig);
+      await _checkTranslations(l10nConfig, locale);
       printInfo('Running generate localization dart files...');
       await generateLocalisation(l10nConfig);
     } on RunException catch (e) {
