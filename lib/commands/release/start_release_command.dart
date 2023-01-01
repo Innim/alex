@@ -23,13 +23,14 @@ import 'package:alex/src/pub_spec.dart';
 class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _argLocale = 'check_locale';
   static const _defaultLocale = 'en';
-  static const String flagDemo = "demo";
+  static const _argSkipL10n = 'skip_l10n';
+  static const _argDemo = 'demo';
+
   late FileSystem fs;
   late GitCommands git;
   String? _packageDir;
 
   StartReleaseCommand() : super("start", "Start new release") {
-    argParser.addFlag(flagDemo, help: "Runs command in demonstration mode");
     argParser
       ..addOption(
         _argLocale,
@@ -38,13 +39,22 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
             'Locale to check before release if translations exist for all strings. '
             'If not specified - "en" locale will be check.',
         valueHelp: 'LOCALE',
+      )
+      ..addFlag(
+        _argSkipL10n,
+        abbr: 's',
+        help: 'Skip process localization',
+      )
+      ..addFlag(
+        _argDemo,
+        help: "Runs command in demonstration mode",
       );
   }
 
   @override
   Future<int> doRun() async {
     final args = argResults!;
-    final isDemo = args[flagDemo] as bool;
+    final isDemo = args[_argDemo] as bool;
     if (!isDemo) {
       fs = const IOFileSystem();
       git = GitCommands(GitClient());
@@ -54,6 +64,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       git = GitCommands(DemoGit());
     }
 
+    final skipL10n = args[_argSkipL10n] as bool? ?? false;
     git.ensureCleanAndCheckoutDevelop();
 
     final spec = await Spec.pub(fs);
@@ -65,10 +76,19 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
           message: 'Invalid version "$vs": '
               'you should define build number (after +).');
     }
-    final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
-    final processLocResult = await _processLocalization(baseLocale);
-    if (processLocResult != 0) {
-      return processLocResult;
+
+    if (skipL10n) {
+      if (args.wasParsed(_argLocale)) {
+        return error(1,
+            message:
+                "You can't pass --$_argSkipL10n and --$_argLocale at the same time");
+      }
+    } else {
+      final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
+      final processLocResult = await _processLocalization(baseLocale);
+      if (processLocResult != 0) {
+        return processLocResult;
+      }
     }
 
     // Commit translations.

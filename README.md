@@ -68,6 +68,7 @@ More about specified configuration parameters - in modules descriptions in the [
 
 ## Commands
 
+### Release
 // TODO @chessmax: `release` command description
 
 ### Feature

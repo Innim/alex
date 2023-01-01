@@ -1,3 +1,6 @@
+
+* [Release] Added flag `--skip_l10n` to skip localization process when release.
+
 ## 1.5.1+1 - 2022-12-10
 
 * Fix  "CHANGELOG.md has unknown structure" error when run release start command.
