@@ -13,7 +13,7 @@ class GenerateCommand extends L10nCommandBase {
     final l10nConfig = config.l10n;
 
     try {
-      await generateLocalisation(l10nConfig);
+      await generateLocalization(l10nConfig);
     } on RunException catch (e) {
       return errorBy(e);
     }

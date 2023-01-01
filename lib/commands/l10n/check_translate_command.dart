@@ -31,7 +31,7 @@ class CheckTranslateCommand extends L10nCommandBase {
       final notTranslatedKeys = await comparer.compare(
         () async {
           printInfo('Running extract to arb...');
-          await extractLocalisation(l10nConfig);
+          await extractLocalization(l10nConfig);
         },
       );
       if (notTranslatedKeys.isEmpty) {

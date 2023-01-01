@@ -13,7 +13,7 @@ class ExtractCommand extends L10nCommandBase {
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
     try {
-    await extractLocalisation(l10nConfig);
+      await extractLocalization(l10nConfig);
     } on RunException catch (e) {
       return errorBy(e);
     }

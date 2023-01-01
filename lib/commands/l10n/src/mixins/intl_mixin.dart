@@ -35,7 +35,7 @@ mixin IntlMixin {
         printStdOut: printStdOut);
   }
 
-  Future<void> extractLocalisation(L10nConfig l10nConfig) async {
+  Future<void> extractLocalization(L10nConfig l10nConfig) async {
     final outputDir = l10nConfig.outputDir;
     final sourcePath = l10nConfig.sourceFile;
     await runIntlOrFail(
@@ -48,7 +48,7 @@ mixin IntlMixin {
     );
   }
 
-  Future<void> generateLocalisation(L10nConfig l10nConfig) async {
+  Future<void> generateLocalization(L10nConfig l10nConfig) async {
     final arbFiles = await _getArbFiles(l10nConfig);
     await runIntlOrFail(
       'generate_from_arb',
