@@ -1,3 +1,4 @@
+## 1.5.2
 
 * [Release] Added flag `--local` for local build.
 * [Release] Added flag `--skip_l10n` to skip localization process when release.
