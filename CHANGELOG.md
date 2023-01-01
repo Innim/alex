@@ -1,5 +1,7 @@
 
+* [Release] Added flag `--local` for local build.
 * [Release] Added flag `--skip_l10n` to skip localization process when release.
+* [Release] Added `ci` section in `alex` configuration. Ability to disable CI for project.
 
 ## 1.5.1+1 - 2022-12-10
 

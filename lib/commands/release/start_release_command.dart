@@ -23,6 +23,7 @@ import 'package:alex/src/pub_spec.dart';
 class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _argLocale = 'check_locale';
   static const _defaultLocale = 'en';
+  static const _argLocal = 'local';
   static const _argSkipL10n = 'skip_l10n';
   static const _argDemo = 'demo';
 
@@ -46,6 +47,11 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         help: 'Skip process localization',
       )
       ..addFlag(
+        _argLocal,
+        abbr: 'b',
+        help: "Runs local release build (only for Android right now)",
+      )
+      ..addFlag(
         _argDemo,
         help: "Runs command in demonstration mode",
       );
@@ -65,6 +71,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     }
 
     final skipL10n = args[_argSkipL10n] as bool? ?? false;
+    final isLocalRelease = args[_argLocal] as bool? ?? false;
+
     git.ensureCleanAndCheckoutDevelop();
 
     final spec = await Spec.pub(fs);
@@ -91,6 +99,13 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       }
     }
 
+    final ciConfig = config.ci;
+    if (!ciConfig.enabled && !isLocalRelease) {
+      return error(1,
+          message: 'You can only use local release if CI is disabled. '
+              'See --$_argLocal and section ci in alex config section.');
+    }
+
     // Commit translations.
     _commit("Generated translations.");
 
@@ -104,9 +119,27 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     printInfo("Change log: \n$changeLog");
 
-    printInfo('Waiting for release notes...');
+    final summary = StringBuffer();
+    if (ciConfig.enabled) {
+      printInfo('Waiting for release notes...');
+      final releaseNotes = await getReleaseNotes(version, changeLog);
+      summary
+        ..writeln()
+        ..writeln('# Release Notes')
+        ..writeln()
+        ..writeln(releaseNotes);
+    }
 
-    final releaseNotes = await getReleaseNotes(version, changeLog);
+    summary
+      ..writeln()
+      ..writeln('# Changelog')
+      ..writeln()
+      ..writeln(changeLog);
+
+    if (isLocalRelease) {
+      final localBuildResult = await _localBuild();
+      if (localBuildResult != 0) return localBuildResult;
+    }
 
     printInfo("Finishing release...");
 
@@ -133,15 +166,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     printInfo(
         'Release summary, copypaste it in the comment for release issue:');
     printInfo('');
-    printInfo('''
-# Release Notes
-
-$releaseNotes
-
-# Changelog 
-
-$changeLog
-''');
+    printInfo(summary.toString());
 
     return 0;
   }
@@ -391,6 +416,37 @@ $changeLog
       setCurrentDir(currentPath);
     }
     return 0;
+  }
+
+  Future<int> _localBuild() async {
+    printInfo('Run local build');
+    final res = await flutter.runCmdOrFail(
+      'build',
+      arguments: [
+        'appbundle',
+      ],
+      printStdOut: false,
+      immediatePrint: false,
+    );
+
+    if (res.exitCode == 0) {
+      // TODO: copy release file to someplace
+      // ✓ Built build/app/outputs/bundle/release/app-release.aab (27.1MB).
+      printInfo('Local build succeed.');
+      final message = res.stdout?.toString();
+      final buildLine = message
+          ?.split('\n')
+          .firstWhere((line) => line.contains('✓ Built '), orElse: () => '');
+      if (buildLine != null && buildLine.isNotEmpty) printInfo(buildLine);
+      return 0;
+    } else {
+      return error(
+        res.exitCode,
+        message: res.stderr?.toString() ??
+            res.stdout?.toString() ??
+            'Local build failed',
+      );
+    }
   }
 }
 

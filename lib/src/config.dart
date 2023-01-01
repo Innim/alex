@@ -91,6 +91,7 @@ class AlexConfig {
   final YamlMap _data;
 
   L10nConfig? _l10n;
+  AlexCIConfig? _ci;
 
   AlexConfig._(this._path, this._data);
 
@@ -99,6 +100,13 @@ class AlexConfig {
     return _l10n ??= _data.containsKey(key)
         ? L10nConfig.fromYaml(_data[key] as YamlMap)
         : L10nConfig();
+  }
+
+  AlexCIConfig get ci {
+    const key = 'ci';
+    return _ci ??= _data.containsKey(key)
+        ? AlexCIConfig.fromYaml(_data[key] as YamlMap)
+        : AlexCIConfig();
   }
 
   String get rootPath => p.dirname(_path);
@@ -184,5 +192,28 @@ class L10nConfig {
         'baseLocaleForXml: $baseLocaleForXml, '
         'xmlOutputDir: $xmlOutputDir, '
         'xmlOutputName: $xmlOutputName}';
+  }
+}
+
+/// Configuration of CI for Alex.
+class AlexCIConfig {
+  static const _defaultEnabled = true;
+
+  /// Defines if CI for project is enabled.
+  final bool enabled;
+
+  AlexCIConfig({
+    this.enabled = _defaultEnabled,
+  });
+
+  factory AlexCIConfig.fromYaml(YamlMap data) {
+    return AlexCIConfig(
+      enabled: data['enabled'] as bool? ?? _defaultEnabled,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AlexCIConfig{enabled: $enabled}';
   }
 }

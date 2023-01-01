@@ -53,6 +53,25 @@ class FlutterCmd extends CmdBase {
     );
   }
 
+  Future<ProcessResult> runCmdOrFail(
+    String cmd, {
+    List<String>? arguments,
+    bool printStdOut = true,
+    bool immediatePrint = true,
+  }) async {
+    assert(printStdOut || !immediatePrint,
+        "You can't disable std output if immediatePrint enabled");
+    return runOrFail(
+      () => run(
+        cmd,
+        arguments: arguments,
+        immediatePrintStd: immediatePrint && printStdOut,
+        immediatePrintErr: false,
+      ),
+      printStdOut: !immediatePrint && printStdOut,
+    );
+  }
+
   /// Runs `flutter pub` command.
   Future<ProcessResult> pub(
     String command, {
