@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:alex/internal/print.dart' as print;
 import 'package:alex/src/exception/run_exception.dart';
 
+// TODO: support for "main" as well
 const String branchMaster = "master";
 const String branchDevelop = "develop";
 const String branchTest = "pipe/test";

@@ -73,6 +73,13 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     final skipL10n = args[_argSkipL10n] as bool? ?? false;
     final isLocalRelease = args[_argLocal] as bool? ?? false;
 
+    final ciConfig = config.ci;
+    if (!ciConfig.enabled && !isLocalRelease) {
+      return error(1,
+          message: 'You can only use local release if CI is disabled. '
+              'See --$_argLocal and section ci in alex config section.');
+    }
+
     git.ensureCleanAndCheckoutDevelop();
 
     final spec = await Spec.pub(fs);
@@ -97,17 +104,10 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       if (processLocResult != 0) {
         return processLocResult;
       }
-    }
 
-    final ciConfig = config.ci;
-    if (!ciConfig.enabled && !isLocalRelease) {
-      return error(1,
-          message: 'You can only use local release if CI is disabled. '
-              'See --$_argLocal and section ci in alex config section.');
+      // Commit translations.
+      _commit("Generated translations.");
     }
-
-    // Commit translations.
-    _commit("Generated translations.");
 
     printInfo('Start new release <v$vs>');
 

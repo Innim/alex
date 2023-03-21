@@ -1,3 +1,7 @@
+## 1.5.2+1
+
+* [Release] **Fixed**: failed on empty commit attempt during local build.
+
 ## 1.5.2
 
 * [Release] Added flag `--local` for local build.
