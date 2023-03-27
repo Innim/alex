@@ -5,8 +5,13 @@ import 'package:path/path.dart' as p;
 
 /// Demo git implementation.
 class DemoGit extends Git {
+  final bool verbose;
+
+  DemoGit({required this.verbose});
+
   @override
   String execute(List<String> args, String desc, {bool printIfError = true}) {
+    if (verbose) print.verbose('git ${args.join(' ')}');
     switch (args[0]) {
       case "remote":
         return "https://github.com/demo/demo.git";

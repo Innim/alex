@@ -1,15 +1,10 @@
 import 'dart:core';
 import 'dart:io';
+import 'package:alex/alex.dart';
 import 'package:alex/internal/print.dart' as print;
 import 'package:alex/src/exception/run_exception.dart';
 
-// TODO: support for "main" as well
-const String branchMaster = "master";
-const String branchDevelop = "develop";
-const String branchTest = "pipe/test";
-const String branchRemotePrefix = "remotes/";
-const String branchFeaturePrefix = "feature/";
-const String defaultRemote = "origin";
+const String _branchRemotePrefix = "remotes/";
 const _sep = '/';
 
 /// Interface of a git client.
@@ -74,8 +69,21 @@ class ConsoleGit extends Git {
 
 class GitCommands {
   final Git _client;
+  final AlexGitConfig _config;
 
-  GitCommands(this._client);
+  GitCommands(this._client, this._config);
+
+  // String get branchRemotePrefix => _branchRemotePrefix;
+
+  String get branchMaster => _config.branches.master;
+
+  String get branchDevelop => _config.branches.develop;
+
+  String get branchTest => _config.branches.test;
+
+  String get branchFeaturePrefix => _config.branches.featurePrefix;
+
+  String get defaultRemote => _config.remote;
 
   void ensureCleanStatus() {
     ensure(() => status("check status of current branch", porcelain: true),
@@ -121,8 +129,8 @@ class GitCommands {
     if (deleteBranch) branchDelete(branchName);
   }
 
-  void mergeDevelopInTest(
-      {String remote = defaultRemote, bool failOnMergeConflict = false}) {
+  void mergeDevelopInTest({String? remote, bool failOnMergeConflict = false}) {
+    remote ??= defaultRemote;
     checkout(branchTest);
     pull(remote);
     merge(branchDevelop, failOnMergeConflict: failOnMergeConflict);
@@ -143,16 +151,18 @@ class GitCommands {
         "get last common commit for $branchA and $branchB");
   }
 
-  String remoteGetUrl(String desc, [String remote = defaultRemote]) {
+  String remoteGetUrl(String desc, [String? remote]) {
+    remote ??= defaultRemote;
     return git("remote get-url $remote", desc);
   }
 
-  String fetch(String branch, [String remote = defaultRemote]) {
+  String fetch(String branch, [String? remote]) {
+    remote ??= defaultRemote;
     return git("fetch $remote", "fetch $remote");
   }
 
   void branchDelete(String branch) {
-    if (branch.startsWith(branchRemotePrefix)) {
+    if (branch.startsWith(_branchRemotePrefix)) {
       final parts = branch.split(_sep);
       final remote = parts[1];
       final remoteBranchName = parts.sublist(2).join(_sep);
@@ -162,7 +172,8 @@ class GitCommands {
     }
   }
 
-  void branchDeleteFromRemote(String branch, [String remote = defaultRemote]) {
+  void branchDeleteFromRemote(String branch, [String? remote]) {
+    remote ??= defaultRemote;
     git("push $remote --delete $branch", "delete $branch from $remote");
   }
 
@@ -208,11 +219,22 @@ class GitCommands {
     }
   }
 
-  String pull([String remote = defaultRemote]) {
+  bool isRemoteBranch(String? branchName) =>
+      branchName?.startsWith(_branchRemotePrefix) ?? false;
+
+  bool isDefaultRemoteBranch(String? branchName) =>
+      branchName?.startsWith('$_branchRemotePrefix$defaultRemote/') ?? false;
+
+  String getBaseNameForRemoteBranch(String remoteBranchName) =>
+      remoteBranchName.split(_sep).sublist(2).join(_sep);
+
+  String pull([String? remote]) {
+    remote ??= defaultRemote;
     return git("pull $remote", "pull $remote");
   }
 
-  void push(String branch, [String remote = defaultRemote]) {
+  void push(String branch, [String? remote]) {
+    remote ??= defaultRemote;
     git("push -v --tags $remote $branch:$branch", "pushing $branch");
   }
 

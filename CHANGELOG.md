@@ -1,3 +1,7 @@
+## 1.5.3
+
+* Support for configuring names for GIT branches.
+
 ## 1.5.2+1
 
 * [Release] **Fixed**: failed on empty commit attempt during local build.

@@ -61,13 +61,15 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   Future<int> doRun() async {
     final args = argResults!;
     final isDemo = args[_argDemo] as bool;
+
+    final gitConfig = config.git;
     if (!isDemo) {
       fs = const IOFileSystem();
-      git = GitCommands(GitClient());
+      git = GitCommands(GitClient(), gitConfig);
     } else {
       printInfo("Demonstration mode");
       fs = DemoFileSystem();
-      git = GitCommands(DemoGit());
+      git = GitCommands(DemoGit(verbose: isVerbose), gitConfig);
     }
 
     final skipL10n = args[_argSkipL10n] as bool? ?? false;
@@ -149,6 +151,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     // finishing release
     git.gitflowReleaseFinish(vs);
 
+    final branchDevelop = git.branchDevelop;
     if (git.getCurrentBranch() != branchDevelop) {
       git.checkout(branchDevelop);
     }
@@ -159,7 +162,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     _commit("Version increment");
 
     git.push(branchDevelop);
-    git.push(branchMaster);
+    git.push(git.branchMaster);
 
     printInfo('Release successfully completed');
     printInfo('');

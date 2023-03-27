@@ -51,16 +51,17 @@ class FinishCommand extends FeatureCommandBase {
 
     try {
       final console = this.console;
+      final gitConfig = config.git;
 
       FileSystem fs;
       GitCommands git;
       if (!isDemo) {
         fs = const IOFileSystem();
-        git = GitCommands(GitClient(isVerbose: isVerbose));
+        git = GitCommands(GitClient(isVerbose: isVerbose), gitConfig);
       } else {
         printInfo("Demonstration mode");
         fs = DemoFileSystem();
-        git = GitCommands(DemoGit());
+        git = GitCommands(DemoGit(), gitConfig);
       }
 
       printVerbose('Check if this is a project directory');
@@ -119,6 +120,7 @@ class FinishCommand extends FeatureCommandBase {
       }
 
       printVerbose('Push develop');
+      final branchDevelop = git.branchDevelop;
       git.push(branchDevelop);
 
       if (branchName == branch.remoteName && branch.localName != null) {
@@ -140,7 +142,7 @@ class FinishCommand extends FeatureCommandBase {
       printVerbose('Remove feature branch');
       git.branchDelete(branchName);
 
-      printVerbose('Merge develop in $branchTest');
+      printVerbose('Merge develop in ${git.branchTest}');
       git.mergeDevelopInTest();
 
       // TODO: handle merge conflicts
@@ -163,7 +165,7 @@ class FinishCommand extends FeatureCommandBase {
     printVerbose('Branches: $branchesNames');
 
     final branches =
-        branchesNames.map((n) => _Branch(n)).where((b) => b.isFeature);
+        branchesNames.map((n) => _Branch(git, n)).where((b) => b.isFeature);
 
     if (branches.isEmpty) return [];
 
@@ -264,20 +266,20 @@ Which section to add:
 }
 
 class _Branch {
+  final GitCommands git;
   final String name;
   // TODO: multiple remotes
   final String? remoteName;
   final String? localName;
 
-  factory _Branch(String name) {
+  factory _Branch(GitCommands git, String name) {
     final String baseName;
     final String? localName;
     final String? remoteName;
 
-    if (name.startsWith(branchRemotePrefix)) {
-      const sep = '/';
+    if (git.isDefaultRemoteBranch(name)) {
       remoteName = name;
-      baseName = name.split(sep).sublist(2).join(sep);
+      baseName = git.getBaseNameForRemoteBranch(name);
       localName = null;
     } else {
       baseName = name;
@@ -285,23 +287,21 @@ class _Branch {
       remoteName = null;
     }
 
-    return _Branch._(baseName, localName, remoteName);
+    return _Branch._(git, baseName, localName, remoteName);
   }
 
-  _Branch._(this.name, this.localName, this.remoteName);
+  _Branch._(this.git, this.name, this.localName, this.remoteName);
 
-  bool get isFeature => name.startsWith(branchFeaturePrefix);
+  bool get isFeature => name.startsWith(git.branchFeaturePrefix);
 
   bool isIssueFeature(int issueId) =>
-      name.startsWith('$branchFeaturePrefix$issueId.');
+      name.startsWith('${git.branchFeaturePrefix}$issueId.');
 
   _Branch merge(_Branch other) => _Branch._(
+        git,
         name,
         localName ?? other.localName,
-        remoteName == null ||
-                (other.remoteName
-                        ?.startsWith('$branchRemotePrefix$defaultRemote/') ??
-                    false)
+        remoteName == null || git.isDefaultRemoteBranch(other.remoteName)
             ? other.remoteName
             : remoteName,
       );

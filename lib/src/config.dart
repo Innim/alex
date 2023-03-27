@@ -92,6 +92,7 @@ class AlexConfig {
 
   L10nConfig? _l10n;
   AlexCIConfig? _ci;
+  AlexGitConfig? _git;
 
   AlexConfig._(this._path, this._data);
 
@@ -106,7 +107,14 @@ class AlexConfig {
     const key = 'ci';
     return _ci ??= _data.containsKey(key)
         ? AlexCIConfig.fromYaml(_data[key] as YamlMap)
-        : AlexCIConfig();
+        : const AlexCIConfig();
+  }
+
+  AlexGitConfig get git {
+    const key = 'git';
+    return _git ??= _data.containsKey(key)
+        ? AlexGitConfig.fromYaml(_data[key] as YamlMap)
+        : const AlexGitConfig();
   }
 
   String get rootPath => p.dirname(_path);
@@ -202,7 +210,7 @@ class AlexCIConfig {
   /// Defines if CI for project is enabled.
   final bool enabled;
 
-  AlexCIConfig({
+  const AlexCIConfig({
     this.enabled = _defaultEnabled,
   });
 
@@ -215,5 +223,77 @@ class AlexCIConfig {
   @override
   String toString() {
     return 'AlexCIConfig{enabled: $enabled}';
+  }
+}
+
+/// Configuration of GIT repository for Alex.
+class AlexGitConfig {
+  static const _defaultRemote = "origin";
+
+  /// Name for default remote.
+  final String remote;
+
+  /// Configurations of branches.
+  final AlexGitConfigBranches branches;
+
+  const AlexGitConfig({
+    this.remote = _defaultRemote,
+    this.branches = const AlexGitConfigBranches(),
+  });
+
+  factory AlexGitConfig.fromYaml(YamlMap data) {
+    const branchesKey = 'branches';
+    return AlexGitConfig(
+      remote: data['remote'] as String? ?? _defaultRemote,
+      branches: data.containsKey(branchesKey)
+          ? AlexGitConfigBranches.fromYaml(data[branchesKey] as YamlMap)
+          : const AlexGitConfigBranches(),
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AlexGitConfig{'
+        'remote: $remote, '
+        'branches: $branches'
+        '}';
+  }
+}
+
+class AlexGitConfigBranches {
+  static const _defaultMaster = "master";
+  static const _defaultDevelop = "develop";
+  static const _defaultTest = "pipe/test";
+  static const _defaultFeaturePrefix = "feature/";
+
+  final String master;
+  final String develop;
+  final String test;
+  final String featurePrefix;
+
+  const AlexGitConfigBranches({
+    this.master = _defaultMaster,
+    this.develop = _defaultDevelop,
+    this.test = _defaultTest,
+    this.featurePrefix = _defaultFeaturePrefix,
+  });
+
+  factory AlexGitConfigBranches.fromYaml(YamlMap data) {
+    return AlexGitConfigBranches(
+      master: data['master'] as String? ?? _defaultMaster,
+      develop: data['develop'] as String? ?? _defaultDevelop,
+      test: data['test'] as String? ?? _defaultTest,
+      featurePrefix: data['featurePrefix'] as String? ?? _defaultFeaturePrefix,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AlexGitConfigBranches{'
+        'master: $master, '
+        'develop: $develop, '
+        'test: $test, '
+        'featurePrefix: $featurePrefix'
+        '}';
   }
 }

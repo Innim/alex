@@ -15,3 +15,12 @@ l10n:
 # CI settings
 ci:
   enabled: true
+
+# GIT settings
+git:
+  branches:
+    master: master
+    develop: develop
+    test: pipe/test
+    feature_prefix: feature/
+  remote: origin
