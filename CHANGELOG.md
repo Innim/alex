@@ -1,3 +1,9 @@
+## 1.5.4
+
+* Load config recursive by default. 
+* **Fixed**: broken release command with localization.
+* **Fixed**: broken release command with configuration in subfolder.
+
 ## 1.5.3
 
 * Support for configuring names for GIT branches.

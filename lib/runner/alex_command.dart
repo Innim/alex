@@ -12,13 +12,12 @@ import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
-
 /// Базовый класс команды.
 abstract class AlexCommand extends Command<int> {
   final String _name;
   final String _description;
   final List<String> _aliases;
-  
+
   Console? _console;
   Cmd? _cmd;
   FlutterCmd? _flutter;
@@ -59,7 +58,12 @@ abstract class AlexCommand extends Command<int> {
   bool get isVerbose => argResults!['verbose'] as bool;
 
   @protected
-  AlexConfig get config => AlexConfig.instance;
+  AlexConfig get config {
+    if (!AlexConfig.hasInstance) {
+      AlexConfig.load(recursive: true);
+    }
+    return AlexConfig.instance;
+  }
 
   @override
   @nonVirtual
@@ -73,8 +77,6 @@ abstract class AlexCommand extends Command<int> {
 
   @protected
   AlexConfig findConfigAndSetWorkingDir() {
-    AlexConfig.load(recursive: true);
-
     final config = this.config;
     setCurrentDir(config.rootPath);
     return config;
@@ -151,9 +153,7 @@ abstract class AlexCommand extends Command<int> {
     return ProcessResult(
         process.pid, exitCode, stdout.toString(), stderr.toString());
   }
-
 }
-
 
 class CmdArg {
   final String name;

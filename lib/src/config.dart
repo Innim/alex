@@ -24,6 +24,8 @@ class AlexConfig {
     return _instance!;
   }
 
+  static bool get hasInstance => _instance != null;
+
   /// Load configuration.
   static void load({String? path, bool recursive = false}) {
     assert(_instance == null);
