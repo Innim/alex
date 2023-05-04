@@ -1,5 +1,4 @@
 import 'package:alex/alex.dart';
-import 'package:alex/src/exception/run_exception.dart';
 
 import 'src/l10n_command_base.dart';
 
@@ -12,11 +11,8 @@ class ExtractCommand extends L10nCommandBase {
   Future<int> doRun() async {
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
-    try {
-      await extractLocalization(l10nConfig);
-    } on RunException catch (e) {
-      return errorBy(e);
-    }
+
+    await extractLocalization(l10nConfig);
 
     final mainFile = await L10nUtils.getMainArb(l10nConfig);
     return success(

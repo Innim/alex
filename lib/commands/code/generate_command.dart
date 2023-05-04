@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'src/code_command_base.dart';
 
@@ -13,25 +12,21 @@ class GenerateCommand extends CodeCommandBase {
   @override
   Future<int> doRun() async {
     printInfo('Start code generation...');
+    printVerbose('Search for pubspec with $_buildRunner dependency');
 
-    try {
-      printVerbose('Search for pubspec with $_buildRunner dependency');
-      final pubspecFile = await _findPubspec();
-      if (pubspecFile != null) {
-        setCurrentDir(pubspecFile.parent.path);
-      }
-
-      await flutter.runPubOrFail(
-        'build_runner',
-        [
-          'build',
-          '--delete-conflicting-outputs',
-        ],
-        prependWithPubGet: true,
-      );
-    } on RunException catch (e) {
-      return errorBy(e);
+    final pubspecFile = await _findPubspec();
+    if (pubspecFile != null) {
+      setCurrentDir(pubspecFile.parent.path);
     }
+
+    await flutter.runPubOrFail(
+      'build_runner',
+      [
+        'build',
+        '--delete-conflicting-outputs',
+      ],
+      prependWithPubGet: true,
+    );
 
     return success(message: 'Code generation complete!');
   }

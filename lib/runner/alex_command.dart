@@ -69,7 +69,15 @@ abstract class AlexCommand extends Command<int> {
   @nonVirtual
   Future<int> run() async {
     print.setupRootLogger(isVerbose: isVerbose);
-    return doRun();
+
+    try {
+      return await doRun();
+    } on RunException catch (e) {
+      return errorBy(e);
+    } catch (e, st) {
+      printVerbose('Exception: $e\nStackTrace: $st');
+      return error(2, message: 'Failed by: $e');
+    }
   }
 
   @protected

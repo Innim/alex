@@ -3,7 +3,6 @@ import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/console/console.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/git/git.dart';
-import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/pub_spec.dart';
 
 import 'src/feature_command_base.dart';
@@ -49,115 +48,109 @@ class FinishCommand extends FeatureCommandBase {
     var issueId = args.getInt(_argIssue);
     final changelog = args.getString(_argChangelog);
 
-    try {
-      final console = this.console;
-      final gitConfig = config.git;
+    final console = this.console;
+    final gitConfig = config.git;
 
-      FileSystem fs;
-      GitCommands git;
-      if (!isDemo) {
-        fs = const IOFileSystem();
-        git = GitCommands(GitClient(isVerbose: isVerbose), gitConfig);
-      } else {
-        printInfo("Demonstration mode");
-        fs = DemoFileSystem();
-        git = GitCommands(DemoGit(), gitConfig);
-      }
-
-      printVerbose('Check if this is a project directory');
-      final pubspecExists = await Spec.exists(fs);
-      if (!pubspecExists) {
-        return error(1,
-            message: 'You should run command from project root directory.');
-      }
-
-      final prevBranch = git.getCurrentBranch();
-      printVerbose('Current branch: $prevBranch');
-      printVerbose('Pull develop and check status');
-      git.ensureCleanAndCheckoutDevelop();
-
-      final branches = await _getFeatureBranches(git);
-
-      if (issueId == null) {
-        printInfo('You should specified issue id to finish feature.');
-        printInfo('Current feature branches:');
-        branches.forEach((b) => printInfo('- ${b.name}'));
-
-        printInfo('Enter issue id:');
-
-        do {
-          final issueIdStr = console.readLineSync();
-
-          if (issueIdStr != null && issueIdStr.isNotEmpty) {
-            issueId = int.tryParse(issueIdStr);
-          }
-          // ignore: invariant_booleans
-        } while (issueId == null);
-      }
-
-      final branch = await _getBranch(branches, issueId);
-      if (branch == null) {
-        return error(1, message: "Can't find branch for issue #$issueId");
-      }
-
-      printInfo('Finish feature $branch');
-
-      // priority - remote if exist
-      final branchName = (branch.remoteName ?? branch.localName)!;
-
-      // TODO: Merge develop in remote feature branch if conflict
-
-      printVerbose('Merge feature branch in develop');
-      git.gitflowFeatureFinish(branchName, deleteBranch: false);
-
-      printVerbose('Add entry in changelog');
-      final changed = await _updateChangelog(console, fs, issueId, changelog);
-
-      if (changed) {
-        printVerbose('Commit changelog');
-        git.addAll();
-        git.commit("Changelog: issue #$issueId.\n\nBy alex.");
-      }
-
-      printVerbose('Push develop');
-      final branchDevelop = git.branchDevelop;
-      git.push(branchDevelop);
-
-      if (branchName == branch.remoteName && branch.localName != null) {
-        final localName = branch.localName!;
-        printVerbose('Check local feature branch $localName');
-
-        final localCommit = git.getCurrentCommit(localName);
-        final commonCommit = git.getLastCommonCommit(localName, branchName);
-
-        if (localCommit == commonCommit) {
-          printVerbose('Remove local feature branch');
-          git.branchDelete(localName);
-        } else {
-          printVerbose('Local branch different from remote. '
-              'Do not delete $localName');
-        }
-      }
-
-      printVerbose('Remove feature branch');
-      git.branchDelete(branchName);
-
-      printVerbose('Merge develop in ${git.branchTest}');
-      git.mergeDevelopInTest();
-
-      // TODO: handle merge conflicts
-
-      if (prevBranch != branchDevelop && prevBranch != branch.localName) {
-        printVerbose('Return to the branch $prevBranch');
-        git.checkout(prevBranch);
-      }
-
-      return success(message: 'Finished 🏁');
-    } on RunException catch (e) {
-      return errorBy(e);
-    } catch (e) {
-      return error(2, message: 'Failed by: $e');
+    FileSystem fs;
+    GitCommands git;
+    if (!isDemo) {
+      fs = const IOFileSystem();
+      git = GitCommands(GitClient(isVerbose: isVerbose), gitConfig);
+    } else {
+      printInfo("Demonstration mode");
+      fs = DemoFileSystem();
+      git = GitCommands(DemoGit(), gitConfig);
     }
+
+    printVerbose('Check if this is a project directory');
+    final pubspecExists = await Spec.exists(fs);
+    if (!pubspecExists) {
+      return error(1,
+          message: 'You should run command from project root directory.');
+    }
+
+    final prevBranch = git.getCurrentBranch();
+    printVerbose('Current branch: $prevBranch');
+    printVerbose('Pull develop and check status');
+    git.ensureCleanAndCheckoutDevelop();
+
+    final branches = await _getFeatureBranches(git);
+
+    if (issueId == null) {
+      printInfo('You should specified issue id to finish feature.');
+      printInfo('Current feature branches:');
+      branches.forEach((b) => printInfo('- ${b.name}'));
+
+      printInfo('Enter issue id:');
+
+      do {
+        final issueIdStr = console.readLineSync();
+
+        if (issueIdStr != null && issueIdStr.isNotEmpty) {
+          issueId = int.tryParse(issueIdStr);
+        }
+        // ignore: invariant_booleans
+      } while (issueId == null);
+    }
+
+    final branch = await _getBranch(branches, issueId);
+    if (branch == null) {
+      return error(1, message: "Can't find branch for issue #$issueId");
+    }
+
+    printInfo('Finish feature $branch');
+
+    // priority - remote if exist
+    final branchName = (branch.remoteName ?? branch.localName)!;
+
+    // TODO: Merge develop in remote feature branch if conflict
+
+    printVerbose('Merge feature branch in develop');
+    git.gitflowFeatureFinish(branchName, deleteBranch: false);
+
+    printVerbose('Add entry in changelog');
+    final changed = await _updateChangelog(console, fs, issueId, changelog);
+
+    if (changed) {
+      printVerbose('Commit changelog');
+      git.addAll();
+      git.commit("Changelog: issue #$issueId.\n\nBy alex.");
+    }
+
+    printVerbose('Push develop');
+    final branchDevelop = git.branchDevelop;
+    git.push(branchDevelop);
+
+    if (branchName == branch.remoteName && branch.localName != null) {
+      final localName = branch.localName!;
+      printVerbose('Check local feature branch $localName');
+
+      final localCommit = git.getCurrentCommit(localName);
+      final commonCommit = git.getLastCommonCommit(localName, branchName);
+
+      if (localCommit == commonCommit) {
+        printVerbose('Remove local feature branch');
+        git.branchDelete(localName);
+      } else {
+        printVerbose('Local branch different from remote. '
+            'Do not delete $localName');
+      }
+    }
+
+    printVerbose('Remove feature branch');
+    git.branchDelete(branchName);
+
+    printVerbose('Merge develop in ${git.branchTest}');
+    git.mergeDevelopInTest();
+
+    // TODO: handle merge conflicts
+
+    if (prevBranch != branchDevelop && prevBranch != branch.localName) {
+      printVerbose('Return to the branch $prevBranch');
+      git.checkout(prevBranch);
+    }
+
+    return success(message: 'Finished 🏁');
   }
 
   Future<List<_Branch>> _getFeatureBranches(GitCommands git) async {

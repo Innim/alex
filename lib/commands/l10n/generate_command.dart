@@ -1,5 +1,4 @@
-import 'package:alex/src/exception/run_exception.dart';
-import 'src/l10n_command_base.dart';
+import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 
 /// Command to generate dart files by arb files.
 class GenerateCommand extends L10nCommandBase {
@@ -12,11 +11,7 @@ class GenerateCommand extends L10nCommandBase {
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
 
-    try {
-      await generateLocalization(l10nConfig);
-    } on RunException catch (e) {
-      return errorBy(e);
-    }
+    await generateLocalization(l10nConfig);
 
     // TODO: check if all translations for all keys are exist
 

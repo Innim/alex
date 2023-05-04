@@ -81,23 +81,15 @@ class ToXmlCommand extends L10nCommandBase {
     final baseLocale =
         args[_argLocale] as String? ?? l10nConfig.baseLocaleForXml;
 
-    try {
-      switch (target) {
-        case _sourceArb:
-          return await _exportArb(l10nConfig, baseLocale);
-        case _sourceJson:
-          return await _exportJson(l10nConfig, baseLocale);
-        case _sourceIos:
-          return await _exportIos(
-              l10nConfig, baseLocale, {path.current, runDirPath});
-        default:
-          return error(1, message: 'Unknown target: $target');
-      }
-    } on RunException catch (e) {
-      return errorBy(e);
-    } catch (e, st) {
-      printVerbose('Exception: $e\nStackTrace: $st');
-      return error(2, message: 'Failed by: $e');
+    switch (target) {
+      case _sourceArb:
+        return _exportArb(l10nConfig, baseLocale);
+      case _sourceJson:
+        return _exportJson(l10nConfig, baseLocale);
+      case _sourceIos:
+        return _exportIos(l10nConfig, baseLocale, {path.current, runDirPath});
+      default:
+        return error(1, message: 'Unknown target: $target');
     }
   }
 

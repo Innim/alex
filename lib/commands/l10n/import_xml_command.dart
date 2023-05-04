@@ -100,20 +100,14 @@ class ImportXmlCommand extends L10nCommandBase {
 
     final locales = importNew ? null : await getLocales(l10nConfig);
 
-    try {
-      return _importFromGooglePlay(
-        l10nConfig,
-        sourcePath,
-        fileForImport: fileForImport,
-        targetFileName: targetFileName,
-        importAll: importAll,
-        locales: locales,
-      );
-    } on RunException catch (e) {
-      return errorBy(e);
-    } catch (e) {
-      return error(2, message: 'Failed by: $e');
-    }
+    return _importFromGooglePlay(
+      l10nConfig,
+      sourcePath,
+      fileForImport: fileForImport,
+      targetFileName: targetFileName,
+      importAll: importAll,
+      locales: locales,
+    );
   }
 
   Future<int> _importFromGooglePlay(

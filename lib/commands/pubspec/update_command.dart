@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:alex/commands/pubspec/src/pubspec_command_base.dart';
-import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:path/path.dart' as p;
 import 'package:list_ext/list_ext.dart';
@@ -46,36 +45,30 @@ class UpdateCommand extends PubspecCommandBase {
 
     printInfo('Updating <$dependency>...');
 
-    try {
-      final pubspecFiles = await getPubspecs();
-      if (pubspecFiles.isNotEmpty) {
-        printVerbose('Sort pubspec files consider mutual dependencies');
-        _sortPubspecs(pubspecFiles);
+    final pubspecFiles = await getPubspecs();
+    if (pubspecFiles.isNotEmpty) {
+      printVerbose('Sort pubspec files consider mutual dependencies');
+      _sortPubspecs(pubspecFiles);
 
-        printVerbose('Update pubspec files');
-        var updated = 0;
-        for (final file in pubspecFiles) {
-          if (await _updatePubspec(file, dependency)) {
-            printInfo('Dependency updated for ${file.path}');
-            updated++;
-          }
-        }
-
-        if (updated == 0) {
-          return error(1,
-              message:
-                  'Dependency <$dependency> is not found in any of pubspec files.');
-        } else {
-          printInfo('Updated $updated pubspec files.');
+      printVerbose('Update pubspec files');
+      var updated = 0;
+      for (final file in pubspecFiles) {
+        if (await _updatePubspec(file, dependency)) {
+          printInfo('Dependency updated for ${file.path}');
+          updated++;
         }
       }
 
-      return success(message: 'Bye 👋');
-    } on RunException catch (e) {
-      return errorBy(e);
-    } catch (e) {
-      return error(2, message: 'Failed by: $e');
+      if (updated == 0) {
+        return error(1,
+            message:
+                'Dependency <$dependency> is not found in any of pubspec files.');
+      } else {
+        printInfo('Updated $updated pubspec files.');
+      }
     }
+
+    return success(message: 'Bye 👋');
   }
 
   Future<bool> _updatePubspec(File pubspecFile, String dependency) async {

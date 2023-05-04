@@ -106,35 +106,28 @@ class FromXmlCommand extends L10nCommandBase {
 
     final dirs = {path.current, runDirPath};
 
-    try {
-      int res;
-      switch (target) {
-        case _targetArb:
-          res = await _importToArb(l10nConfig, locales);
-          break;
-        case _targetAndroid:
-          res = await _importToAndroid(l10nConfig, locales, dirs);
-          break;
-        case _targetIos:
-          res = await _importToIos(l10nConfig, locales, dirs);
-          break;
-        case _targetJson:
-          res = await _importToJson(l10nConfig, locales, name);
-          break;
-        case _targetGoogleDocs:
-          // TODO: parameter for filename
-          res = await _importToGoogleDocs(l10nConfig, 'screenshot1', locales);
-          break;
-        default:
-          res = error(1, message: 'Unknown target: $target');
-      }
-      return res;
-    } on RunException catch (e) {
-      return errorBy(e);
-    } catch (e, st) {
-      printVerbose('Exception: $e\nStackTrace: $st');
-      return error(2, message: 'Failed by: $e');
+    int res;
+    switch (target) {
+      case _targetArb:
+        res = await _importToArb(l10nConfig, locales);
+        break;
+      case _targetAndroid:
+        res = await _importToAndroid(l10nConfig, locales, dirs);
+        break;
+      case _targetIos:
+        res = await _importToIos(l10nConfig, locales, dirs);
+        break;
+      case _targetJson:
+        res = await _importToJson(l10nConfig, locales, name);
+        break;
+      case _targetGoogleDocs:
+        // TODO: parameter for filename
+        res = await _importToGoogleDocs(l10nConfig, 'screenshot1', locales);
+        break;
+      default:
+        res = error(1, message: 'Unknown target: $target');
     }
+    return res;
   }
 
   Future<int> _importToArb(L10nConfig config, List<String> locales) async {
@@ -329,6 +322,8 @@ class FromXmlCommand extends L10nCommandBase {
         names.add(path.withoutExtension(basename));
       }
     }
+
+    // TODO: если явно указано имя, то спрашивать подтверждение надо ли экспортировать, даже если нет
 
     if (names.isEmpty || name != null && !names.contains(name)) {
       return error(1,
