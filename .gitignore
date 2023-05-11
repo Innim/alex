@@ -11,3 +11,6 @@ doc/api/
 # VS Code settings
 .vscode/launch.json
 .vscode/settings.json
+
+# FVM SDK
+.fvm/flutter_sdk
