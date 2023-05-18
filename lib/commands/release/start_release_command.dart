@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 
 import 'package:alex/alex.dart';
 import 'package:alex/commands/l10n/src/mixins/intl_mixin.dart';
 import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
@@ -29,7 +29,6 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
   late FileSystem fs;
   late GitCommands git;
-  String? _packageDir;
 
   StartReleaseCommand() : super("start", "Start new release") {
     argParser
@@ -266,9 +265,9 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
           await response.close();
           break;
         } else {
-          final noteTemplate = await readTemplate("release_note");
-          final entryTemplate = await readTemplate("release_note_entry");
-          final formTemplate = await readTemplate("release_notes");
+          final noteTemplate = await _readTemplate("release_note");
+          final entryTemplate = await _readTemplate("release_note_entry");
+          final formTemplate = await _readTemplate("release_notes");
 
           final items = entries.values.map((entry) {
             return buildNote(
@@ -338,38 +337,12 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         .replaceAll("%required%", isRequired ? 'required' : '');
   }
 
-  Future<String> readTemplate(String fileName) {
-    return readAssetFile("commands/release/$fileName.html");
+  Future<String> _readTemplate(String fileName) {
+    return _readAssetFile("commands/release/$fileName.html");
   }
 
-  Future<String> readAssetFile(String assetPath) async {
-    return readPackageFile("assets/$assetPath");
-  }
-
-  Future<String> readPackageFile(String path) async {
-    final packageUri = Uri.parse('package:alex/$path');
-    final resolvedUri = await Isolate.resolvePackageUri(packageUri);
-
-    String filePath;
-    if (resolvedUri == null) {
-      // trying to get relative path
-      final packageDir = getPackageDir();
-      filePath = p.join(packageDir, path);
-    } else {
-      filePath = resolvedUri.path;
-    }
-
-    // TODO: windows fix
-    if (Platform.isWindows && filePath.startsWith('/')) {
-      filePath = filePath.substring(1);
-    }
-
-    return File(filePath).readAsString();
-  }
-
-  String getPackageDir() {
-    return _packageDir ??=
-        Directory.fromUri(Platform.script).parent.parent.path;
+  Future<String> _readAssetFile(String assetPath) async {
+    return File(await PathUtils.getAssetsPath(assetPath)).readAsString();
   }
 
   void incrementVersion(Spec spec, Version value) {
