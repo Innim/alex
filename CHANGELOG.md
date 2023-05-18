@@ -1,3 +1,5 @@
+* Added global settings. You can set it using new `alex settings set` command.
+
 ## 1.5.4
 
 * Load config recursive by default. 

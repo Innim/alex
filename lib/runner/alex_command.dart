@@ -6,6 +6,7 @@ import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/internal/print.dart' as print;
 import 'package:alex/src/run/cmd.dart';
 import 'package:alex/src/run/flutter_cmd.dart';
+import 'package:alex/src/settings.dart';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:logging/logging.dart';
@@ -25,7 +26,7 @@ abstract class AlexCommand extends Command<int> {
   final _logger = Logger('alex');
 
   final ArgParser _argParser = ArgParser(
-    allowTrailingOptions: false,
+    allowTrailingOptions: true,
   )..addFlag('verbose', help: 'Show additional diagnostic info');
 
   AlexCommand(this._name, this._description, [this._aliases = const []]);
@@ -64,6 +65,9 @@ abstract class AlexCommand extends Command<int> {
     }
     return AlexConfig.instance;
   }
+
+  @protected
+  AlexSettings get settings => AlexSettings();
 
   @override
   @nonVirtual
@@ -186,6 +190,23 @@ extension CmdArgArgParserExtension on ArgParser {
         valueHelp: valueHelp,
         allowed: allowed,
         allowedHelp: allowedHelp,
+        defaultsTo: defaultsTo,
+        callback: callback,
+        hide: hide,
+      );
+
+  void addFlagArg(CmdArg info,
+          {String? help,
+          String? valueHelp,
+          Iterable<String>? allowed,
+          Map<String, String>? allowedHelp,
+          bool? defaultsTo = false,
+          void Function(bool)? callback,
+          bool hide = false}) =>
+      addFlag(
+        info.name,
+        abbr: info.abbr,
+        help: help,
         defaultsTo: defaultsTo,
         callback: callback,
         hide: hide,

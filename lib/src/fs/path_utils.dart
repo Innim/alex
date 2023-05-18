@@ -7,6 +7,16 @@ class PathUtils {
 
   static Future<String> getAssetsPath(String assetPath) =>
       getPathRelativePackage('assets/$assetPath');
+
+  static Future<String> getAppDataPath([String subPath = '']) async {
+    final path = await getPathRelativePackage('app_data');
+    final directory = Directory(path);
+    if (await directory.exists() == false) {
+      await directory.create(recursive: true);
+    }
+    return subPath.isEmpty ? path : p.join(path, subPath);
+  }
+
   static Future<String> getPathRelativePackage(String path) async {
     final packageUri = Uri.parse('package:alex/$path');
     final resolvedUri = await Isolate.resolvePackageUri(packageUri);

@@ -224,7 +224,7 @@ or
 alex pub <command>
 ```
 
-### Update dependency
+#### Update dependency
 
 Update specified dependency. It's useful when you want to update
 dependency for git. 
@@ -239,7 +239,7 @@ and input package name. Or define it right in a command:
 alex pubspec update -dPACKAGE_NAME
 ```
 
-### Get dependencies
+#### Get dependencies
 
 Run `pub get` for all projects/packages in folder (recursively). It's useful
 when you have multiple packages or project and package in single repository.
@@ -252,4 +252,26 @@ or
 
 ```
 alex pub get
+```
+
+### Global settings
+
+Set global settings for alex.
+
+Currently supported settings:
+
+- `open_ai_api_key` - OpenAI API key for using ChatGPT features.
+
+#### Set settings
+
+Allow to set setting's value.
+
+```
+alex setting set <name> <value>
+```
+
+For example:
+
+```
+alex setting set open_ai_api_key abc123
 ```
