@@ -8,6 +8,8 @@ import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
+import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
+import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
 import 'package:version/version.dart';
@@ -122,8 +124,17 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     final summary = StringBuffer();
     if (ciConfig.enabled) {
+      final Map<String, String> prompt;
+      final chatGptApiKey = await settings.openAIApiKey;
+      if (chatGptApiKey != null && chatGptApiKey.isNotEmpty) {
+        printInfo('Trying to generate release notes prompt...');
+        prompt = await _getReleaseNotesPrompt(chatGptApiKey, changeLog);
+      } else {
+        prompt = {};
+      }
+
       printInfo('Waiting for release notes...');
-      final releaseNotes = await getReleaseNotes(version, changeLog);
+      final releaseNotes = await getReleaseNotes(version, changeLog, prompt);
       summary
         ..writeln()
         ..writeln('# Release Notes')
@@ -186,9 +197,72 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return changelog.getLastVersionChangelog();
   }
 
-  Future<String?> getReleaseNotes(Version version, String changeLog) async {
+  Future<Map<String, String>> _getReleaseNotesPrompt(
+    String apiKey,
+    String changeLog,
+  ) async {
+    final openAI = OpenAI.instance.build(
+      token: apiKey,
+      baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 15)),
+      isLog: isVerbose,
+    );
+
+    final res = <String, String>{};
+
+    const basicGptRequest =
+        'Below is changelog for the mobile application update release. '
+        'Please, provide the release notes for the application page in the store. No greetings nor signature. Not include version number in the text. Keep it short and to the point. You can skip not important changes.\n'
+        'Make it in %LANG%\n'
+        'Here the changelog:\n%CHANGELOG%';
+    final chatGptRequests = {
+      'en': basicGptRequest.replaceAll('%LANG%', 'English'),
+      'ru': basicGptRequest.replaceAll('%LANG%', 'Russian'),
+    };
+
+    for (final lang in chatGptRequests.keys) {
+      final requestContext = chatGptRequests[lang]!;
+      final request = ChatCompleteText(
+        messages: [
+          {
+            "role": "user",
+            "content": requestContext.replaceAll('%CHANGELOG%', changeLog),
+          }
+        ],
+        maxToken: 500, // TODO: get limit from settings
+        model: ChatModel.gptTurbo0301,
+      );
+
+      printInfo('Request to ChatGPT for $lang Release Notes prompt');
+      final response = await openAI.onChatCompletion(request: request);
+      if (response != null) {
+        final data = response.choices.firstOrNull;
+        if (data != null) {
+          final text = data.message?.content;
+          if (text != null) {
+            printInfo('Request succeed');
+            printVerbose('Text: $text');
+            res[lang] = text;
+          } else {
+            printInfo('Response text is empty');
+          }
+        } else {
+          printInfo('Empty response');
+        }
+      } else {
+        printInfo('No response');
+      }
+    }
+
+    return res;
+  }
+
+  Future<String?> getReleaseNotes(
+    Version version,
+    String changeLog,
+    Map<String, String> prompt,
+  ) async {
     const port = 4024;
-    final data = getRawReleaseNotes(port, changeLog);
+    final data = getRawReleaseNotes(port, changeLog, prompt);
 
     // ignore: unawaited_futures
     openUrl("http://localhost:$port");
@@ -223,7 +297,11 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return result;
   }
 
-  Future<Iterable<Entry>> getRawReleaseNotes(int port, String changeLog) async {
+  Future<Iterable<Entry>> getRawReleaseNotes(
+    int port,
+    String changeLog,
+    Map<String, String> promptByLang,
+  ) async {
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
     final ciConfig = await CiConfig.getConfig(_CIPath.configPath);
     final langs = ciConfig.localizationLanguageList;
@@ -255,6 +333,15 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
           entries.values.any((entry) => entry.update(id, value));
         }
+
+        entries.values.forEach((entry) {
+          final lang = entry.lang;
+          final prompt = promptByLang[lang];
+          if (prompt != null) {
+            entry.values
+                .updateAll((key, value) => value.isEmpty ? prompt : value);
+          }
+        });
 
         // TODO: error if default and stores values are set
         if (formSubmitted &&
