@@ -12,5 +12,8 @@ doc/api/
 .vscode/launch.json
 .vscode/settings.json
 
+# Do not need this for a package
+pubspec.lock
+
 # FVM SDK
 .fvm/flutter_sdk
