@@ -248,7 +248,9 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
           entry.clear();
         });
 
-        for (final kv in request.uri.queryParameters.entries) {
+        final data = request.uri.queryParameters;
+        final formSubmitted = data.containsKey('submit');
+        for (final kv in data.entries) {
           final id = kv.key;
           final value = kv.value;
 
@@ -256,7 +258,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         }
 
         // TODO: error if default and stores values are set
-        if (entries.values.every((entry) => entry.isAllRequiredValuesSet())) {
+        if (formSubmitted &&
+            entries.values.every((entry) => entry.isAllRequiredValuesSet())) {
           completer.complete(entries.values);
           response
               .writeln("Succeed. Close the page and return to the console.");
