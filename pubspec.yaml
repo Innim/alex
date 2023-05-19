@@ -4,10 +4,11 @@ homepage: https://github.com/innim/
 repository: https://github.com/Innim/alex
 issue_tracker: https://github.com/Innim/alex/issues
 
-version: 1.6.0
+version: 1.6.0-alpha
 
 environment:
   sdk: ">=2.19.6 <3.0.0"
+  flutter: ">=3.7.0"
 
 dependencies:
   args: ^2.3.0

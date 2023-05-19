@@ -12,15 +12,7 @@
 
 It's recommended to install the package globally and use as an executable.
 
-You can install the package from the command line:
-
-with pub:
-
-```
-$ pub global activate alex
-```
-
-with Flutter:
+You can install the package from the command line with Flutter:
 
 ```
 $ flutter pub global activate alex
@@ -34,16 +26,13 @@ Now you can execute commands with
 $ alex
 ```
 
-⚠️ **Attention!** If you have only Flutter installed and doesn't have separate Dart SDK
-installed, then you haven't `pub` command. So when you try to run `alex` you will see something like:
+⚠️ **Attention!** If when you try to run `alex` you will see something like:
 
 ```
 ~/Development/flutter/.pub-cache/bin/alex: line 17: pub: command not found
 ```
 
-There are more than one solution for this. You can just install separate Dart SDK if you want. 
-
-Or, if you don't want to do it, you can edit specified file (`~/Development/flutter/.pub-cache/bin/alex` in this example). All you need to change in it - it's use `flutter pub` instead of `pub`, so replace `pub global run alex:alex "$@"` with `flutter pub global run alex:alex "$@"`, save the file, and you are all set.
+In such case you can edit specified file (`~/Development/flutter/.pub-cache/bin/alex` in this example). All you need to change in it - it's use `flutter pub` instead of `pub` or `dart pub`, so replace `pub global run alex:alex "$@"` with `flutter pub global run alex:alex "$@"`, save the file, and you are all set.
 
 #### Fix problems with cyrillic encoding on Windows
 
