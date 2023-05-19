@@ -32,7 +32,7 @@ dependencies:
   yaml: ^3.1.0
 
 dev_dependencies:
-  innim_lint: ^0.3.1
+  innim_lint: ^0.4.0
   mockito: ^5.0.6
   test: ^1.17.12
 

@@ -64,8 +64,8 @@ class Cmd extends CmdBase {
   Future<ProcessResult> runAndListenOutput(
     String executable,
     List<String> arguments, {
-    Function(String out)? onOut,
-    Function(String err)? onErr,
+    void Function(String out)? onOut,
+    void Function(String err)? onErr,
     String? workingDir,
   }) async {
     final stdout = StringBuffer();
