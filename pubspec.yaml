@@ -12,7 +12,7 @@ environment:
 
 dependencies:
   args: ^2.3.0
-  chat_gpt_sdk: 2.1.2
+  chat_gpt_sdk: ^2.1.2
   glob: ^2.0.1
   hive: ^2.2.3
   ini: ^2.1.0
