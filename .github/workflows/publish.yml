@@ -20,5 +20,5 @@ jobs:
           accessToken: ${{ secrets.OAUTH_ACCESS_TOKEN }}
           refreshToken: ${{ secrets.OAUTH_REFRESH_TOKEN }}
           skipTests: true
-          flutter: true
-          flutterBranch: 3.7.12
+          flutter: false
+          # flutterBranch: 3.7.12

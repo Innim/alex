@@ -1,6 +1,5 @@
-## 1.6.0-alpha
+## 1.6.0-alpha.1
 
-* Only works with Flutter SDK now.
 * Using ChatGPT to generate Release Notes (only en and ru locales). You should set global setting `open_ai_api_key` to use it.
 * Added global settings. You can set it using new `alex settings set` command.
 

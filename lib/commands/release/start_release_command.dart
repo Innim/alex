@@ -8,7 +8,7 @@ import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
+import 'package:dart_openai/openai.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
@@ -201,17 +201,21 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     String apiKey,
     String changeLog,
   ) async {
-    final openAI = OpenAI.instance.build(
-      token: apiKey,
-      baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 15)),
-      isLog: isVerbose,
-    );
+    // TODO: make adapter for openAI API
+    OpenAI.apiKey = apiKey;
+    OpenAI.showLogs = isVerbose;
+    final chat = OpenAI.instance.chat;
 
     final res = <String, String>{};
 
     const basicGptRequest =
         'Below is changelog for the mobile application update release. '
-        'Please, provide the release notes for the application page in the store. No greetings nor signature. Not include version number in the text. Keep it short and to the point. You can skip not important changes.\n'
+        'Please, provide the release notes for the application page in the store. '
+        'No greetings nor signature. '
+        'Not include version number in the text. '
+        'Do not add some sort of header at the start, like "App updates:". '
+        'Keep it short and to the point. '
+        'You can skip not important changes.\n'
         'Make it in %LANG%\n'
         'Here the changelog:\n%CHANGELOG%';
     final chatGptRequests = {
@@ -221,35 +225,30 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     for (final lang in chatGptRequests.keys) {
       final requestContext = chatGptRequests[lang]!;
-      final request = ChatCompleteText(
-        messages: [
-          {
-            "role": "user",
-            "content": requestContext.replaceAll('%CHANGELOG%', changeLog),
-          }
-        ],
-        maxToken: 500, // TODO: get limit from settings
-        model: ChatModel.gptTurbo0301,
+      final message = OpenAIChatCompletionChoiceMessageModel(
+        content: requestContext.replaceAll('%CHANGELOG%', changeLog),
+        role: OpenAIChatMessageRole.user,
       );
 
       printInfo('Request to ChatGPT for $lang Release Notes prompt');
-      final response = await openAI.onChatCompletion(request: request);
-      if (response != null) {
-        final data = response.choices.firstOrNull;
-        if (data != null) {
-          final text = data.message?.content;
-          if (text != null) {
-            printInfo('Request succeed');
-            printVerbose('Text: $text');
-            res[lang] = text;
-          } else {
-            printInfo('Response text is empty');
-          }
+      final response = await chat.create(
+        // https://platform.openai.com/docs/models/gpt-3-5
+        model: 'gpt-3.5-turbo',
+        maxTokens: 500, // TODO: get limit from settings
+        messages: [message],
+      );
+      final data = response.choices.firstOrNull;
+      if (data != null) {
+        final text = data.message.content;
+        if (text.isNotEmpty) {
+          printInfo('Request succeed');
+          printVerbose('Text: $text');
+          res[lang] = text;
         } else {
-          printInfo('Empty response');
+          printInfo('Response text is empty');
         }
       } else {
-        printInfo('No response');
+        printInfo('Empty response');
       }
     }
 
