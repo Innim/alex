@@ -256,11 +256,11 @@ Currently supported settings:
 Allow to set setting's value.
 
 ```
-alex setting set <name> <value>
+alex settings set <name> <value>
 ```
 
 For example:
 
 ```
-alex setting set open_ai_api_key abc123
+alex settings set open_ai_api_key abc123
 ```
