@@ -26,6 +26,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _argLocale = 'check_locale';
   static const _defaultLocale = 'en';
   static const _argLocal = 'local';
+  static const _argEntryPoint = 'entry-point';
   static const _argSkipL10n = 'skip_l10n';
   static const _argDemo = 'demo';
 
@@ -51,6 +52,14 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         _argLocal,
         abbr: 'b',
         help: "Runs local release build (only for Android right now)",
+      )
+      ..addOption(
+        _argEntryPoint,
+        abbr: 'e',
+        help: 'Entry point of the app, e.g. lib/main_test.dart. '
+            'If not defined than default will be used. '
+            'Only for local release builds.',
+        valueHelp: 'lib/entry_point.dart',
       )
       ..addFlag(
         _argDemo,
@@ -149,7 +158,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       ..writeln(changeLog);
 
     if (isLocalRelease) {
-      final localBuildResult = await _localBuild();
+      final entryPoint = args[_argEntryPoint] as String?;
+      final localBuildResult = await _localBuild(entryPoint);
       if (localBuildResult != 0) return localBuildResult;
     }
 
@@ -483,12 +493,13 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return 0;
   }
 
-  Future<int> _localBuild() async {
+  Future<int> _localBuild(String? entryPoint) async {
     printInfo('Run local build');
     final res = await flutter.runCmdOrFail(
       'build',
       arguments: [
         'appbundle',
+        if (entryPoint != null) entryPoint,
       ],
       printStdOut: false,
       immediatePrint: false,

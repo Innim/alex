@@ -1,3 +1,7 @@
+## 1.6.0-alpha.2
+
+* [Release] Parameter `--entry-point` to define the entry point for local build.
+
 ## 1.6.0-alpha.1
 
 * Using ChatGPT to generate Release Notes (only en and ru locales). You should set global setting `open_ai_api_key` to use it.
