@@ -8,7 +8,7 @@ import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
-import 'package:dart_openai/openai.dart';
+import 'package:dart_openai/dart_openai.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
@@ -119,6 +119,25 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
       // Commit translations.
       _commit("Generated translations.");
+    }
+
+    final scriptPathes = config.preReliaseScripts?.scriptsPatches;
+
+    if (scriptPathes.isNotNullOrEmpty) {
+      printInfo('Running pre release cripts.');
+      for (final patch in scriptPathes!) {
+        final res = await flutter.runCmdOrFail(
+          'pub',
+          arguments: ['run', '${config.rootPath}/$patch'],
+        );
+        if (res.exitCode == 0) {
+          _commit('Run pre release cripts result.');
+        } else {
+          return error(res.exitCode, message: '${res.stderr}');
+        }
+      }
+    } else {
+      printInfo('Have not pre release cripts to run.');
     }
 
     printInfo('Start new release <v$vs>');
