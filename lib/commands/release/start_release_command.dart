@@ -137,7 +137,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         }
       }
     } else {
-      printInfo('Have not pre release cripts to run.');
+      printInfo('There are no pre release scripts to run.');
     }
 
     printInfo('Start new release <v$vs>');
