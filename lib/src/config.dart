@@ -309,7 +309,7 @@ class AlexGitConfigBranches {
 }
 
 /// Configuration for scripts for alex
-class AlexsScriptsConfig {
+class AlexScriptsConfig {
   final List<String>? scriptsPatches;
   const AlexsScriptsConfig({this.scriptsPatches});
 
