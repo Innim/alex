@@ -131,7 +131,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
           arguments: ['run', '${config.rootPath}/$patch'],
         );
         if (res.exitCode == 0) {
-          _commit('Run pre release cripts result.');
+          _commit('Pre release scripts run.');
         } else {
           return error(res.exitCode, message: '${res.stderr}');
         }
