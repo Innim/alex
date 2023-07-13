@@ -1,4 +1,4 @@
-## 1.6.0-alpha.3
+## 1.6.1
 
 * [Release] Support for provide scrips to run before release.
 

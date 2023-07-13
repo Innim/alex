@@ -95,7 +95,7 @@ class AlexConfig {
   L10nConfig? _l10n;
   AlexCIConfig? _ci;
   AlexGitConfig? _git;
-  AlexsScriptsConfig? _scripts;
+  AlexScriptsConfig? _scripts;
 
   AlexConfig._(this._path, this._data);
 
@@ -120,11 +120,11 @@ class AlexConfig {
         : const AlexGitConfig();
   }
 
-  AlexsScriptsConfig? get preReliaseScripts {
-    const key = 'pre_release_scripts';
+  AlexScriptsConfig? get preReliaseScripts {
+    const key = 'scripts';
     return _scripts ??= _data.containsKey(key)
-        ? AlexsScriptsConfig.fromYaml(_data[key] as YamlMap)
-        : null;
+        ? AlexScriptsConfig.fromYaml(_data[key] as YamlMap)
+        : const AlexScriptsConfig();
   }
 
   String get rootPath => p.dirname(_path);
@@ -310,29 +310,29 @@ class AlexGitConfigBranches {
 
 /// Configuration for scripts for alex
 class AlexScriptsConfig {
-  final List<String>? scriptsPatches;
-  const AlexsScriptsConfig({this.scriptsPatches});
+  /// Scripts paths for run before release start.
+  final List<String>? preReleaseScriptsPaths;
 
-  factory AlexsScriptsConfig.fromYaml(YamlMap data) {
-    return AlexsScriptsConfig(
-      scriptsPatches: (data['scripts_patches'] as YamlList?).toListString(),
+  const AlexScriptsConfig({this.preReleaseScriptsPaths = const []});
+
+  factory AlexScriptsConfig.fromYaml(YamlMap data) {
+    return AlexScriptsConfig(
+      preReleaseScriptsPaths:
+          (data['pre_release_scripts_paths'] as YamlList?).toListString(),
     );
   }
 
   @override
   String toString() {
-    return 'AlexsSriptsConfig{scriptsPatches: $scriptsPatches}';
+    return 'AlexSсriptsConfig{preReleaseScriptsPaths: $preReleaseScriptsPaths}';
   }
 }
 
 extension YamlListExtension on YamlList? {
   List<String>? toListString() {
-    if (this != null) {
-      final list = <String>[];
-      for (final yaml in this!) {
-        list.add(yaml as String);
-      }
-      return list;
+    final list = this;
+    if (list != null) {
+      return list.map((e) => e as String).toList();
     }
     return null;
   }

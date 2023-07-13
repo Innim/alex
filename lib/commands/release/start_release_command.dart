@@ -121,20 +121,22 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       _commit("Generated translations.");
     }
 
-    final scriptPathes = config.preReliaseScripts?.scriptsPatches;
+    final scriptPaths = config.preReliaseScripts?.preReleaseScriptsPaths;
 
-    if (scriptPathes.isNotNullOrEmpty) {
-      printInfo('Running pre release cripts.');
-      for (final patch in scriptPathes!) {
-        final res = await flutter.runCmdOrFail(
-          'pub',
-          arguments: ['run', '${config.rootPath}/$patch'],
+    if (scriptPaths != null && scriptPaths.isNotEmpty) {
+      printInfo('Running pre release scripts.');
+      for (final path in scriptPaths) {
+        final res = await flutter.runPubOrFail(
+          '${config.rootPath}/$path',
+          const [],
         );
         if (res.exitCode == 0) {
-          _commit('Pre release scripts run.');
+          printInfo('Pre release script $path run - OK');
         } else {
+           // TODO: Clean current changes for git.
           return error(res.exitCode, message: '${res.stderr}');
         }
+        _commit('Pre release scripts run.');
       }
     } else {
       printInfo('There are no pre release scripts to run.');
