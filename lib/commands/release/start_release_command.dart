@@ -121,7 +121,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       _commit("Generated translations.");
     }
 
-    final scriptPaths = config.preReliaseScripts?.preReleaseScriptsPaths;
+    final scriptPaths = config.scripts?.preReleaseScriptsPaths;
 
     if (scriptPaths != null && scriptPaths.isNotEmpty) {
       printInfo('Running pre release scripts.');
@@ -133,7 +133,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         if (res.exitCode == 0) {
           printInfo('Pre release script $path run - OK');
         } else {
-           // TODO: Clean current changes for git.
+          // TODO: Clean current changes for git.
           return error(res.exitCode, message: '${res.stderr}');
         }
         _commit('Pre release scripts run.');
