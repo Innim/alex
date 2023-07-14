@@ -4,7 +4,7 @@ homepage: https://github.com/innim/
 repository: https://github.com/Innim/alex
 issue_tracker: https://github.com/Innim/alex/issues
 
-version: 1.6.0-alpha.2
+version: 1.6.1
 
 environment:
   sdk: ">=2.19.6 <4.0.0"

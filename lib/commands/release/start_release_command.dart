@@ -8,7 +8,7 @@ import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
-import 'package:dart_openai/openai.dart';
+import 'package:dart_openai/dart_openai.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
 import 'package:path/path.dart' as p;
@@ -119,6 +119,27 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
       // Commit translations.
       _commit("Generated translations.");
+    }
+
+    final scriptPaths = config.scripts?.preReleaseScriptsPaths;
+
+    if (scriptPaths != null && scriptPaths.isNotEmpty) {
+      printInfo('Running pre release scripts.');
+      for (final path in scriptPaths) {
+        final res = await flutter.runPubOrFail(
+          '${config.rootPath}/$path',
+          const [],
+        );
+        if (res.exitCode == 0) {
+          printInfo('Pre release script $path run - OK');
+        } else {
+          // TODO: Clean current changes for git.
+          return error(res.exitCode, message: '${res.stderr}');
+        }
+        _commit('Pre release scripts run.');
+      }
+    } else {
+      printInfo('There are no pre release scripts to run.');
     }
 
     printInfo('Start new release <v$vs>');

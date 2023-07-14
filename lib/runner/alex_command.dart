@@ -201,6 +201,7 @@ extension CmdArgArgParserExtension on ArgParser {
           Iterable<String>? allowed,
           Map<String, String>? allowedHelp,
           bool? defaultsTo = false,
+          // ignore: avoid_positional_boolean_parameters
           void Function(bool)? callback,
           bool hide = false}) =>
       addFlag(

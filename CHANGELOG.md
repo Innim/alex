@@ -1,3 +1,7 @@
+## 1.6.1
+
+* [Release] Support for provide scrips to run before release.
+
 ## 1.6.0-alpha.2
 
 * [Release] Parameter `--entry-point` to define the entry point for local build.

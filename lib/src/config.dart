@@ -95,6 +95,7 @@ class AlexConfig {
   L10nConfig? _l10n;
   AlexCIConfig? _ci;
   AlexGitConfig? _git;
+  AlexScriptsConfig? _scripts;
 
   AlexConfig._(this._path, this._data);
 
@@ -117,6 +118,13 @@ class AlexConfig {
     return _git ??= _data.containsKey(key)
         ? AlexGitConfig.fromYaml(_data[key] as YamlMap)
         : const AlexGitConfig();
+  }
+
+  AlexScriptsConfig? get scripts {
+    const key = 'scripts';
+    return _scripts ??= _data.containsKey(key)
+        ? AlexScriptsConfig.fromYaml(_data[key] as YamlMap)
+        : const AlexScriptsConfig();
   }
 
   String get rootPath => p.dirname(_path);
@@ -297,5 +305,35 @@ class AlexGitConfigBranches {
         'test: $test, '
         'featurePrefix: $featurePrefix'
         '}';
+  }
+}
+
+/// Configuration for scripts for alex
+class AlexScriptsConfig {
+  /// Scripts paths for run before release start.
+  final List<String>? preReleaseScriptsPaths;
+
+  const AlexScriptsConfig({this.preReleaseScriptsPaths = const []});
+
+  factory AlexScriptsConfig.fromYaml(YamlMap data) {
+    return AlexScriptsConfig(
+      preReleaseScriptsPaths:
+          (data['pre_release_scripts_paths'] as YamlList?).toListString(),
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AlexSсriptsConfig{preReleaseScriptsPaths: $preReleaseScriptsPaths}';
+  }
+}
+
+extension YamlListExtension on YamlList? {
+  List<String>? toListString() {
+    final list = this;
+    if (list != null) {
+      return list.map((e) => e as String).toList();
+    }
+    return null;
   }
 }
