@@ -120,7 +120,7 @@ class AlexConfig {
         : const AlexGitConfig();
   }
 
-  AlexScriptsConfig? get preReliaseScripts {
+  AlexScriptsConfig? get scripts {
     const key = 'scripts';
     return _scripts ??= _data.containsKey(key)
         ? AlexScriptsConfig.fromYaml(_data[key] as YamlMap)
