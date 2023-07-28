@@ -174,8 +174,6 @@ alex l10n from_xml --to=ios
 
 Localization xml files for iOS should start with `ios_` prefix.
 
-If the files have the suffix `_diff` then they will be imported as a list of changes.
-
 #### Import translation from Google Play to project XML files
 
 When you download and unzip translations from Google Play,
@@ -186,6 +184,8 @@ So you can use the command `import_xml` to do it.
 ```
 alex l10n import_xml --path=path/to/dir/with/translations
 ```
+
+If the files have the suffix `_diff` then they will be imported as a list of changes.
 
 ### Code 
 

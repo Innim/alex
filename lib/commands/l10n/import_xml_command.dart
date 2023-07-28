@@ -24,7 +24,8 @@ class ImportXmlCommand extends L10nCommandBase {
           'Import translations from Google Play '
               "to the project's xml files. "
               'By default only files for existing locales will be imported. '
-              'If you want to import new locales, use --$_argNew argument.',
+              'If you want to import new locales, use --$_argNew argument.\n'
+              'If filename has suffix "${L10nUtils.diffsSuffix}" - it will be imported as a diff file.',
         ) {
     argParser
       ..addOption(
@@ -275,21 +276,25 @@ class ImportXmlCommand extends L10nCommandBase {
     final targetDir = await _requireDirectory(config.getXmlFilesPath(locale),
         createIfNotExist: true);
     final targetFile = File(path.join(targetDir.path, targetFilename));
-    printVerbose('Copy ${sourceFile.path} to ${targetFile.path}');
-    if (_isDiffs(sourceFilename)) {
+    if (_isDiffs(sourceFilename, googlePlayLocale)) {
       await _importDifference(config, sourceFile, targetFile);
     } else {
+      printVerbose('Copy ${sourceFile.path} to ${targetFile.path}');
       await sourceFile.copy(targetFile.path);
     }
 
     imported.add(locale);
   }
 
-  bool _isDiffs(String sourceFilename) =>
-      path.withoutExtension(sourceFilename).endsWith(L10nUtils.diffsSuffix);
+  bool _isDiffs(String sourceFilename, String localeInName) {
+    final nameWithoutExtension = path.withoutExtension(sourceFilename);
+    return nameWithoutExtension.endsWith(L10nUtils.diffsSuffix) ||
+        nameWithoutExtension.endsWith('${L10nUtils.diffsSuffix}_$localeInName');
+  }
 
   Future<void> _importDifference(
       L10nConfig config, File source, File target) async {
+    printInfo('Import file ${source.path} as diff for ${target.path}');
     final baseLocale = config.baseLocaleForXml;
     final baseFile = File(path.join(config.getXmlFilesPath(baseLocale),
         path.setExtension(config.getMainXmlFileName(), '.xml')));
