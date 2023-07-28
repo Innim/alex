@@ -5,6 +5,7 @@
   * Prints info about imported diffs.
   * Handle diff file with locale at the end.
   * Add documentation about import diffs.
+* [L10n] Common prints improvements.
 
 ## 1.6.1
 

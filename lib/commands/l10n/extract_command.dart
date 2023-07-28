@@ -17,6 +17,6 @@ class ExtractCommand extends L10nCommandBase {
     final mainFile = await L10nUtils.getMainArb(l10nConfig);
     return success(
         message: 'Strings extracted to ARB file. '
-            'You can send $mainFile to the translators');
+            'You can send $mainFile to the translators or create an XML with "alex l10n to_xml" command if you need to.');
   }
 }

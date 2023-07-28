@@ -260,7 +260,7 @@ class ImportXmlCommand extends L10nCommandBase {
             'import $googlePlayLocale to $allowedLocale');
         locale = allowedLocale;
       } else {
-        printInfo('Skip locale $locale');
+        printInfo('Skip locale <$locale>');
         return;
       }
     }
