@@ -1,3 +1,5 @@
+## 1.6.2
+
 * [L10n] `to_xml`:
   * Prints info about written diffs.
   * Do not create empty diff file.
