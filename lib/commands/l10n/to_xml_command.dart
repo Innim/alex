@@ -294,6 +294,8 @@ Filename: $baseName
 
     StringBuffer? partsBuffer;
 
+    final bool hasNewStrings;
+
     if (oldFile.existsSync()) {
       final oldXml = getXML(oldFile);
       final oldRes = oldXml.resources.children;
@@ -306,26 +308,36 @@ Filename: $baseName
         }
       });
 
-      final partsXmlDoc = XmlDocument([
-        XmlElement(XmlName.fromString('resources')),
-      ]);
-      partsXmlDoc.resources.children.addAll(partsElements);
+      hasNewStrings = partsElements.isNotEmpty;
+      if (hasNewStrings) {
+        printInfo('Found ${partsElements.length} strings for diff');
+        final partsXmlDoc = XmlDocument([
+          XmlElement(XmlName.fromString('resources')),
+        ]);
+        partsXmlDoc.resources.children.addAll(partsElements);
 
-      partsBuffer = StringBuffer();
-      partsBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
-      partsBuffer.write(partsXmlDoc.toXmlString(
-          pretty: true,
-          preserveWhitespace: (node) => node.getAttribute('name') != null));
+        partsBuffer = StringBuffer();
+        partsBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
+        partsBuffer.write(partsXmlDoc.toXmlString(
+            pretty: true,
+            preserveWhitespace: (node) => node.getAttribute('name') != null));
+      } else {
+        printInfo('No new or changed strings.');
+      }
     } else {
       printInfo('${oldFile.path} not found. All strings was added as new.');
+      hasNewStrings = true;
     }
 
-    final partsFileName = path.setExtension(
-        '${path.withoutExtension(fileName)}${L10nUtils.diffsSuffix}', '.xml');
-    final dir = Directory(diffPath);
-    if (!dir.existsSync()) dir.createSync(recursive: true);
-    final output = File(path.join(dir.path, partsFileName));
-    output.writeAsStringSync(partsBuffer?.toString() ?? xml);
+    if (hasNewStrings) {
+      final partsFileName = path.setExtension(
+          '${path.withoutExtension(fileName)}${L10nUtils.diffsSuffix}', '.xml');
+      final dir = Directory(diffPath);
+      if (!dir.existsSync()) dir.createSync(recursive: true);
+      final output = File(path.join(dir.path, partsFileName));
+      output.writeAsStringSync(partsBuffer?.toString() ?? xml);
+      printInfo('Diff was written in ${output.path}');
+    }
   }
 }
 

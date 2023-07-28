@@ -1,3 +1,6 @@
+
+* [L10n] Prints info about written diffs.
+* [L10n] Do not create empty diff file.
 ## 1.6.1
 
 * [Release] Support for provide scrips to run before release.
