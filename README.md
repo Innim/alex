@@ -1,7 +1,7 @@
 # alex
 
 [![pub package](https://img.shields.io/pub/v/alex)](https://pub.dev/packages/alex)
-![Analyze & Test](https://github.com/Innim/alex/actions/workflows/dart.yml/badge.svg?branch=master)
+[![Analyze & Test](https://github.com/Innim/alex/actions/workflows/dart.yml/badge.svg?branch=master)](https://github.com/Innim/alex/actions/workflows/dart.yml)
 [![innim lint](https://img.shields.io/badge/style-innim_lint-40c4ff.svg)](https://pub.dev/packages/innim_lint)
 
 **alex** - command line tool for working with Flutter projects.
