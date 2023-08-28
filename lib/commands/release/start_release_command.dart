@@ -27,6 +27,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _defaultLocale = 'en';
   static const _argLocal = 'local';
   static const _argEntryPoint = 'entry-point';
+  static const _argBuildPlatforms = 'platforms';
   static const _argSkipL10n = 'skip_l10n';
   static const _argDemo = 'demo';
 
@@ -51,7 +52,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       ..addFlag(
         _argLocal,
         abbr: 'b',
-        help: "Runs local release build (only for Android right now)",
+        help: 'Runs local release build '
+            '(Android and iOS, see parameter --$_argBuildPlatforms)',
       )
       ..addOption(
         _argEntryPoint,
@@ -59,6 +61,15 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         help: 'Entry point of the app, e.g. lib/main_test.dart. '
             'If not defined than default will be used. '
             'Only for local release builds.',
+        valueHelp: 'lib/entry_point.dart',
+      )
+      ..addOption(
+        _argBuildPlatforms,
+        abbr: 'p',
+        help: 'Target build platforms: ${_BuildPlatform.values.asDesc()}. '
+            'You can pass multiple platforms separated by commas. '
+            'Only for local release builds.',
+        defaultsTo: [_BuildPlatform.android, _BuildPlatform.ios].asArgs(),
         valueHelp: 'lib/entry_point.dart',
       )
       ..addFlag(
@@ -180,8 +191,15 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     if (isLocalRelease) {
       final entryPoint = args[_argEntryPoint] as String?;
-      final localBuildResult = await _localBuild(entryPoint);
-      if (localBuildResult != 0) return localBuildResult;
+      final platforms =
+          _BuildPlatform.parseArgs(args[_argBuildPlatforms] as String);
+
+      printVerbose('Platforms: ${platforms.asDesc()}');
+
+      for (final platfrom in platforms) {
+        final localBuildResult = await _localBuild(entryPoint, platfrom);
+        if (localBuildResult != 0) return localBuildResult;
+      }
     }
 
     printInfo("Finishing release...");
@@ -514,12 +532,24 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return 0;
   }
 
-  Future<int> _localBuild(String? entryPoint) async {
-    printInfo('Run local build');
+  Future<int> _localBuild(String? entryPoint, _BuildPlatform platform) async {
+    printInfo('Run local build for ${platform.name}');
+
+    final String subcommand;
+
+    switch (platform) {
+      case _BuildPlatform.ios:
+        subcommand = 'ipa';
+        break;
+      case _BuildPlatform.android:
+        subcommand = 'appbundle';
+        break;
+    }
+
     final res = await flutter.runCmdOrFail(
       'build',
       arguments: [
-        'appbundle',
+        subcommand,
         if (entryPoint != null) entryPoint,
       ],
       printStdOut: false,
@@ -527,8 +557,14 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     );
 
     if (res.exitCode == 0) {
-      // TODO: copy release file to someplace
+      // TODO: copy release file to someplace and save for finale summary
+      // Android: we have string in the output
       // ✓ Built build/app/outputs/bundle/release/app-release.aab (27.1MB).
+      // iOS:
+      // Run flutter build ipa to produce an Xcode build archive (.xcarchive file)
+      // in your project’s build/ios/archive/ directory and
+      // an App Store app bundle (.ipa file) in build/ios/ipa.
+
       printInfo('Local build succeed.');
       final message = res.stdout?.toString();
       final buildLine = message
@@ -660,4 +696,28 @@ class _CIPath {
       p.join(defaultChangelogRootPath, 'default_$locale.txt');
 
   _CIPath._();
+}
+
+enum _BuildPlatform {
+  ios,
+  android;
+
+  static Iterable<_BuildPlatform> parseArgs(String str) {
+    if (str.trim().isEmpty)
+      throw const RunException.err('Empty platforms argument');
+
+    return str.split(',').map((e) {
+      final needle = e.trim();
+      final val =
+          _BuildPlatform.values.firstWhereOrNull((p) => p.name == needle);
+      if (val == null) throw RunException.err('Unknown platform <$needle>');
+      return val;
+    });
+  }
+}
+
+extension _BuildPlatformsExt on Iterable<_BuildPlatform> {
+  String asArgs() => joinOf((e) => e.name, ',');
+
+  String asDesc() => joinOf((e) => e.name, ', ');
 }

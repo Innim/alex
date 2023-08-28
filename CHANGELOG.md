@@ -1,3 +1,7 @@
+## 1.6.3
+
+* [Release] Local build now build for Android and iOS by default. See parameter `--platforms`.
+
 ## 1.6.2
 
 * [L10n] `to_xml`:
