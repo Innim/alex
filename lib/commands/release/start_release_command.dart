@@ -703,8 +703,9 @@ enum _BuildPlatform {
   android;
 
   static Iterable<_BuildPlatform> parseArgs(String str) {
-    if (str.trim().isEmpty)
+    if (str.trim().isEmpty) {
       throw const RunException.err('Empty platforms argument');
+    }
 
     return str.split(',').map((e) {
       final needle = e.trim();
