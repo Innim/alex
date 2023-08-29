@@ -70,7 +70,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
             'You can pass multiple platforms separated by commas. '
             'Only for local release builds.',
         defaultsTo: [_BuildPlatform.android, _BuildPlatform.ios].asArgs(),
-        valueHelp: 'lib/entry_point.dart',
+        valueHelp: 'PLATFORMS',
       )
       ..addFlag(
         _argDemo,

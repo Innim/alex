@@ -1,3 +1,7 @@
+## 1.6.3+1
+
+* [Release] Small help fix.
+
 ## 1.6.3
 
 * [Release] Local build now build for Android and iOS by default. See parameter `--platforms`.
