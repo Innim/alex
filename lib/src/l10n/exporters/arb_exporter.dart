@@ -44,7 +44,9 @@ class ArbExporter extends L10nExporter {
         final baseValue =
             arbDecoder.decodeValue(key, baseStr) as L10nPluralEntry;
 
-        final val = StringBuffer(prefix)..write(pluralPrefix)..write(' ');
+        final val = StringBuffer(prefix)
+          ..write(pluralPrefix)
+          ..write(' ');
         <String, String?>{
           '=0': value.zero,
           '=1': value.one,
@@ -94,7 +96,9 @@ class ArbExporter extends L10nExporter {
   }
 
   String _processText(String key, Set<String> allowed, String text) {
-    return clearWinLines(_validateParameters(key, allowed, text));
+    return clearWinLines(_validateParameters(key, allowed, text)
+        .replaceAll(r'\n', '\n')
+        .replaceAll(r'\r', '\r'));
   }
 
   String _validateParameters(String key, Set<String> allowed, String text) {

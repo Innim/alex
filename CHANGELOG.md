@@ -1,5 +1,7 @@
+## 1.6.4
 
 * [L10n] `to_xml`: Export new lines as `\n`.
+* [L10n] `from_xml` **Fixed**: Adds slash for `\n` on import.
 
 ## 1.6.3+1
 
