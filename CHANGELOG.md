@@ -1,3 +1,6 @@
+
+* [L10n] `to_xml`: Export new lines as `\n`.
+
 ## 1.6.3+1
 
 * [Release] Small help fix.

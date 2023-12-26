@@ -354,14 +354,14 @@ class _StrData {
 
     final parsed = arbDecoder.decodeValue(key, value);
     if (parsed is L10nTextEntry) {
-      xml.writeln('<string name="$key">${parsed.text}</string>');
+      xml.writeln('<string name="$key">${_prepareStr(parsed.text)}</string>');
     } else if (parsed is L10nPluralEntry) {
       xml.writeln('<plurals name="$key">');
       final plural = parsed;
       plural.codeAttributeNames.forEach((quantity) {
         final val = plural[quantity];
         if (val != null) {
-          xml.writeln('<item quantity="$quantity">$val</item>');
+          xml.writeln('<item quantity="$quantity">${_prepareStr(val)}</item>');
         }
       });
 
@@ -372,4 +372,6 @@ class _StrData {
           'Key: $key');
     }
   }
+
+  String _prepareStr(String value) => value.replaceAll('\n', r'\n');
 }
