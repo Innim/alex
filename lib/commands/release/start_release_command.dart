@@ -196,8 +196,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
       printVerbose('Platforms: ${platforms.asDesc()}');
 
-      for (final platfrom in platforms) {
-        final localBuildResult = await _localBuild(entryPoint, platfrom);
+      for (final platform in platforms) {
+        final localBuildResult = await _localBuild(entryPoint, platform);
         if (localBuildResult != 0) return localBuildResult;
       }
     }
