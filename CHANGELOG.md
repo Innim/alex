@@ -1,3 +1,8 @@
+## 1.6.5
+
+* [L10n] `import_xml`: Support for import files with suffix `_diffs` in plane directory structure
+(`intl/intl_{locale}/intl_diffs.xml` or `intl_diffs/intl_diffs_{locale}/intl_diffs.xml`);
+
 ## 1.6.4
 
 * [L10n] `to_xml`: Export new lines as `\n`.

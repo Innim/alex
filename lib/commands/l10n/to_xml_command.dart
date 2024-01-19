@@ -330,8 +330,7 @@ Filename: $baseName
     }
 
     if (hasNewStrings) {
-      final partsFileName = path.setExtension(
-          '${path.withoutExtension(fileName)}${L10nUtils.diffsSuffix}', '.xml');
+      final partsFileName = L10nUtils.getDiffsXmlFileName(fileName);
       final dir = Directory(diffPath);
       if (!dir.existsSync()) dir.createSync(recursive: true);
       final output = File(path.join(dir.path, partsFileName));

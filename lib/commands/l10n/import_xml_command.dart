@@ -159,9 +159,16 @@ class ImportXmlCommand extends L10nCommandBase {
             targetFilename ?? destFilename,
             locales);
 
+    bool fileExist(Directory dir, String filename) {
+      final res = File(path.join(dir.path, filename)).existsSync();
+      printVerbose('File <$filename> - ${res ? 'exist' : 'not exist'}');
+      return res;
+    }
+
     // In some cases source filename may be just base filename
     // but we don't know for sure
     bool? useBaseName;
+    String? baseFileName;
 
     // if multiple files - than it's in subdirectory,
     // if single file - it's directly in root
@@ -177,12 +184,22 @@ class ImportXmlCommand extends L10nCommandBase {
           if (projectUid != null) {
             final compositeFilename = '${uidWithName}_$projectUid.xml';
 
-            useBaseName ??=
-                !File(path.join(item.path, compositeFilename)).existsSync() &&
-                    File(path.join(item.path, srcFilename)).existsSync();
+            bool checkBaseName(String? filename) {
+              if (filename == null) return false;
+              if (!fileExist(item, filename)) return false;
+              baseFileName = filename;
+              printVerbose('Set base name: $baseFileName');
+              return true;
+            }
+
+            useBaseName ??= !fileExist(item, compositeFilename) &&
+                (checkBaseName(srcFilename) ||
+                    srcFilename != null &&
+                        checkBaseName(
+                            L10nUtils.getDiffsXmlFileName(srcFilename)));
 
             final sourceFilename =
-                useBaseName ? srcFilename! : compositeFilename;
+                useBaseName ? baseFileName! : compositeFilename;
 
             await import(item, sourceFilename, googlePlayLocale);
           } else {
@@ -248,6 +265,7 @@ class ImportXmlCommand extends L10nCommandBase {
       String googlePlayLocale,
       String? targetFilename,
       List<String>? allowedLocales) async {
+    printVerbose('Import file $sourceFilename');
     var locale = _convertGooglePlayLocale(googlePlayLocale);
 
     if (allowedLocales != null && !allowedLocales.contains(locale)) {

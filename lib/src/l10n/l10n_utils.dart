@@ -1,9 +1,7 @@
-
 import 'dart:io';
 
 import 'package:alex/alex.dart';
 import 'package:path/path.dart' as path;
-
 
 /// Localization utils.
 class L10nUtils {
@@ -47,7 +45,10 @@ class L10nUtils {
     return path.setExtension(fileName, '.xml');
   }
 
-  static  Future<File> getMainArb(L10nConfig l10nConfig) async {
+  static String getDiffsXmlFileName(String fileName) => path.setExtension(
+      '${path.withoutExtension(fileName)}$diffsSuffix', '.xml');
+
+  static Future<File> getMainArb(L10nConfig l10nConfig) async {
     final mainFile = _arb(L10nUtils.getArbMessagesFile(l10nConfig), l10nConfig);
     final localeFile = _arb(L10nUtils.getBaseArbFile(l10nConfig), l10nConfig);
 
@@ -56,7 +57,7 @@ class L10nUtils {
     return res;
   }
 
- static File _arb(String fileName, L10nConfig config) =>
+  static File _arb(String fileName, L10nConfig config) =>
       File(path.join(config.outputDir, fileName));
 
   static String _getBaseNameByArb(L10nConfig config) {
