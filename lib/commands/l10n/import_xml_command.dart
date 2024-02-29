@@ -15,6 +15,7 @@ class ImportXmlCommand extends L10nCommandBase {
   static const _argTarget = 'target';
   static const _argAll = 'all';
   static const _argNew = 'new';
+  static const _argDiffs = 'diffs';
 
   static const _localeJoint = '_';
 
@@ -25,7 +26,8 @@ class ImportXmlCommand extends L10nCommandBase {
               "to the project's xml files. "
               'By default only files for existing locales will be imported. '
               'If you want to import new locales, use --$_argNew argument.\n'
-              'If filename has suffix "${L10nUtils.diffsSuffix}" - it will be imported as a diff file.',
+              'If filename has suffix "${L10nUtils.diffsSuffix}" - it will be imported as a diff file. '
+              'You can alter this behavior with --$_argDiffs argument.',
         ) {
     argParser
       ..addOption(
@@ -59,6 +61,12 @@ class ImportXmlCommand extends L10nCommandBase {
       ..addFlag(
         _argNew,
         help: 'Import files for new locales from provided path.',
+      )
+      ..addFlag(
+        _argDiffs,
+        defaultsTo: null,
+        help: 'Import strings as diffs or replace a whole file. '
+            'If this argument is not defined, alex will decide how to export based on the filename.',
       );
   }
 
@@ -70,6 +78,7 @@ class ImportXmlCommand extends L10nCommandBase {
     final targetFileName = args[_argTarget] as String?;
     final importAll = args[_argAll] as bool;
     final importNew = args[_argNew] as bool;
+    final importDiffs = args[_argDiffs] as bool?;
 
     if (sourcePath == null) {
       printUsage();
@@ -107,6 +116,7 @@ class ImportXmlCommand extends L10nCommandBase {
       fileForImport: fileForImport,
       targetFileName: targetFileName,
       importAll: importAll,
+      importDiffs: importDiffs,
       locales: locales,
     );
   }
@@ -117,6 +127,7 @@ class ImportXmlCommand extends L10nCommandBase {
     String? fileForImport,
     String? targetFileName,
     bool importAll = false,
+    bool? importDiffs,
     List<String>? locales,
   }) async {
     final srcFilename = importAll
@@ -149,15 +160,17 @@ class ImportXmlCommand extends L10nCommandBase {
             Directory sourceDir, String sourceFilename, String googlePlayLocale,
             [String? gpProjectUid, String? targetFilename]) =>
         _importFile(
-            config,
-            imported,
-            sourceDir,
-            sourceFilename,
-            gpProjectUid ?? projectUid,
-            translationUid,
-            googlePlayLocale,
-            targetFilename ?? destFilename,
-            locales);
+          config,
+          imported,
+          sourceDir,
+          sourceFilename,
+          gpProjectUid ?? projectUid,
+          translationUid,
+          googlePlayLocale,
+          targetFilename ?? destFilename,
+          locales,
+          importDiffs,
+        );
 
     bool fileExist(Directory dir, String filename) {
       final res = File(path.join(dir.path, filename)).existsSync();
@@ -256,15 +269,17 @@ class ImportXmlCommand extends L10nCommandBase {
   String _getFilenameByBaseName(String name) => path.setExtension(name, '.xml');
 
   Future<void> _importFile(
-      L10nConfig config,
-      Set<String> imported,
-      Directory sourceDir,
-      String sourceFilename,
-      String? projectUid,
-      String translationUid,
-      String googlePlayLocale,
-      String? targetFilename,
-      List<String>? allowedLocales) async {
+    L10nConfig config,
+    Set<String> imported,
+    Directory sourceDir,
+    String sourceFilename,
+    String? projectUid,
+    String translationUid,
+    String googlePlayLocale,
+    String? targetFilename,
+    List<String>? allowedLocales,
+    bool? importDiffs,
+  ) async {
     printVerbose('Import file $sourceFilename');
     var locale = _convertGooglePlayLocale(googlePlayLocale);
 
@@ -294,7 +309,7 @@ class ImportXmlCommand extends L10nCommandBase {
     final targetDir = await _requireDirectory(config.getXmlFilesPath(locale),
         createIfNotExist: true);
     final targetFile = File(path.join(targetDir.path, targetFilename));
-    if (_isDiffs(sourceFilename, googlePlayLocale)) {
+    if (importDiffs ?? _isDiffs(sourceFilename, googlePlayLocale)) {
       await _importDifference(config, sourceFile, targetFile);
     } else {
       printVerbose('Copy ${sourceFile.path} to ${targetFile.path}');

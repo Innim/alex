@@ -1,3 +1,8 @@
+## 1.6.6
+
+* [L10n] `import_xml`: Support for explicit diffs import (new argument `--diffs`).
+* Readme: fixed "Generate XML for translation" section.
+
 ## 1.6.5
 
 * [L10n] `import_xml`: Support for import files with suffix `_diffs` in plane directory structure
