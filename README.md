@@ -134,7 +134,7 @@ Also you can export json localization to xml.
 Json localization can be used for a backend localization.
 
 ```
-alex l10n --from=json --source=/path/to/json/localization/dir
+alex l10n to_xml --from=json --source=/path/to/json/localization/dir
 ```
 
 Also you can export only difference (new and changed strings) to xml.
