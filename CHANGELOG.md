@@ -1,3 +1,7 @@
+## 1.6.7
+
+* Command to see a current version of alex: `alex --version`.
+
 ## 1.6.6
 
 * [L10n] `import_xml`: Support for explicit diffs import (new argument `--diffs`).

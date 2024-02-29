@@ -26,6 +26,12 @@ Now you can execute commands with
 $ alex
 ```
 
+Check the version with:
+
+```
+$ alex --version
+```
+
 ⚠️ **Attention!** If when you try to run `alex` you will see something like:
 
 ```

@@ -16,9 +16,13 @@ void exception(Object message, [StackTrace? stackTrace]) =>
 // ignore: avoid_print
 void verbose(String message) => print('[verbose] $message');
 
-void setupRootLogger({bool isVerbose = false}) {
-  Logger.root.level = isVerbose ? Level.ALL : Level.INFO;
+void setupRootLogger() {
+  Logger.root.level = Level.INFO;
   _setupLogger(Logger.root);
+}
+
+void setRootLoggerLevel({bool isVerbose = false}) {
+  Logger.root.level = isVerbose ? Level.ALL : Level.INFO;
 }
 
 void _setupLogger(Logger logger) {

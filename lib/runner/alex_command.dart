@@ -23,6 +23,7 @@ abstract class AlexCommand extends Command<int> {
   Cmd? _cmd;
   FlutterCmd? _flutter;
 
+  // TODO: as an argument in constructor
   final _logger = Logger('alex');
 
   final ArgParser _argParser = ArgParser(
@@ -72,7 +73,7 @@ abstract class AlexCommand extends Command<int> {
   @override
   @nonVirtual
   Future<int> run() async {
-    print.setupRootLogger(isVerbose: isVerbose);
+    print.setRootLoggerLevel(isVerbose: isVerbose);
 
     try {
       return await doRun();
