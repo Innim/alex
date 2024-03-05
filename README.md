@@ -270,3 +270,17 @@ For example:
 ```
 alex settings set open_ai_api_key abc123
 ```
+
+## Development
+
+Do not forget regenerate code when updating the version:
+
+```
+alex code gen
+```
+
+or 
+
+```
+dart pub run build_runner build --delete-conflicting-outputs
+```
