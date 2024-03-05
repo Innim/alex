@@ -1,3 +1,4 @@
+## 1.6.8
 
 * [L10n] `import_xml`: Support for .zip from Google Play as a source (argument `--path`). 
 * [L10n] `import_xml`: Automatically detect diffs import for the translation from Google Play with suffix `_diffs`.
