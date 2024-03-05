@@ -8,6 +8,8 @@ import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 import 'package:list_ext/list_ext.dart';
 
+typedef _CompositeNameBuilder = String Function(String uidWithName);
+
 /// Command to import translations from Google Play
 /// to the project's xml files.
 class ImportXmlCommand extends L10nCommandBase {
@@ -211,6 +213,12 @@ class ImportXmlCommand extends L10nCommandBase {
     // but we don't know for sure
     bool? useBaseName;
     String? baseFileName;
+    _CompositeNameBuilder? compositeFilenameBuilder;
+
+    String defaultCompositeBuilder(String uidWithName) =>
+        '${uidWithName}_$projectUid.xml';
+    String diffsCompositeBuilder(String uidWithName) =>
+        defaultCompositeBuilder(uidWithName).asDiffsName();
 
     // if multiple files - than it's in subdirectory,
     // if single file - it's directly in root
@@ -225,8 +233,6 @@ class ImportXmlCommand extends L10nCommandBase {
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
           final uidWithName = '${translationUid}_$googlePlayLocale';
           if (projectUid != null) {
-            final compositeFilename = '${uidWithName}_$projectUid.xml';
-
             bool checkBaseName(String? filename) {
               if (filename == null) return false;
               if (!fileExist(item, filename)) return false;
@@ -235,14 +241,22 @@ class ImportXmlCommand extends L10nCommandBase {
               return true;
             }
 
-            useBaseName ??= !fileExist(item, compositeFilename) &&
-                (checkBaseName(srcFilename) ||
-                    srcFilename != null &&
-                        checkBaseName(
-                            L10nUtils.getDiffsXmlFileName(srcFilename)));
+            bool checkCompositeName(_CompositeNameBuilder builder) {
+              final filename = builder(uidWithName);
+              if (!fileExist(item, filename)) return false;
+              compositeFilenameBuilder = builder;
+              printVerbose('Set composite name: $filename');
+              return true;
+            }
 
-            final sourceFilename =
-                useBaseName ? baseFileName! : compositeFilename;
+            useBaseName ??= !checkCompositeName(defaultCompositeBuilder) &&
+                !checkCompositeName(diffsCompositeBuilder) &&
+                (checkBaseName(srcFilename) ||
+                    checkBaseName(srcFilename?.asDiffsName()));
+
+            final sourceFilename = useBaseName
+                ? baseFileName!
+                : compositeFilenameBuilder!.call(uidWithName);
 
             await import(item, sourceFilename, googlePlayLocale);
           } else {
@@ -482,4 +496,8 @@ class ImportXmlCommand extends L10nCommandBase {
     await extractFileToDisk(archiveFile.path, unpackedDir.path);
     return unpackedDir;
   }
+}
+
+extension _StrExt on String {
+  String asDiffsName() => L10nUtils.getDiffsXmlFileName(this);
 }
