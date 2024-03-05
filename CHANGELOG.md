@@ -1,5 +1,7 @@
 
 * [L10n] `import_xml`: Support for .zip from Google Play as a source (argument `--path`). 
+* [L10n] `import_xml`: Translations are imported in alphabetical order.
+
 ## 1.6.7
 
 * Command to see a current version of alex: `alex --version`.

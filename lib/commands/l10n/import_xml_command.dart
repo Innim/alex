@@ -214,7 +214,8 @@ class ImportXmlCommand extends L10nCommandBase {
 
     // if multiple files - than it's in subdirectory,
     // if single file - it's directly in root
-    await for (final item in sourceDir.list()) {
+    final items = sourceDir.listSync()..sortBy((e) => path.basename(e.path));
+    for (final item in items) {
       final name = path.basename(item.path);
       printVerbose('Processing: $name');
       if (name.startsWith(translationUid)) {
