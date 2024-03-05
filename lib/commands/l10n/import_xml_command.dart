@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:alex/alex.dart';
 import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 import 'package:list_ext/list_ext.dart';
@@ -141,9 +142,37 @@ class ImportXmlCommand extends L10nCommandBase {
             ? srcFilename
             : _getFilenameByBaseName(targetFileName));
 
-    final sourceDir = await _requireDirectory(sourcePath);
+    final Directory sourceDir;
+    if (FileSystemEntity.isDirectorySync(sourcePath)) {
+      sourceDir = await _requireDirectory(sourcePath);
+    } else if (FileSystemEntity.isFileSync(sourcePath)) {
+      final sourceFile = File(sourcePath);
+      final sourceExt = path.extension(sourcePath);
 
-    final translationUid = path.basename(sourcePath);
+      if (sourceExt == '.zip') {
+        sourceDir = await _extractZip(sourceFile);
+      } else if (sourceExt == '.xml') {
+        // TODO: import single xml (sl, en)
+        // TODO: add xml below in else's error message
+        return error(
+          2,
+          message: 'Import of a single xml file is not supported yet. '
+              'Stay tuned.',
+        );
+      } else {
+        return error(
+          2,
+          message: 'Files with extension <$sourceExt> are not supported. '
+              'Expected: zip.',
+        );
+      }
+    } else {
+      return error(2, message: 'Path $sourcePath is not directory or file');
+    }
+
+    printVerbose('Directory for import: ${sourceDir.path}');
+
+    final translationUid = path.basename(sourceDir.path);
     final projectUid =
         srcFilename != null ? path.withoutExtension(srcFilename) : null;
 
@@ -420,5 +449,36 @@ class ImportXmlCommand extends L10nCommandBase {
     };
 
     return langMap[lang] ?? lang;
+  }
+
+  Future<Directory> _extractZip(File zipFile) async {
+    printVerbose('Starting to extract archive: ${zipFile.path}');
+
+    final archiveName = path.basenameWithoutExtension(zipFile.path);
+    final tmp = Directory.systemTemp.createTempSync(
+      'alex_unpack_${archiveName}_',
+    );
+
+    final unpackedDir = await _doExtract(zipFile, tmp.path);
+
+    // unpack also all inside archive
+    for (final file in unpackedDir.listSync()) {
+      if (file is File && path.extension(file.path) == '.zip') {
+        await _doExtract(file, file.parent.path);
+        file.deleteSync();
+      }
+    }
+
+    printVerbose('Extraction done');
+    return unpackedDir;
+  }
+
+  Future<Directory> _doExtract(File archiveFile, String outPath) async {
+    final archiveName = path.basenameWithoutExtension(archiveFile.path);
+    final unpackedDir = Directory(path.join(outPath, archiveName));
+
+    printVerbose('Extract ${archiveFile.path} to ${unpackedDir.path}');
+    await extractFileToDisk(archiveFile.path, unpackedDir.path);
+    return unpackedDir;
   }
 }

@@ -10,6 +10,7 @@ environment:
   sdk: ">=2.19.6 <4.0.0"
 
 dependencies:
+  archive: ^3.4.10
   args: ^2.3.0
   dart_openai: ">=1.9.91 <1.9.92"
   glob: ^2.0.1
