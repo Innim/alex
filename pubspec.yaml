@@ -15,6 +15,7 @@ dependencies:
   dart_openai: ">=1.9.91 <1.9.92"
   glob: ^2.0.1
   hive: ^2.2.3
+  in_date_utils: ^1.2.0+2
   ini: ^2.1.0
   intl: ^0.17.0
   intl_generator: ^0.4.1
@@ -24,6 +25,7 @@ dependencies:
   open_url: ^2.0.0
   path: ^1.8.0
   plain_optional: ^1.0.0
+  pub_updater: ^0.3.0
   pubspec_yaml_2: ^3.2.0
   recase: ^4.0.0
   tuple: ^2.0.0

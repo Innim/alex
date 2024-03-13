@@ -9,6 +9,9 @@ class LocalStore {
   static Future<Box<String>> get settingsBox async =>
       (await i).openBox('alex_settings');
 
+  static Future<Box<String>> get localDataBox async =>
+      (await i).openBox('alex_local_data');
+
   static Future<LocalStore> _init() async {
     final path = await PathUtils.getAppDataPath('hive');
     return LocalStore._(path);

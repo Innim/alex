@@ -1,3 +1,5 @@
+* Check for updates and message about a new version in the output.
+
 ## 1.6.9
 
 * [L10n] `import_xml`: Support for `--locale` argument.
