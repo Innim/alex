@@ -19,6 +19,7 @@ class ImportXmlCommand extends L10nCommandBase {
   static const _argAll = 'all';
   static const _argNew = 'new';
   static const _argDiffs = 'diffs';
+  static const _argLocale = 'locale';
 
   static const _localeJoint = '_';
 
@@ -57,6 +58,13 @@ class ImportXmlCommand extends L10nCommandBase {
             "Can't be used if --$_argAll passed.",
         valueHelp: 'FILENAME',
       )
+      ..addOption(
+        _argLocale,
+        abbr: 'l',
+        help: 'Locale for import. '
+            'If not specified - all locales will be imported.',
+        valueHelp: 'LOCALE',
+      )
       ..addFlag(
         _argAll,
         help: 'Import all files from provided path.',
@@ -79,6 +87,7 @@ class ImportXmlCommand extends L10nCommandBase {
     final sourcePath = args[_argPath] as String?;
     final fileForImport = args[_argFile] as String?;
     final targetFileName = args[_argTarget] as String?;
+    final locale = args[_argLocale] as String?;
     final importAll = args[_argAll] as bool;
     final importNew = args[_argNew] as bool;
     final importDiffs = args[_argDiffs] as bool?;
@@ -108,10 +117,16 @@ class ImportXmlCommand extends L10nCommandBase {
               (targetFileName != null ? ' to $targetFileName.' : '.'));
     }
 
+    if (locale == null) {
+      printVerbose('Import only locale <$locale>');
+    }
+
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
 
-    final locales = importNew ? null : await getLocales(l10nConfig);
+    final locales = locale != null
+        ? [locale]
+        : (importNew ? null : await getLocales(l10nConfig));
 
     return _importFromGooglePlay(
       l10nConfig,
