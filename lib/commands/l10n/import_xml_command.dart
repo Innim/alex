@@ -394,9 +394,12 @@ class ImportXmlCommand extends L10nCommandBase {
       L10nConfig config, File source, File target) async {
     printInfo('Import file ${source.path} as diff for ${target.path}');
     final baseLocale = config.baseLocaleForXml;
-    final baseFile = File(path.join(config.getXmlFilesPath(baseLocale),
-        path.setExtension(config.getMainXmlFileName(), '.xml')));
+    final baseFileName = path.basename(target.path);
+    final baseFile =
+        File(path.join(config.getXmlFilesPath(baseLocale), baseFileName));
     if (baseFile.existsSync()) {
+      printVerbose('Base XML: $baseFile');
+
       final baseXML = getXML(baseFile);
       final sourceXML = getXML(source);
       final targetXML = getXML(target);
@@ -422,6 +425,10 @@ class ImportXmlCommand extends L10nCommandBase {
 
       final notImported = sourceElements.where((e) =>
           !outputElements.any((oe) => oe.attributeName == e.attributeName));
+      if (notImported.isNotEmpty) {
+        printVerbose('${notImported.length} keys were not imported '
+            'because they are not presented in the base file');
+      }
       notImported.forEach((e) => printInfo('Skip key [${e.attributeName}]'));
 
       final outputXml = XmlDocument([

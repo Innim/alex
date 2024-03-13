@@ -1,5 +1,6 @@
 
 * [L10n] `import_xml`: Support for `--locale` argument.
+* [L10n] `import_xml` **Fixed**: Failed to import diff for not main localization files.
 * [L10n] `import_xml` **Fixed**: Incorrect locations fallback (can change language, not only pick up region).
 
 ## 1.6.8
