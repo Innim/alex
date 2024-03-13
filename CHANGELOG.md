@@ -1,3 +1,5 @@
+* [L10n] `import_xml` **Fixed**: Incorrect locations fallback (can change language, not only pick up region).
+
 ## 1.6.8
 
 * [L10n] `import_xml`: Support for .zip from Google Play as a source (argument `--path`). 

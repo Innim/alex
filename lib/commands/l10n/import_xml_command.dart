@@ -329,10 +329,16 @@ class ImportXmlCommand extends L10nCommandBase {
 
     if (allowedLocales != null && !allowedLocales.contains(locale)) {
       // Maybe we have locale with region in an app
-      if (!locale.contains(_localeJoint) &&
-          allowedLocales.any((l) => l.startsWith(locale))) {
-        final allowedLocale =
-            allowedLocales.firstWhere((l) => l.startsWith(locale));
+      final String? allowedLocale;
+
+      if (locale.contains(_localeJoint)) {
+        allowedLocale = null;
+      } else {
+        allowedLocale = allowedLocales
+            .firstWhereOrNull((l) => l.startsWith('$locale$_localeJoint'));
+      }
+
+      if (allowedLocale != null) {
         printInfo('Locale $locale not found: '
             'import $googlePlayLocale to $allowedLocale');
         locale = allowedLocale;
