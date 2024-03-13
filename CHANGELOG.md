@@ -1,3 +1,4 @@
+## 1.6.9
 
 * [L10n] `import_xml`: Support for `--locale` argument.
 * [L10n] `import_xml` **Fixed**: Failed to import diff for not main localization files.
