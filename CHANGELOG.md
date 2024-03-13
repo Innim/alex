@@ -1,3 +1,5 @@
+## 1.6.10
+
 * Check for updates and message about a new version in the output.
 
 ## 1.6.9
