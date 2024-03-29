@@ -1,3 +1,5 @@
+* [L10n] `import_xml`: Prints total locales count in project at the end.
+
 ## 1.6.10
 
 * Check for updates and message about a new version in the output.

@@ -318,10 +318,27 @@ class ImportXmlCommand extends L10nCommandBase {
               'or base name of imported file$folderNameHint.');
     } else {
       final importedLocales = imported.join(", ");
-      // TODO: писать сколько всего должно быть? или может даже ошибку выдать?
-      return success(
-          message: 'Success. Imported locales (${imported.length}): '
-              '$importedLocales.');
+      final message =
+          StringBuffer('Success. Imported locales (${imported.length}): ')
+            ..write(importedLocales)
+            ..write('.');
+
+      final projectLocales = await getLocales(config);
+
+      message
+        ..writeln()
+        ..write('Project supports ')
+        ..write(projectLocales.length)
+        ..write(' locales (including base locale)');
+
+      if (locales != null && locales.length != projectLocales.length) {
+        message
+          ..writeln()
+          ..write(locales.length)
+          ..write(' locales were allowed to import');
+      }
+
+      return success(message: message.toString());
     }
   }
 
