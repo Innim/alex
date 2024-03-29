@@ -1,3 +1,5 @@
+## 1.6.11
+
 * **IMPORTANT** [L10n] `from_xml`: Single quotes in the xml now escaped with another single quote for arb target. 
   See [documentation](https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization#escaping-syntax) for details. **Remove** any manual escapes for `'` from xml if you have any.
 * Ignore `pubspec.yaml` from hidden folders (like `.dart_tools/`).
