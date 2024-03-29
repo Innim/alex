@@ -13,8 +13,6 @@ class GenerateCommand extends L10nCommandBase {
 
     await generateLocalization(l10nConfig);
 
-    // TODO: check if all translations for all keys are exist
-
     return success(message: 'All translations imported.');
   }
 }
