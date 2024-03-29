@@ -1,4 +1,6 @@
 * [L10n] `import_xml`: Prints total locales count in project at the end.
+* Ignore `pubspec.yaml` from hidden folders (like `.dart_tools/`).
+* Root `pubspec.yaml` is always the first.
 
 ## 1.6.10
 

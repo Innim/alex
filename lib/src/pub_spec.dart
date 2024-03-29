@@ -30,9 +30,11 @@ class Spec {
     final projectPath = p.current;
     final pubspecFiles = <File>[];
 
-    for (final file
-        in _pubspecSearch.listSync(root: projectPath, followLinks: false)) {
-      _getPubspecsBody(file, pubspecFiles);
+    for (final file in _pubspecSearch.listSync(
+      root: projectPath,
+      followLinks: false,
+    )) {
+      _getPubspecsBody(file, pubspecFiles, projectPath);
     }
 
     return _getPubspecsEnd(pubspecFiles);
@@ -42,24 +44,68 @@ class Spec {
     final projectPath = p.current;
     final pubspecFiles = <File>[];
 
-    await for (final file
-        in _pubspecSearch.list(root: projectPath, followLinks: false)) {
-      _getPubspecsBody(file, pubspecFiles);
+    await for (final file in _pubspecSearch.list(
+      root: projectPath,
+      followLinks: false,
+    )) {
+      _getPubspecsBody(file, pubspecFiles, projectPath);
     }
 
     return _getPubspecsEnd(pubspecFiles);
   }
 
-  static void _getPubspecsBody(FileSystemEntity file, List<File> pubspecFiles) {
-    if (file is File && p.basename(file.path) == fileName) {
-      _logger.finest('Found ${file.path}');
-      pubspecFiles.add(file);
+  static void _getPubspecsBody(
+      FileSystemEntity file, List<File> pubspecFiles, String rootPath) {
+    // we can add specific folders/subpath to ignore here
+    const ignoredDirs = <String>[];
+
+    if (file is! File) return;
+
+    final path = file.path;
+    if (p.basename(path) != fileName) return;
+
+    final relatedPath = p.relative(path, from: rootPath);
+    final checkPath = '${p.separator}$relatedPath';
+
+    // ignore all inside hidden directories
+    final hiddenPrefix = '${p.separator}.';
+    if (checkPath.contains(hiddenPrefix)) {
+      _logger.finest('- Skip  ${file.path}: ignored by hidden parent dir');
+      return;
     }
+
+    // ignore by specific folder
+    if (ignoredDirs.any((dir) => checkPath.contains('/$dir/'))) {
+      _logger.finest('- Skip  ${file.path}: ignored by dir');
+      return;
+    }
+
+    _logger.finest('+ Found ${file.path}');
+    pubspecFiles.add(file);
   }
 
   static List<File> _getPubspecsEnd(List<File> pubspecFiles) {
     if (pubspecFiles.isEmpty) {
       _logger.info('Pubspec files are not found');
+    } else {
+      // file in the root folder should be first than any nested
+      pubspecFiles.sort((a, b) {
+        final aPath = a.path;
+        final bPath = b.path;
+
+        final aPartsLen = p.split(aPath).length;
+        final bPartsLen = p.split(bPath).length;
+        if (aPartsLen != bPartsLen) {
+          final aParent = p.dirname(aPath);
+          final bParent = p.dirname(bPath);
+
+          if (aParent.startsWith(bParent) || bParent.startsWith(aParent)) {
+            return aPartsLen - bPartsLen;
+          }
+        }
+
+        return aPath.compareTo(bPath);
+      });
     }
 
     return pubspecFiles;
