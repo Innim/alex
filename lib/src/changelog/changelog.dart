@@ -186,7 +186,11 @@ class Changelog {
     if (!str.trimLeft().startsWith(entryStart)) entry.write(entryStart);
     entry.write(str);
     if (!str.trimRight().endsWith(entryEnd)) entry.write(entryEnd);
-    if (issueSuffix != null) entry..write(' ')..write(issueSuffix);
+    if (issueSuffix != null) {
+      entry
+        ..write(' ')
+        ..write(issueSuffix);
+    }
 
     lines.insert(targetIndex, entry.toString());
 

@@ -37,7 +37,10 @@ class IosStringsExporter extends L10nExporter {
     final headerLength = result.length;
 
     data.forEach((key, value) {
-      result..write('"')..write(key)..write('"="');
+      result
+        ..write('"')
+        ..write(key)
+        ..write('"="');
 
       if (value is L10nTextEntry) {
         result.write(_prepareStr(value.text));
