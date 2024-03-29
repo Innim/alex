@@ -1,3 +1,5 @@
+* **IMPORTANT** [L10n] `from_xml`: Single quotes in the xml now escaped with another single quote for arb target. 
+  See [documentation](https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization#escaping-syntax) for details. **Remove** any manual escapes for `'` from xml if you have any.
 * Ignore `pubspec.yaml` from hidden folders (like `.dart_tools/`).
 * Root `pubspec.yaml` is always the first.
 * [L10n] `import_xml`: Prints total locales count in project at the end.

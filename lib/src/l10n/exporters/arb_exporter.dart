@@ -98,7 +98,10 @@ class ArbExporter extends L10nExporter {
   String _processText(String key, Set<String> allowed, String text) {
     return clearWinLines(_validateParameters(key, allowed, text)
         .replaceAll(r'\n', '\n')
-        .replaceAll(r'\r', '\r'));
+        .replaceAll(r'\r', '\r')
+        // escape single quotes
+        // https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization#escaping-syntax
+        .replaceAll("'", "''"));
   }
 
   String _validateParameters(String key, Set<String> allowed, String text) {
