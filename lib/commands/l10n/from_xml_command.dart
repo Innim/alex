@@ -339,6 +339,7 @@ class FromXmlCommand extends L10nCommandBase {
 
     printVerbose('Files to export: ${names.join(', ')}');
 
+    final exportedLocales = <String>[];
     for (final locale in locales) {
       printVerbose('Export locale: $locale');
 
@@ -353,12 +354,17 @@ class FromXmlCommand extends L10nCommandBase {
 
       if (updated > 0) {
         printVerbose('Success ($updated updated)');
+        exportedLocales.add(locale);
       } else {
         printVerbose('No changes');
       }
     }
 
-    return success();
+    return success(
+      message: exportedLocales.isEmpty
+          ? 'No JSON files updated'
+          : 'Updated JSON for ${exportedLocales.length} locales: ${exportedLocales.join(', ')}.',
+    );
   }
 
   Future<int> _importToGoogleDocs(

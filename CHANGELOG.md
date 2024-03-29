@@ -1,6 +1,7 @@
-* [L10n] `import_xml`: Prints total locales count in project at the end.
 * Ignore `pubspec.yaml` from hidden folders (like `.dart_tools/`).
 * Root `pubspec.yaml` is always the first.
+* [L10n] `import_xml`: Prints total locales count in project at the end.
+* [L10n] `from_xml`: Message on success for json target.
 
 ## 1.6.10
 
