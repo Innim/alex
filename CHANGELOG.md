@@ -1,3 +1,5 @@
+## 1.6.12
+
 [L10n] `import_xml`:
 * Detailed error explanation with a suggestion if can't find appropriate file for import.
 * **Fixed**: null check error when imported file is incorrect.
