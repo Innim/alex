@@ -52,9 +52,10 @@ class ImportXmlCommand extends L10nCommandBase {
       ..addOption(
         _argTarget,
         abbr: 't',
-        help: 'Target filename, which will be imported (without extension). '
+        help:
+            'Target filename, to which the import will be made (without extension). '
             'For example if translation file has incorrect name "intl_en", '
-            'you can provider expected target name "intl" with this argument. '
+            'you can provide the expected target name "intl" with this argument. '
             "Can't be used if --$_argAll passed.",
         valueHelp: 'FILENAME',
       )
@@ -230,8 +231,8 @@ class ImportXmlCommand extends L10nCommandBase {
     String? baseFileName;
     _CompositeNameBuilder? compositeFilenameBuilder;
 
-    String defaultCompositeBuilder(String uidWithName) =>
-        '${uidWithName}_$projectUid.xml';
+    String defaultCompositeBuilder(String uidWithName, [String? mainName]) =>
+        '${uidWithName}_${mainName ?? projectUid}.xml';
     String diffsCompositeBuilder(String uidWithName) =>
         defaultCompositeBuilder(uidWithName).asDiffsName();
 
@@ -270,8 +271,76 @@ class ImportXmlCommand extends L10nCommandBase {
                     checkBaseName(srcFilename?.asDiffsName()));
 
             final sourceFilename = useBaseName
-                ? baseFileName!
-                : compositeFilenameBuilder!.call(uidWithName);
+                ? baseFileName
+                : compositeFilenameBuilder?.call(uidWithName);
+
+            if (sourceFilename == null) {
+              final sb =
+                  StringBuffer("Couldn't find acceptable filename for import.");
+
+              final filesInDirectory =
+                  item.listSync().map((f) => path.basename(f.path));
+
+              sb.writeln();
+              if (filesInDirectory.isEmpty) {
+                sb.write('No files in directory ${item.path}');
+              } else {
+                const lfp = " - ";
+                sb
+                  ..writeln('Following files was found in directory: ')
+                  ..write(lfp)
+                  ..write(filesInDirectory.join("\n$lfp"));
+
+                final filenamePrefix = path.basenameWithoutExtension(
+                    defaultCompositeBuilder(uidWithName, ''));
+
+                final candidateFile = filesInDirectory
+                    .firstWhereOrNull((e) => e.startsWith(filenamePrefix));
+
+                final String? suggestFile;
+                final suggestTarget = destFilename != null
+                    ? path.basenameWithoutExtension(destFilename)
+                    : null;
+
+                if (candidateFile != null) {
+                  final invalidName = path
+                      .basenameWithoutExtension(candidateFile)
+                      .substring(filenamePrefix.length);
+
+                  suggestFile = invalidName;
+                } else {
+                  suggestFile = null;
+                }
+
+                sb
+                  ..writeln('')
+                  ..writeln('')
+                  ..writeln('💡 Suggestion:')
+                  ..writeln(
+                      'Probably the name of the imported file is incorrect, '
+                      'try to specify the parameters explicitly:')
+                  ..write('--$_argFile - Filename for import. '
+                      'Name without uid, locale and extension. ');
+                if (suggestFile != null) {
+                  sb.write('E.g.: --$_argFile=$suggestFile');
+                }
+
+                sb
+                  ..writeln()
+                  ..write('--$_argTarget - Name of the file in the project '
+                      'to which the import will be performed. '
+                      'Name without extension and locale. ');
+                if (suggestTarget != null) {
+                  sb.write('E.g.: --$_argTarget=$suggestTarget');
+                }
+
+                sb
+                  ..writeln('')
+                  ..write('--diff - If you are importing diffs file.');
+              }
+
+              throw RunException.err(sb.toString());
+            }
 
             await import(item, sourceFilename, googlePlayLocale);
           } else {

@@ -1,3 +1,7 @@
+[L10n] `import_xml`:
+* Detailed error explanation with a suggestion if can't find appropriate file for import.
+* **Fixed**: null check error when imported file is incorrect.
+
 ## 1.6.11
 
 * **IMPORTANT** [L10n] `from_xml`: Single quotes in the xml now escaped with another single quote for arb target. 
