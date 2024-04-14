@@ -191,7 +191,7 @@ So you can use the command `import_xml` to do it.
 alex l10n import_xml --path=path/to/dir/with/translations
 ```
 
-If the files have the suffix `_diff` then they will be imported as a list of changes.
+If the files have the suffix `_diffs` then they will be imported as a list of changes.
 
 ### Code 
 
