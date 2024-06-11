@@ -133,8 +133,11 @@ abstract class AlexCommand extends Command<int> {
 
   /// Returns error code by exception.
   @protected
-  int errorBy(RunException exception) {
-    return error(exception.exitCode, message: exception.message);
+  int errorBy(RunException exception, {String? title}) {
+    final sb = StringBuffer();
+    if (title?.isNotEmpty == true) sb.writeln(title);
+    if (exception.message?.isNotEmpty == true) sb.write(exception.message);
+    return error(exception.exitCode, message: sb.toString());
   }
 
   /// Run command and add listeners `onOut`/`onErr` on

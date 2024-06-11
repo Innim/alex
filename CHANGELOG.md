@@ -1,6 +1,7 @@
 
 * **Fixed**: Program always have 0 exit code, even when execution failed.
 * [L10n] `from_xml`:
+  * Clearer and more detailed error message if there is no imported key in the base .strings file. Also added suggestions for fixes.
   * Refactor output strings: "export" replaced with more consistent in this context "import".
 
 ## 1.6.12

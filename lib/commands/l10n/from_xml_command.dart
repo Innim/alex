@@ -106,28 +106,32 @@ class FromXmlCommand extends L10nCommandBase {
 
     final dirs = {path.current, runDirPath};
 
-    int res;
-    switch (target) {
-      case _targetArb:
-        res = await _importToArb(l10nConfig, locales);
-        break;
-      case _targetAndroid:
-        res = await _importToAndroid(l10nConfig, locales, dirs);
-        break;
-      case _targetIos:
-        res = await _importToIos(l10nConfig, locales, dirs);
-        break;
-      case _targetJson:
-        res = await _importToJson(l10nConfig, locales, name);
-        break;
-      case _targetGoogleDocs:
-        // TODO: parameter for filename
-        res = await _importToGoogleDocs(l10nConfig, 'screenshot1', locales);
-        break;
-      default:
-        res = error(1, message: 'Unknown target: $target');
+    try {
+      final int res;
+      switch (target) {
+        case _targetArb:
+          res = await _importToArb(l10nConfig, locales);
+          break;
+        case _targetAndroid:
+          res = await _importToAndroid(l10nConfig, locales, dirs);
+          break;
+        case _targetIos:
+          res = await _importToIos(l10nConfig, locales, dirs);
+          break;
+        case _targetJson:
+          res = await _importToJson(l10nConfig, locales, name);
+          break;
+        case _targetGoogleDocs:
+          // TODO: parameter for filename
+          res = await _importToGoogleDocs(l10nConfig, 'screenshot1', locales);
+          break;
+        default:
+          res = error(1, message: 'Unknown target: $target');
+      }
+      return res;
+    } on RunException catch (e) {
+      return errorBy(e, title: 'Import failed.');
     }
-    return res;
   }
 
   Future<int> _importToArb(L10nConfig config, List<String> locales) async {
@@ -219,7 +223,7 @@ class FromXmlCommand extends L10nCommandBase {
 
     final baseLocale = config.baseLocaleForXml;
     final filesByProject = <String, Set<String>>{};
-    final keysMapByXmlBasename = <String, Map<String, String>>{};
+    final keysMapByXmlBasename = <String, _IosL10nFileInfo>{};
 
     await provider.forEachLocalizationFile(
       baseLocale,
@@ -235,16 +239,27 @@ class FromXmlCommand extends L10nCommandBase {
           files.add(xmlBasename);
 
           final data = await L10nIosUtils.loadAndDecodeStringsFile(file);
-          keysMapByXmlBasename[xmlBasename] = data.map((key, value) =>
-              MapEntry(L10nIosUtils.covertStringsKeyToXml(key), key));
+          keysMapByXmlBasename[xmlBasename] = _IosL10nFileInfo(
+            file,
+            data.map(
+              (key, value) => MapEntry(
+                L10nIosUtils.covertStringsKeyToXml(key),
+                key,
+              ),
+            ),
+          );
         }
       },
     );
 
-    printVerbose(filesByProject.keys
-        .where((k) => filesByProject[k]!.isNotEmpty)
-        .map((k) => '$k: ${filesByProject[k]!.join(', ')}')
-        .join('; '));
+    printVerbose(
+      // ignore: prefer_interpolation_to_compose_strings
+      'Found ${filesByProject.length} projects. Files by projects: ' +
+          filesByProject.keys
+              .where((k) => filesByProject[k]!.isNotEmpty)
+              .map((k) => '$k: ${filesByProject[k]!.join(', ')}')
+              .join('; '),
+    );
 
     for (final locale in locales) {
       printVerbose('Import locale: $locale');
@@ -253,13 +268,25 @@ class FromXmlCommand extends L10nCommandBase {
       for (final projectName in filesByProject.keys) {
         for (final fileName in filesByProject[projectName]!) {
           final xmlData = await _loadMap(config, fileName, locale);
-          final keysMap = keysMapByXmlBasename[fileName]!;
+          final info = keysMapByXmlBasename[fileName]!;
+          final keysMap = info.xml2IosKeys;
 
           MapEntry<String, L10nEntry> mapKeys(String key, L10nEntry value) {
             final iosKey = keysMap[key];
             if (iosKey == null) {
-              throw Exception(
-                  "Can't find record for key <$key>. File: $fileName, locale: $locale");
+              final baseFilePath = info.baseIosFile.path;
+              final msg = '''
+Found unexpected key <$key>. File: $fileName, locale: $locale.
+The search for a matching key was performed in the file for base locale ($baseLocale): $baseFilePath.
+
+💡 Suggestions: 
+   - Make sure the .strings file for the *base* locale ($baseLocale) has all the necessary keys. Add any missing ones.
+   - Remove not relevant keys from the processed .xml file (locale: $locale) if key was removed from localization.
+   - Check name of the keys in the base .strings and processed .xml files 
+     (note that keys do not always have to be exactly the same in .strings and .xml files, but a key in a .xml file should be able to be generated from a key in .strings by replacing forbidden symbols).
+''';
+
+              throw RunException.err(msg);
             }
 
             return MapEntry(iosKey, value);
@@ -462,4 +489,11 @@ class FromXmlCommand extends L10nCommandBase {
     final dirPath = config.getXmlFilesPath(locale);
     return File(path.join(dirPath, path.setExtension(fileBaseName, '.xml')));
   }
+}
+
+class _IosL10nFileInfo {
+  final File baseIosFile;
+  final Map<String, String> xml2IosKeys;
+
+  _IosL10nFileInfo(this.baseIosFile, this.xml2IosKeys);
 }
