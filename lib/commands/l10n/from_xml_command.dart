@@ -146,7 +146,7 @@ class FromXmlCommand extends L10nCommandBase {
     for (final locale in locales) {
       final arbLocale = localeMap[locale] ?? locale;
       // ignore: prefer_interpolation_to_compose_strings
-      printVerbose('Export locale: $locale' +
+      printVerbose('Import locale: $locale' +
           (arbLocale != locale ? ' -> $arbLocale' : ''));
 
       final arbFilePath = config.getArbFilePath(arbLocale);
@@ -165,7 +165,7 @@ class FromXmlCommand extends L10nCommandBase {
     }
 
     return success(
-        message: 'Locales ${locales.join(', ')} exported to arb. '
+        message: 'Locales ${locales.join(', ')} imported to arb. '
             'You can "alex l10n generate" to generate dart code.');
   }
 
@@ -191,7 +191,7 @@ class FromXmlCommand extends L10nCommandBase {
 
     // Here file already in required format, just copy it
     for (final locale in locales) {
-      printVerbose('Export locale: $locale');
+      printVerbose('Import locale: $locale');
       final androidLocale = (localeMap[locale] ?? locale).replaceAll('_', '-r');
       final targetDirPath = path.join(resPath, '$dirName-$androidLocale');
 
@@ -247,7 +247,7 @@ class FromXmlCommand extends L10nCommandBase {
         .join('; '));
 
     for (final locale in locales) {
-      printVerbose('Export locale: $locale');
+      printVerbose('Import locale: $locale');
 
       var updated = 0;
       for (final projectName in filesByProject.keys) {
@@ -284,7 +284,8 @@ class FromXmlCommand extends L10nCommandBase {
     }
 
     return success(
-        message: 'Locales ${locales.join(', ')} exported to iOS strings.');
+      message: 'Locales ${locales.join(', ')} imported to iOS strings.',
+    );
   }
 
   Future<int> _importToJson(
@@ -328,7 +329,7 @@ class FromXmlCommand extends L10nCommandBase {
     if (names.isEmpty || name != null && !names.contains(name)) {
       return error(1,
           // ignore: prefer_interpolation_to_compose_strings
-          message: "Can't find any matching files for export. " +
+          message: "Can't find any matching files for import. " +
               (names.isNotEmpty
                   ? '\nFound following candidates: ${names.join(', ')}.'
                       '\nLooking for: $name'
@@ -337,11 +338,11 @@ class FromXmlCommand extends L10nCommandBase {
 
     if (name != null) names.removeWhere((n) => n != name);
 
-    printVerbose('Files to export: ${names.join(', ')}');
+    printVerbose('Files to import: ${names.join(', ')}');
 
     final exportedLocales = <String>[];
     for (final locale in locales) {
-      printVerbose('Export locale: $locale');
+      printVerbose('Import locale: $locale');
 
       var updated = 0;
       for (final name in names) {

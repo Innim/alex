@@ -1,5 +1,8 @@
 
 * **Fixed**: Program always have 0 exit code, even when execution failed.
+* [L10n] `from_xml`:
+  * Refactor output strings: "export" replaced with more consistent in this context "import".
+
 ## 1.6.12
 
 [L10n] `import_xml`:
