@@ -1,3 +1,5 @@
+
+* **Fixed**: Program always have 0 exit code, even when execution failed.
 ## 1.6.12
 
 [L10n] `import_xml`:
