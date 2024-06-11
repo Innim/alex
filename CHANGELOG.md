@@ -1,3 +1,4 @@
+## 1.6.13
 
 * **Fixed**: Program always have 0 exit code, even when execution failed.
 * [L10n] `from_xml`:
