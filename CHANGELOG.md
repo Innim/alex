@@ -1,3 +1,5 @@
+## 1.6.14
+
 [L10n] `import_xml`:
 * More relevant suggestion for `--target` value when failed to find appropriate file for import.
 * **Fixed**: Invalid `--diff` flag name in suggestion (should be `--diffs`).
