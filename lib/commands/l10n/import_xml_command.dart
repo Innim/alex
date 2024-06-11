@@ -154,6 +154,7 @@ class ImportXmlCommand extends L10nCommandBase {
         : (fileForImport == null
             ? config.getMainXmlFileName()
             : _getFilenameByBaseName(fileForImport));
+    // TODO: define dest file by name of imported file (change help for _argFile)
     final destFilename = importAll
         ? null
         : (targetFileName == null
@@ -298,10 +299,6 @@ class ImportXmlCommand extends L10nCommandBase {
                     .firstWhereOrNull((e) => e.startsWith(filenamePrefix));
 
                 final String? suggestFile;
-                final suggestTarget = destFilename != null
-                    ? path.basenameWithoutExtension(destFilename)
-                    : null;
-
                 if (candidateFile != null) {
                   final invalidName = path
                       .basenameWithoutExtension(candidateFile)
@@ -310,6 +307,44 @@ class ImportXmlCommand extends L10nCommandBase {
                   suggestFile = invalidName;
                 } else {
                   suggestFile = null;
+                }
+
+                String? suggestTarget;
+                if (targetFileName == null && suggestFile != null) {
+                  // check for appropriate target file
+                  // common error, than filename includes base or "en" locale
+                  final baseLocale = config.baseLocaleForXml;
+                  final junkSuffixes = {null, baseLocale, 'en'};
+
+                  for (final suffix in junkSuffixes) {
+                    final String guessName;
+                    if (suffix == null) {
+                      guessName = suggestFile;
+                    } else {
+                      final nameEnd = '_$suffix';
+                      if (!suggestFile.endsWith(nameEnd)) continue;
+                      guessName = suggestFile.substring(
+                          0, suggestFile.length - nameEnd.length);
+                    }
+
+                    // check if exist
+                    final guessFile = File(
+                      path.join(
+                        config.getXmlFilesPath(baseLocale),
+                        _getFilenameByBaseName(guessName),
+                      ),
+                    );
+
+                    if (guessFile.existsSync()) {
+                      suggestTarget =
+                          path.basenameWithoutExtension(guessFile.path);
+                      break;
+                    }
+                  }
+                }
+
+                if (suggestTarget == null && destFilename != null) {
+                  suggestTarget = path.basenameWithoutExtension(destFilename);
                 }
 
                 sb
@@ -336,7 +371,7 @@ class ImportXmlCommand extends L10nCommandBase {
 
                 sb
                   ..writeln('')
-                  ..write('--diff - If you are importing diffs file.');
+                  ..write('--$_argDiffs - If you are importing diffs file.');
               }
 
               throw RunException.err(sb.toString());

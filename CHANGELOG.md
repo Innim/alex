@@ -1,3 +1,7 @@
+[L10n] `import_xml`:
+* More relevant suggestion for `--target` value when failed to find appropriate file for import.
+* **Fixed**: Invalid `--diff` flag name in suggestion (should be `--diffs`).
+
 ## 1.6.13
 
 * **Fixed**: Program always have 0 exit code, even when execution failed.
