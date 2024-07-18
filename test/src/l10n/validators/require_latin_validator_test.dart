@@ -84,15 +84,15 @@ void main() {
       expect(
         validator.validate(
           'Dòlar Àfrica albanès Gràfics Relaxació Introduïu bielorús kenyà '
-          'ucraïnès Xíling més Freqüència Adreça Bermudský Tālā Správa'
-          'Ázerbájdžánský měně svůj přepočítán Kalkulačka ještě Maďarský'
-          'Keňský Ohodnoťte mærke Caymanøerne indgående Einkäufe Löschen'
-          'Regelmäßige año icônes Intérêt Noël Złoty îles Mađarska piće'
-          'időszak működéséhez più Stai Così Dzień kategorię usunąć bieżące'
-          'Wyjść Wyjdź não transações câmbio sterlină ieșire Finanțe'
-          'Educaţie podľa Nezahŕňať değiştirildi hesaplandı işlemler İçecek'
-          'sơ lại Tiền Đến Chuyển nhận đổi mỗi Xuất khoản Chọn Số Đồng dễ'
-          'được dịch của được giờ gửi một sắm lần chỉ dữ mục từ thức bằng'
+          'ucraïnès Xíling més Freqüència Adreça Bermudský Tālā Správa '
+          'Ázerbájdžánský měně svůj přepočítán Kalkulačka ještě Maďarský '
+          'Keňský Ohodnoťte mærke Caymanøerne indgående Einkäufe Löschen '
+          'Regelmäßige año icônes Intérêt Noël Złoty îles Mađarska piće '
+          'időszak működéséhez più Stai Così Dzień kategorię usunąć bieżące '
+          'Wyjść Wyjdź não transações câmbio sterlină ieșire Finanțe '
+          'Educaţie podľa Nezahŕňať değiştirildi hesaplandı işlemler İçecek '
+          'sơ lại Tiền Đến Chuyển nhận đổi mỗi Xuất khoản Chọn Số Đồng dễ '
+          'được dịch của được giờ gửi một sắm lần chỉ dữ mục từ thức bằng '
           'đẹp đặt viện dưới khỏe khẩu quỹ vẫn nghĩa nhở sẽ tự thẻ Kỳ tỷ',
         ),
         true,
