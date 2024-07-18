@@ -1,4 +1,6 @@
 
+* [L10n] `from_xml` validates strings for Cyrillic and other inappropriate characters for locales,
+where Latin is required. Added config parameter `require_latin` (has default value).
 * README: "Updating" section.
 
 ## 1.6.14

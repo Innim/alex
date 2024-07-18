@@ -11,6 +11,7 @@ l10n:
   base_locale_for_xml: en
   xml_output_dir: lib/application/l10n/xml
   xml_output_name: 
+  require_latin: [ 'ca', 'cs', 'da', 'de', 'en', 'es', 'fi', 'fr', 'hr', 'hu', 'id', 'it', 'ms', 'nl', 'no', 'pl', 'pt', 'pt_BR', 'ro', 'sk', 'sl', 'sr', 'sv', 'tr' ]
 
 # CI settings
 ci:

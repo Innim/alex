@@ -138,6 +138,32 @@ class L10nConfig {
   static const String _defaultBaseLocaleForArb = 'ru';
   static const String _defaultBaseLocaleForXml = 'en';
   static const String _defaultXmlOutputDir = 'lib/application/l10n/xml';
+  static const List<String> _defaultRequireLatin = [
+    'ca',
+    'cs',
+    'da',
+    'de',
+    'en',
+    'es',
+    'fi',
+    'fr',
+    'hr',
+    'hu',
+    'id',
+    'it',
+    'ms',
+    'nl',
+    'no',
+    'pl',
+    'pt',
+    'pt_BR',
+    'ro',
+    'sk',
+    'sl',
+    'sr',
+    'sv',
+    'tr',
+  ];
 
   /// Path to the output directory for arb files.
   final String outputDir;
@@ -177,6 +203,13 @@ class L10nConfig {
   /// See [baseLocaleForXml].
   final String? xmlOutputName;
 
+  /// Require only Latin symbols for specified locales.
+  ///
+  /// This includes (i.e. they are allowed) all special symbols from
+  /// German, Spanish, Turkish, Slovenian, Vietnamese, etc alphabets.
+  /// But exclude (i.e. they are forbidden) Cyrillic, Persian, etc symbols.
+  final List<String> requireLatin;
+
   L10nConfig({
     this.outputDir = _defaultOutputDir,
     this.sourceFile = _defaultSourceFile,
@@ -185,6 +218,7 @@ class L10nConfig {
     this.baseLocaleForXml = _defaultBaseLocaleForXml,
     this.xmlOutputDir = _defaultXmlOutputDir,
     this.xmlOutputName,
+    this.requireLatin = _defaultRequireLatin,
   });
 
   factory L10nConfig.fromYaml(YamlMap data) {
@@ -199,6 +233,8 @@ class L10nConfig {
           data['base_locale_for_xml'] as String? ?? _defaultBaseLocaleForXml,
       xmlOutputDir: data['xml_output_dir'] as String? ?? _defaultXmlOutputDir,
       xmlOutputName: data['xml_output_name'] as String?,
+      requireLatin: (data['require_latin'] as YamlList?).toListString() ??
+          _defaultRequireLatin,
     );
   }
 
@@ -209,6 +245,7 @@ class L10nConfig {
         'baseLocaleForArb: $baseLocaleForArb, '
         'baseLocaleForXml: $baseLocaleForXml, '
         'xmlOutputDir: $xmlOutputDir, '
+        'requireLatin: [${requireLatin.join(', ')}], '
         'xmlOutputName: $xmlOutputName}';
   }
 }
@@ -324,7 +361,7 @@ class AlexScriptsConfig {
 
   @override
   String toString() {
-    return 'AlexSсriptsConfig{preReleaseScriptsPaths: $preReleaseScriptsPaths}';
+    return 'AlexScriptsConfig{preReleaseScriptsPaths: $preReleaseScriptsPaths}';
   }
 }
 

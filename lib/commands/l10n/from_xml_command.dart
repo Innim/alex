@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:alex/alex.dart';
 import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/exception/validation_exception.dart';
 import 'package:alex/src/l10n/exporters/arb_exporter.dart';
 import 'package:alex/src/l10n/exporters/google_docs_exporter.dart';
 import 'package:alex/src/l10n/exporters/ios_strings_exporter.dart';
@@ -11,6 +12,8 @@ import 'package:alex/src/l10n/exporters/json_exported.dart';
 import 'package:alex/src/l10n/l10n_entry.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
 import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
+import 'package:alex/src/l10n/validators/l10n_validator.dart';
+import 'package:alex/src/l10n/validators/require_latin_validator.dart';
 import 'package:xml/xml.dart';
 import 'package:path/path.dart' as path;
 import 'package:list_ext/list_ext.dart';
@@ -203,6 +206,9 @@ class FromXmlCommand extends L10nCommandBase {
       if (!(await targetDir.exists())) await targetDir.create(recursive: true);
 
       final xmlPath = path.join(config.getXmlFilesPath(locale), filename);
+
+      // TODO: check source xml with validators, as _loadAndParseXml do
+
       final targetPath = path.join(targetDirPath, filename);
 
       printVerbose('Copy $xmlPath to $targetPath');
@@ -440,35 +446,83 @@ The search for a matching key was performed in the file for base locale ($baseLo
     return map;
   }
 
-  Future<void> _loadAndParseXml(L10nConfig config, String fileBaseName,
-      String locale, void Function(String name, L10nEntry value) handle) async {
+  Future<void> _loadAndParseXml(
+    L10nConfig config,
+    String fileBaseName,
+    String locale,
+    void Function(String name, L10nEntry value) handle,
+  ) async {
     final xml = await _loadXml(config, fileBaseName, locale);
     final resources = xml.findAllElements('resources').first;
+
+    final validators = <L10nValidator>[
+      if (config.requireLatin.contains(locale)) RequireLatinValidator(),
+    ];
+
+    String processText(String value) => _textFromXml(value, validators);
+
+    final errors = <String>[];
     for (final child in resources.children) {
       if (child is XmlElement) {
         final name = child.getAttribute('name')!;
         final element = child.name.toString();
 
-        switch (element) {
-          case 'string':
-            handle(name, L10nEntry.text(_textFromXml(child.text)));
-            break;
-          case 'plurals':
-            final map =
-                child.children.whereType<XmlElement>().toMap<String, String>(
-                      (el) => el.getAttribute('quantity')!,
-                      (el) => _textFromXml(el.text),
-                    );
-            handle(name, L10nEntry.pluralFromMap(map));
-            break;
-          default:
-            throw Exception('Unhandled element <$element> in xml: $child');
+        try {
+          switch (element) {
+            case 'string':
+              handle(name, L10nEntry.text(processText(child.text)));
+              break;
+            case 'plurals':
+              final map =
+                  child.children.whereType<XmlElement>().toMap<String, String>(
+                        (el) => el.getAttribute('quantity')!,
+                        (el) => processText(el.text),
+                      );
+              handle(name, L10nEntry.pluralFromMap(map));
+              break;
+            default:
+              throw Exception('Unhandled element <$element> in xml: $child');
+          }
+        } on ValidationException catch (e) {
+          errors.add('[$name] ${e.message}');
         }
       }
     }
+
+    if (errors.isNotEmpty) {
+      final sb = StringBuffer('XML file for locale <$locale> contains errors:')
+        ..writeln()
+        ..writeln();
+      errors.forEach(sb.writeln);
+      sb
+        ..writeln()
+        ..writeln('Found ${errors.length} invalid strings.')
+        ..writeln()
+        ..writeln('💡 Suggestion:')
+        ..writeln(
+            'Probably translations file contains some Cyrillic characters '
+            'or unusual kind of punctuation marks. '
+            'Another options: instead of a single character, combining characters '
+            '(combining diacritical marks) are used.')
+        ..writeln('You should fix the strings in xml and try again '
+            '(in case of combining characters you should replace them '
+            'with a single character).')
+        ..write('If you think this is a false positive, '
+            'please contact developer.');
+
+      throw RunException.warn(sb.toString());
+    }
   }
 
-  String _textFromXml(String val) {
+  String _textFromXml(String val, List<L10nValidator> validators) {
+    final errors =
+        validators.where((e) => !e.validate(val)).map((e) => e.getError(val));
+    if (errors.isNotEmpty) {
+      throw ValidationException(
+        'Validation failed:\n\t- ${errors.join('\n\t - ')}',
+      );
+    }
+
     // Translates add escape slashes for ' and " in xml
     return val.replaceAll(r"\'", "'").replaceAll(r'\"', '"');
   }
