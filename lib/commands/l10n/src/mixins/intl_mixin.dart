@@ -81,6 +81,8 @@ mixin IntlMixin {
         res.add(path.join(dir, filename));
       }
     }
+
+    res.sort();
     return res;
   }
 

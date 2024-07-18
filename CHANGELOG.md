@@ -1,3 +1,5 @@
+* [L10n] `generate` always generate main messages file in the same order.
+
 ## 1.6.15
 
 * [L10n] `from_xml` validates strings for Cyrillic and other inappropriate characters for locales,
