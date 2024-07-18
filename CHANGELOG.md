@@ -1,3 +1,5 @@
+## 1.6.16
+
 * [L10n] `generate` always generate main messages file in the same order.
 
 ## 1.6.15
