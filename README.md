@@ -40,6 +40,14 @@ $ alex --version
 
 In such case you can edit specified file (`~/Development/flutter/.pub-cache/bin/alex` in this example). All you need to change in it - it's use `flutter pub` instead of `pub` or `dart pub`, so replace `pub global run alex:alex "$@"` with `flutter pub global run alex:alex "$@"`, save the file, and you are all set.
 
+#### Updating
+
+To update alex you should execute the same command as for installing:
+
+```
+$ flutter pub global activate alex
+```
+
 #### Fix problems with cyrillic encoding on Windows
 
 When entering Cyrillic characters (while saving changelog) they may not be displayed correctly or may not be displayed at all.

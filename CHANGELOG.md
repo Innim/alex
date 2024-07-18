@@ -1,3 +1,6 @@
+
+* README: "Updating" section.
+
 ## 1.6.14
 
 [L10n] `import_xml`:
