@@ -213,6 +213,8 @@ class ImportXmlCommand extends L10nCommandBase {
 
     // TODO: check that all locales (rather than base and gp base) presented
     final imported = <String>{};
+    final skippedLocales = <String>{};
+    final processedItems = <String>{};
 
     Future<void> import(
             Directory sourceDir, String sourceFilename, String googlePlayLocale,
@@ -220,6 +222,7 @@ class ImportXmlCommand extends L10nCommandBase {
         _importFile(
           config,
           imported,
+          skippedLocales,
           sourceDir,
           sourceFilename,
           googlePlayLocale,
@@ -421,7 +424,9 @@ class ImportXmlCommand extends L10nCommandBase {
           await import(sourceDir, name, googlePlayLocale);
         } else {
           printVerbose('Skipped because of invalid extension');
+          continue;
         }
+        processedItems.add(name);
       } else {
         printVerbose('Skipped because of discrepancy with translation UID');
       }
@@ -435,10 +440,10 @@ class ImportXmlCommand extends L10nCommandBase {
               'it should be order UID if translation came from Google Play '
               'or base name of imported file$folderNameHint.');
     } else {
-      final importedLocales = imported.join(", ");
+      final importedLocalesStr = imported.join(", ");
       final message =
           StringBuffer('Success. Imported locales (${imported.length}): ')
-            ..write(importedLocales)
+            ..write(importedLocalesStr)
             ..write('.');
 
       final projectLocales = await getLocales(config);
@@ -454,6 +459,20 @@ class ImportXmlCommand extends L10nCommandBase {
           ..writeln()
           ..write(locales.length)
           ..write(' locales were allowed to import');
+      } else if (imported.length < projectLocales.length - 1 &&
+          processedItems.length > imported.length) {
+        message
+          ..writeln()
+          ..write('Processed ${processedItems.length} items.');
+
+        if (skippedLocales.isNotEmpty) {
+          message.write(' Skipped locales: ${skippedLocales.join(', ')}.');
+        }
+
+        message
+          ..writeln()
+          ..write('⚠️ ATTENTION! This may indicate a problem. '
+              'Make sure that all desired locales are imported.');
       }
 
       return success(message: message.toString());
@@ -465,6 +484,7 @@ class ImportXmlCommand extends L10nCommandBase {
   Future<void> _importFile(
     L10nConfig config,
     Set<String> imported,
+    Set<String> skipped,
     Directory sourceDir,
     String sourceFilename,
     String googlePlayLocale,
@@ -492,6 +512,7 @@ class ImportXmlCommand extends L10nCommandBase {
         locale = allowedLocale;
       } else {
         printInfo('Skip locale <$locale>');
+        skipped.add(locale);
         return;
       }
     }
