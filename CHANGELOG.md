@@ -1,3 +1,6 @@
+
+[L10n] `import_xml`
+* Support name of the directory without `_diffs` suffix. Therefore, now you can import directory with files like this: `intl/intl_diffs_es.xml`;
 ## 1.6.16
 
 * [L10n] `generate` always generate main messages file in the same order.

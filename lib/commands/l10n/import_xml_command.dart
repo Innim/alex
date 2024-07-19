@@ -191,13 +191,23 @@ class ImportXmlCommand extends L10nCommandBase {
 
     printVerbose('Directory for import: ${sourceDir.path}');
 
-    final translationUid = path.basename(sourceDir.path);
-    final projectUid =
+    final importedDirName = path.basename(sourceDir.path);
+    final isAllegedlyDiff = importedDirName.endsWith(L10nUtils.diffsSuffix);
+
+    final translationName = isAllegedlyDiff
+        ? L10nUtils.removeDiffsSuffix(importedDirName)
+        : importedDirName;
+
+    final translationNameWithDiffs = isAllegedlyDiff
+        ? importedDirName
+        : L10nUtils.addDiffsSuffix(importedDirName);
+
+    final srcBaseName =
         srcFilename != null ? path.withoutExtension(srcFilename) : null;
 
     printVerbose('Start import.\n'
-        '\tTranslation UID: $translationUid,\n'
-        '\tProject UID: $projectUid,\n'
+        '\tTranslation name: $translationName,\n'
+        '\tAssumed imported file: $srcBaseName,\n'
         '\tSource: $srcFilename,\n'
         '\tDestination: $destFilename.');
 
@@ -206,14 +216,12 @@ class ImportXmlCommand extends L10nCommandBase {
 
     Future<void> import(
             Directory sourceDir, String sourceFilename, String googlePlayLocale,
-            [String? gpProjectUid, String? targetFilename]) =>
+            [String? targetFilename]) =>
         _importFile(
           config,
           imported,
           sourceDir,
           sourceFilename,
-          gpProjectUid ?? projectUid,
-          translationUid,
           googlePlayLocale,
           targetFilename ?? destFilename,
           locales,
@@ -233,7 +241,7 @@ class ImportXmlCommand extends L10nCommandBase {
     _CompositeNameBuilder? compositeFilenameBuilder;
 
     String defaultCompositeBuilder(String uidWithName, [String? mainName]) =>
-        '${uidWithName}_${mainName ?? projectUid}.xml';
+        '${uidWithName}_${mainName ?? srcBaseName}.xml';
     String diffsCompositeBuilder(String uidWithName) =>
         defaultCompositeBuilder(uidWithName).asDiffsName();
 
@@ -243,13 +251,14 @@ class ImportXmlCommand extends L10nCommandBase {
     for (final item in items) {
       final name = path.basename(item.path);
       printVerbose('Processing: $name');
-      if (name.startsWith(translationUid)) {
+      if (name.startsWith(translationName)) {
         if (item is Directory) {
+          final translationUid = translationName;
           // file paths like:
           // d_11f922c9b/d_11f922c9b_ko/d_11f922c9b_ko_intl.xml
           final googlePlayLocale = name.replaceFirst('${translationUid}_', '');
           final uidWithName = '${translationUid}_$googlePlayLocale';
-          if (projectUid != null) {
+          if (srcFilename != null) {
             bool checkBaseName(String? filename) {
               if (filename == null) return false;
               if (!fileExist(item, filename)) return false;
@@ -269,7 +278,7 @@ class ImportXmlCommand extends L10nCommandBase {
             useBaseName ??= !checkCompositeName(defaultCompositeBuilder) &&
                 !checkCompositeName(diffsCompositeBuilder) &&
                 (checkBaseName(srcFilename) ||
-                    checkBaseName(srcFilename?.asDiffsName()));
+                    checkBaseName(srcFilename.asDiffsName()));
 
             final sourceFilename = useBaseName
                 ? baseFileName
@@ -390,18 +399,23 @@ class ImportXmlCommand extends L10nCommandBase {
               final curProjectUid = path
                   .withoutExtension(sourceFilename)
                   .substring(uidWithName.length + 1);
-              final curFileName = _getFilenameByBaseName(curProjectUid);
-              await import(item, sourceFilename, googlePlayLocale,
-                  curProjectUid, curFileName);
+              await import(
+                  item, sourceFilename, googlePlayLocale, curProjectUid);
             }
           }
         } else if (item is File && item.path.endsWith('.xml')) {
           // file paths like:
           // d_11f922f82/d_11f922f82_ar_intl.xml
           // intl/intl_de.xml
+          // intl_diffs/intl_diffs_de.xml
+          // intl/intl_diffs_de.xml
+          final baseName = name.startsWith(translationNameWithDiffs)
+              ? translationNameWithDiffs
+              : translationName;
+
           final googlePlayLocale = path
               .withoutExtension(name)
-              .replaceFirst('${translationUid}_', '')
+              .replaceFirst('${baseName}_', '')
               .split('_')
               .first;
           await import(sourceDir, name, googlePlayLocale);
@@ -414,7 +428,7 @@ class ImportXmlCommand extends L10nCommandBase {
     }
 
     if (imported.isEmpty) {
-      final folderNameHint = projectUid != null ? ' ($projectUid)' : '';
+      final folderNameHint = srcBaseName != null ? ' ($srcBaseName)' : '';
       return error(2,
           message: 'There is no files for import in $sourcePath\n'
               'Please, check the name of containing folder - '
@@ -453,8 +467,6 @@ class ImportXmlCommand extends L10nCommandBase {
     Set<String> imported,
     Directory sourceDir,
     String sourceFilename,
-    String? projectUid,
-    String translationUid,
     String googlePlayLocale,
     String? targetFilename,
     List<String>? allowedLocales,

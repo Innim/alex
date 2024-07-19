@@ -46,7 +46,12 @@ class L10nUtils {
   }
 
   static String getDiffsXmlFileName(String fileName) => path.setExtension(
-      '${path.withoutExtension(fileName)}$diffsSuffix', '.xml');
+      addDiffsSuffix(path.withoutExtension(fileName)), '.xml');
+
+  static String addDiffsSuffix(String name) => '$name$diffsSuffix';
+
+  static String removeDiffsSuffix(String name) =>
+      name.substring(0, name.length - diffsSuffix.length);
 
   static Future<File> getMainArb(L10nConfig l10nConfig) async {
     final mainFile = _arb(L10nUtils.getArbMessagesFile(l10nConfig), l10nConfig);
