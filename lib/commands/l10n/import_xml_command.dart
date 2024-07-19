@@ -118,7 +118,7 @@ class ImportXmlCommand extends L10nCommandBase {
               (targetFileName != null ? ' to $targetFileName.' : '.'));
     }
 
-    if (locale == null) {
+    if (locale != null) {
       printVerbose('Import only locale <$locale>');
     }
 
