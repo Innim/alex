@@ -2,8 +2,8 @@ import 'package:alex/src/l10n/validators/l10n_validator.dart';
 
 class RequireLatinValidator implements L10nValidator {
   static late final _pattern = RegExp(
-    r'^[a-z0-9\s​​!¡<=>?¿()*+,\-–’^_`·./:;@"#$%&\[\\\]{|}~'
-    r"'àāáåäãăâậąấạảắầặằẫẩæßçčćďđèéěêëęẽềếểẹễệẻğïíîìịıỉĩİłľňñńòóöôőỏõổỗờồợởọơớốộøřŕšśșşťțţúùüůűủừửữứụựưýỹỳỷżźž]+$",
+    r'^[a-z0-9\s​​!¡<=>?¿()*+,\-–—’^_`·./:;@"#$%&\[\\\]{|}~'
+    r"'àāáåäãăâậąấạảắầặằẫẩæßçčćďđèéěêëęẽềếểẹễệẻğïíîìịıỉĩİłľňñńòóöôőỏõổỗờồợởọơớốộøřŕšśșşťțţúùüůűủừửữứûụựưýỹỳỷżźž]+$",
     unicode: true,
     caseSensitive: false,
   );
