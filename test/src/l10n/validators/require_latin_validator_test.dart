@@ -72,7 +72,8 @@ void main() {
       expect(
         validator.validate(
           "- Hello, John! How are you? Listen: I have... So; ¿Quiere ¡Recordatorio "
-          "Start date – End date. cancel·lar",
+          "Start date – End date. cancel·lar "
+          "The details yet—you can fill them in later.",
         ),
         true,
       );
@@ -93,7 +94,8 @@ void main() {
           'Educaţie podľa Nezahŕňať değiştirildi hesaplandı işlemler İçecek '
           'sơ lại Tiền Đến Chuyển nhận đổi mỗi Xuất khoản Chọn Số Đồng dễ '
           'được dịch của được giờ gửi một sắm lần chỉ dữ mục từ thức bằng '
-          'đẹp đặt viện dưới khỏe khẩu quỹ vẫn nghĩa nhở sẽ tự thẻ Kỳ tỷ',
+          'đẹp đặt viện dưới khỏe khẩu quỹ vẫn nghĩa nhở sẽ tự thẻ Kỳ tỷ '
+          'Êtes-vous sûr de vouloir supprimer ce paiement régulier',
         ),
         true,
       );
