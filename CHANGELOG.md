@@ -1,3 +1,7 @@
+## 1.6.19
+
+* [L10n] `from_xml` added missing double quotes for validator checking.
+
 ## 1.6.18
 
 * [L10n] `from_xml` added missing characters for validator checking.

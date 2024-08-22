@@ -54,10 +54,26 @@ void main() {
       expect(validator.validate(r'Day\nWeekday'), true);
     });
 
-    test('should return true for string with quotes', () {
+    test('should return true for string with double quotes ""', () {
       final validator = RequireLatinValidator();
 
       expect(validator.validate('Tap "Allow" button'), true);
+    });
+
+    test('should return true for string with double quotes “”', () {
+      final validator = RequireLatinValidator();
+
+      expect(validator.validate('Tap “Allow” button'), true);
+    });
+    test('should return true for string with double quotes „”', () {
+      final validator = RequireLatinValidator();
+
+      expect(validator.validate('Tap „Allow” button'), true);
+    });
+    test('should return true for string with double quotes «»', () {
+      final validator = RequireLatinValidator();
+
+      expect(validator.validate('Tap «Allow» button'), true);
     });
 
     test('should return true for string with single quotes', () {
