@@ -16,7 +16,7 @@ class JsonExporter extends L10nExporter {
 
     data.forEach((key, value) {
       if (value is L10nTextEntry) {
-        map[key] = value.text;
+        map[key] = _processText(value.text);
       } else {
         throw Exception('Unhandled entry type: ${value.runtimeType}');
       }
@@ -31,5 +31,9 @@ class JsonExporter extends L10nExporter {
     }
 
     return writeContentIfChanged(target, json);
+  }
+
+  String _processText(String text) {
+    return text.replaceAll(r'\n', '\n').replaceAll(r'\r', '\r');
   }
 }

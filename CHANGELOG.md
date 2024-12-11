@@ -1,6 +1,8 @@
-## 1.6.18+1
+## 1.6.19
 
-* [L10n] `import_xml`: Fix error in the log message about total project locales count.
+[L10n] 
+* `import_xml`: Fix error in the log message about total project locales count.
+* `from_xml`: Handle new line symbols for json target.
 
 ## 1.6.18
 
