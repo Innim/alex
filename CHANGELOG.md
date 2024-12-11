@@ -1,3 +1,7 @@
+## 1.6.18+1
+
+* [L10n] `import_xml`: Fix error in the log message about total project locales count.
+
 ## 1.6.18
 
 * [L10n] `from_xml` added missing characters for validator checking.

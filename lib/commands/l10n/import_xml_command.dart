@@ -452,7 +452,7 @@ class ImportXmlCommand extends L10nCommandBase {
         ..writeln()
         ..write('Project supports ')
         ..write(projectLocales.length)
-        ..write(' locales (including base locale)');
+        ..write(' locales (excluding base locale)');
 
       if (locales != null && locales.length != projectLocales.length) {
         message
