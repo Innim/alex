@@ -1,3 +1,5 @@
+* Fail if there are warning during extraction to arb. Affects `l10n extract`, `l10n check_translate`, `release start`.
+
 ## 1.6.19
 
 [L10n] 

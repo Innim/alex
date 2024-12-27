@@ -36,16 +36,22 @@ mixin IntlMixin {
   }
 
   Future<void> extractLocalization(L10nConfig l10nConfig) async {
-    final outputDir = l10nConfig.outputDir;
-    final sourcePath = l10nConfig.sourceFile;
-    await runIntlOrFail(
-      'extract_to_arb',
-      [
-        '--output-dir=$outputDir',
-        sourcePath,
-      ],
-      prependWithPubGet: true,
-    );
+    try {
+      final outputDir = l10nConfig.outputDir;
+      final sourcePath = l10nConfig.sourceFile;
+      await runIntlOrFail(
+        'extract_to_arb',
+        [
+          '--output-dir=$outputDir',
+          sourcePath,
+          '--warnings-are-errors',
+        ],
+        prependWithPubGet: true,
+      );
+    } catch (e) {
+      throw const RunException.err(
+          'Failed to extract localization. See output above');
+    }
   }
 
   Future<void> generateLocalization(L10nConfig l10nConfig) async {

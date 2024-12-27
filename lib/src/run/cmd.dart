@@ -102,7 +102,10 @@ abstract class CmdBase {
     }
 
     if (res.exitCode != 0) {
-      throw RunException.withCode(res.exitCode, res.stderr.toString());
+      final stderr = res.stderr.toString();
+      final message =
+          stderr.isEmpty ? 'Command failed, see output above' : stderr;
+      throw RunException.withCode(res.exitCode, message);
     }
 
     return res;
