@@ -16,7 +16,9 @@ doc/api/
 pubspec.lock
 
 # FVM SDK
-.fvm/flutter_sdk
 
 # Dev dirs
 app_data/
+
+# FVM Version Cache
+.fvm/
