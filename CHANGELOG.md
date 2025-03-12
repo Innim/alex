@@ -1,3 +1,6 @@
+
+* [L10n] Fixed: empty output on failed extract command in some cases.
+
 ## 1.6.20
 
 * Fail if there are warning during extraction to arb. Affects `l10n extract`, `l10n check_translate`, `release start`.

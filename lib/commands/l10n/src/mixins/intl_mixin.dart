@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:alex/alex.dart';
+import 'package:alex/internal/print.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/pub_spec.dart';
@@ -48,9 +49,12 @@ mixin IntlMixin {
         ],
         prependWithPubGet: true,
       );
+    } on RunException catch (_) {
+      rethrow;
     } catch (e) {
+      verbose("Exception: $e");
       throw const RunException.err(
-          'Failed to extract localization. See output above');
+          'Failed to extract localization. See output above.\n(If no output, try to run with --verbose)');
     }
   }
 
