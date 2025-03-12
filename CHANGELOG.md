@@ -1,3 +1,4 @@
+## 1.6.20+1
 
 * [L10n] Fixed: empty output on failed extract command in some cases.
 
