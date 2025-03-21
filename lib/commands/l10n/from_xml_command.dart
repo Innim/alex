@@ -462,10 +462,17 @@ The search for a matching key was performed in the file for base locale ($baseLo
     String processText(String value) => _textFromXml(value, validators);
 
     final errors = <String>[];
+    final keys = <String>{};
+    final duplicateKeys = <String>{};
     for (final child in resources.children) {
       if (child is XmlElement) {
         final name = child.getAttribute('name')!;
         final element = child.name.toString();
+
+        if (!keys.add(name)) {
+          duplicateKeys.add(name);
+          continue;
+        }
 
         try {
           switch (element) {
@@ -489,7 +496,10 @@ The search for a matching key was performed in the file for base locale ($baseLo
       }
     }
 
-    if (errors.isNotEmpty) {
+    if (duplicateKeys.isNotEmpty) {
+      throw RunException.err(
+          'Found duplicate keys in xml for locale <$locale>: ${duplicateKeys.join(', ')}.');
+    } else if (errors.isNotEmpty) {
       final sb = StringBuffer('XML file for locale <$locale> contains errors:')
         ..writeln()
         ..writeln();

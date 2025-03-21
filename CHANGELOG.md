@@ -1,3 +1,6 @@
+[L10n] 
+* `import_xml`: Fail if there are duplicated keys in the imported file.
+
 ## 1.6.20+1
 
 * [L10n] Fixed: empty output on failed extract command in some cases.
