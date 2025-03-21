@@ -1,7 +1,7 @@
 ## 1.6.21
 
 [L10n] 
-* `import_xml`: Fail if there are duplicated keys in the imported file.
+* `from_xml`: Fail if there are duplicated keys in the imported file.
 
 ## 1.6.20+1
 
