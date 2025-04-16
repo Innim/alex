@@ -161,15 +161,18 @@ class ImportXmlCommand extends L10nCommandBase {
             ? srcFilename
             : _getFilenameByBaseName(targetFileName));
 
+    final bool isImportArchive;
     final Directory sourceDir;
     if (FileSystemEntity.isDirectorySync(sourcePath)) {
       sourceDir = await _requireDirectory(sourcePath);
+      isImportArchive = false;
     } else if (FileSystemEntity.isFileSync(sourcePath)) {
       final sourceFile = File(sourcePath);
       final sourceExt = path.extension(sourcePath);
 
       if (sourceExt == '.zip') {
         sourceDir = await _extractZip(sourceFile);
+        isImportArchive = true;
       } else if (sourceExt == '.xml') {
         // TODO: import single xml (sl, en)
         // TODO: add xml below in else's error message
@@ -359,13 +362,30 @@ class ImportXmlCommand extends L10nCommandBase {
                   suggestTarget = path.basenameWithoutExtension(destFilename);
                 }
 
+                const point = ' - ';
+                final subIndent = ' ' * point.length;
                 sb
                   ..writeln('')
                   ..writeln('')
-                  ..writeln('💡 Suggestion:')
+                  ..writeln('💡 Suggestions:');
+                if (isImportArchive) {
+                  sb
+                    ..write(point)
+                    ..write(
+                        'Probably you are trying to import archive with unsupported content. '
+                        'For now alex supports only archives from Google Play. ')
+                    ..writeln()
+                    ..write(subIndent)
+                    ..write(
+                        'Try to extract the archive and import the directory.')
+                    ..writeln();
+                }
+                sb
+                  ..write(point)
                   ..writeln(
                       'Probably the name of the imported file is incorrect, '
                       'try to specify the parameters explicitly:')
+                  ..write(subIndent)
                   ..write('--$_argFile - Filename for import. '
                       'Name without uid, locale and extension. ');
                 if (suggestFile != null) {
@@ -374,6 +394,7 @@ class ImportXmlCommand extends L10nCommandBase {
 
                 sb
                   ..writeln()
+                  ..write(subIndent)
                   ..write('--$_argTarget - Name of the file in the project '
                       'to which the import will be performed. '
                       'Name without extension and locale. ');
@@ -383,6 +404,7 @@ class ImportXmlCommand extends L10nCommandBase {
 
                 sb
                   ..writeln('')
+                  ..write(subIndent)
                   ..write('--$_argDiffs - If you are importing diffs file.');
               }
 
