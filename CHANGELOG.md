@@ -1,3 +1,8 @@
+## 1.6.22
+
+[L10n] 
+* `import_xml`: Added suggestion when importing archive file with wrong content.
+
 ## 1.6.21
 
 [L10n] 
