@@ -1,3 +1,5 @@
+## 1.7.0
+
 [L10n]
 * New command `l10n cleanup_xml` to remove unused strings from XML files.
 
