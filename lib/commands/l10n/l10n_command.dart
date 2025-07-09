@@ -1,4 +1,5 @@
 import 'package:alex/commands/l10n/check_translate_command.dart';
+import 'package:alex/commands/l10n/cleanup_xml_command.dart';
 import 'package:alex/commands/l10n/generate_command.dart';
 import 'package:alex/runner/alex_command.dart';
 
@@ -15,6 +16,7 @@ class L10nCommand extends AlexCommand {
     addSubcommand(ToXmlCommand());
     addSubcommand(FromXmlCommand());
     addSubcommand(ImportXmlCommand());
+    addSubcommand(CleanupXmlCommand());
     addSubcommand(CheckTranslateCommand());
   }
 

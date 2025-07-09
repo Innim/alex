@@ -201,6 +201,16 @@ alex l10n import_xml --path=path/to/dir/with/translations
 
 If the files have the suffix `_diffs` then they will be imported as a list of changes.
 
+
+#### Cleanup XML files
+
+Remove unused strings from XML files. Check ARB files for all keys and remove
+unused strings from XML files for all locales.
+
+```
+alex l10n cleanup_xml
+```
+
 ### Code 
 
 Work with code.

@@ -60,7 +60,7 @@ class ToXmlCommand extends L10nCommandBase {
         abbr: 'l',
         help: 'Locale to export. By default this is '
             'base_locale_for_xml from alex configuration.',
-        valueHelp: 'DIR_PATH',
+        valueHelp: 'LOCALE',
       )
       ..addOption(
         _argDiffPath,

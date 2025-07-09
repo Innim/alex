@@ -19,7 +19,10 @@ abstract class L10nCommandBase extends AlexCommand with IntlMixin {
       : super(name, description, aliases);
 
   @protected
-  Future<List<String>> getLocales(L10nConfig config) async {
+  Future<List<String>> getLocales(
+    L10nConfig config, {
+    bool includeBase = false,
+  }) async {
     final baseDirPath = config.xmlOutputDir;
     final baseDir = Directory(baseDirPath);
     final baseLocale = config.baseLocaleForXml;
@@ -28,7 +31,9 @@ abstract class L10nCommandBase extends AlexCommand with IntlMixin {
     await for (final item in baseDir.list()) {
       if (item is Directory) {
         final name = path.basename(item.path);
-        if (name != baseLocale && _isLocaleName(name)) locales.add(name);
+        if ((includeBase || name != baseLocale) && _isLocaleName(name)) {
+          locales.add(name);
+        }
       }
     }
 
@@ -44,6 +49,22 @@ abstract class L10nCommandBase extends AlexCommand with IntlMixin {
       printVerbose('Exception during parsing xml from ${file.path}: $e\n$st');
       throw RunException.err('Failed parsing XML from ${file.path}: $e');
     }
+  }
+
+  @protected
+  Future<File> writeXML(File target, Set<XmlNode> elements) async {
+    final outputXml = XmlDocument([
+      XmlElement(XmlName.fromString('resources')),
+    ]);
+    outputXml.resources.children.addAll(elements);
+
+    final outputBuffer = StringBuffer();
+    outputBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
+    outputBuffer.write(outputXml.toXmlString(
+        pretty: true,
+        preserveWhitespace: (node) => node.getAttribute('name') != null));
+
+    return target.writeAsString(outputBuffer.toString());
   }
 
   bool _isLocaleName(String value) {

@@ -607,18 +607,7 @@ class ImportXmlCommand extends L10nCommandBase {
       }
       notImported.forEach((e) => printInfo('Skip key [${e.attributeName}]'));
 
-      final outputXml = XmlDocument([
-        XmlElement(XmlName.fromString('resources')),
-      ]);
-      outputXml.resources.children.addAll(outputElements);
-
-      final outputBuffer = StringBuffer();
-      outputBuffer.writeln('<?xml version="1.0" encoding="utf-8"?>');
-      outputBuffer.write(outputXml.toXmlString(
-          pretty: true,
-          preserveWhitespace: (node) => node.getAttribute('name') != null));
-
-      await target.writeAsString(outputBuffer.toString());
+      await writeXML(target, outputElements);
     } else {
       throw RunException.warn('Base XML not found from ${baseFile.path}');
     }
