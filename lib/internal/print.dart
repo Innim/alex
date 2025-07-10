@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 
+const _kVerbosePrefix = '[verbose] ';
+final _verboseIndent = ' ' * _kVerbosePrefix.length;
+
 /// Prints some info message in output.
 void info(String message) => stdout.writeln(message);
 
@@ -13,8 +16,15 @@ void exception(Object message, [StackTrace? stackTrace]) =>
     error(message.toString()); // + (isDebug ? '\n$stackTrace' : ''));
 
 /// Prints some verbose message in output.
-// ignore: avoid_print
-void verbose(String message) => print('[verbose] $message');
+void verbose(String message) {
+  final lines = message.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    final prefix = i == 0 ? _kVerbosePrefix : _verboseIndent;
+    // ignore: avoid_print
+    print('$prefix$line');
+  }
+}
 
 void setupRootLogger() {
   Logger.root.level = Level.INFO;
