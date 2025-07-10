@@ -1,5 +1,14 @@
 [L10n] `check_translate`:
 
+* **BREAKING CHANGE**: Now it checks for all locales by default, not only `en`. You can specify locale with `-l` or `--locale` argument.
+* **Power up the command with additional checks**:
+  * Check if all strings from the localization file have translations in the specified locale 
+  (previous check, but with ability to check all locales).
+  * Check if all strings from the localization file was sent for translation.
+  * Check if all strings from base XML file have translation in XML for the specified locale.
+  * Check if all strings from XML for the specified locale are imported to ARB for this locale.
+  * Check if XML for the specified locale has redundant strings that are not in the localization file.
+  * Check if all code is generated for the specified locale.
 * Ensure that GIT repository is clean before checking translations. Reset all changes after command execution.
 
 ## 1.7.0

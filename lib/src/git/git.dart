@@ -31,7 +31,7 @@ class GitClient extends Git {
     final error = result.stderr as String;
 
     if (code == 0) {
-      return out.trim();
+      return out.trimRight();
     }
 
     if (printIfError) {
@@ -149,6 +149,23 @@ class GitCommands {
   String getLastCommonCommit(String branchA, String branchB) {
     return git('merge-base $branchA $branchB',
         "get last common commit for $branchA and $branchB");
+  }
+
+  List<String> getModifiedFiles() {
+    final res = status('get modified files', porcelain: true);
+    if (res.isEmpty) {
+      return const [];
+    } else {
+      return res
+          .split('\n')
+          .map((line) {
+            // First two characters = status
+            // From 4th character onwards = file path
+            return line.substring(3);
+          })
+          .where((line) => line.isNotEmpty)
+          .toList();
+    }
   }
 
   String remoteGetUrl(String desc, [String? remote]) {

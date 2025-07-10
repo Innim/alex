@@ -18,25 +18,48 @@ mixin IntlMixin {
   String? _intlGeneratorPackage;
 
   @protected
-  Future<ProcessResult> runIntl(String cmd, List<String> arguments,
-      {String? workingDir, bool prependWithPubGet = false}) async {
+  Future<ProcessResult> runIntl(
+    String cmd,
+    List<String> arguments, {
+    String? workingDir,
+    bool prependWithPubGet = false,
+    bool printStdOut = true,
+  }) async {
     final packageName = await _getIntlGeneratorPackageName();
-    return flutter.runPub('$packageName:$cmd', arguments,
-        workingDir: workingDir, prependWithPubGet: prependWithPubGet);
+    return flutter.runPub(
+      '$packageName:$cmd',
+      arguments,
+      workingDir: workingDir,
+      prependWithPubGet: prependWithPubGet,
+      immediatePrintStd: printStdOut,
+    );
   }
 
   @protected
-  Future<ProcessResult> runIntlOrFail(String cmd, List<String> arguments,
-      {bool printStdOut = true,
-      String? workingDir,
-      bool prependWithPubGet = false}) async {
+  Future<ProcessResult> runIntlOrFail(
+    String cmd,
+    List<String> arguments, {
+    bool printStdOut = true,
+    String? workingDir,
+    bool prependWithPubGet = false,
+  }) async {
     return flutter.runOrFail(
-        () => runIntl(cmd, arguments,
-            workingDir: workingDir, prependWithPubGet: prependWithPubGet),
-        printStdOut: printStdOut);
+      () => runIntl(
+        cmd,
+        arguments,
+        workingDir: workingDir,
+        prependWithPubGet: prependWithPubGet,
+        printStdOut: printStdOut,
+      ),
+      printStdOut: printStdOut,
+    );
   }
 
-  Future<void> extractLocalization(L10nConfig l10nConfig) async {
+  Future<void> extractLocalization(
+    L10nConfig l10nConfig, {
+    bool prependWithPubGet = true,
+    bool printStdOut = true,
+  }) async {
     try {
       final outputDir = l10nConfig.outputDir;
       final sourcePath = l10nConfig.sourceFile;
@@ -47,7 +70,8 @@ mixin IntlMixin {
           sourcePath,
           '--warnings-are-errors',
         ],
-        prependWithPubGet: true,
+        printStdOut: printStdOut,
+        prependWithPubGet: prependWithPubGet,
       );
     } on RunException catch (_) {
       rethrow;
@@ -58,7 +82,14 @@ mixin IntlMixin {
     }
   }
 
-  Future<void> generateLocalization(L10nConfig l10nConfig) async {
+  Future<void> generateLocalization(
+    L10nConfig l10nConfig, {
+    bool prependWithPubGet = true,
+    bool printStdOut = true,
+  }) async {
+    // we should always generate code for all arb,
+    // because the resulting code may be different
+    // if we generate only for one arb file
     final arbFiles = await _getArbFiles(l10nConfig);
     await runIntlOrFail(
       'generate_from_arb',
@@ -70,7 +101,8 @@ mixin IntlMixin {
         l10nConfig.sourceFile,
         ...arbFiles,
       ],
-      prependWithPubGet: true,
+      prependWithPubGet: prependWithPubGet,
+      printStdOut: printStdOut,
     );
   }
 

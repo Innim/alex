@@ -15,6 +15,8 @@ import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
+const _kArgVerboseFlutterCmd = CmdArg('verboseFlutterCmd');
+
 /// Базовый класс команды.
 abstract class AlexCommand extends Command<int> {
   final String _name;
@@ -53,13 +55,21 @@ abstract class AlexCommand extends Command<int> {
   Cmd get cmd => _cmd ??= Cmd();
 
   @protected
-  FlutterCmd get flutter => _flutter ??= FlutterCmd(cmd, isVerbose: isVerbose);
+  FlutterCmd get flutter =>
+      _flutter ??= FlutterCmd(cmd, isVerbose: isVerboseFlutterCmd);
 
   @protected
   set console(Console value) => _console = value;
 
   @protected
   bool get isVerbose => argResults!['verbose'] as bool;
+
+  @protected
+  bool get isVerboseFlutterCmd =>
+      (argResults!.options.contains(_kArgVerboseFlutterCmd.name)
+          ? argResults!.getBool(_kArgVerboseFlutterCmd)
+          : null) ??
+      isVerbose;
 
   @protected
   AlexConfig get config {
@@ -229,6 +239,12 @@ extension CmdArgArgParserExtension on ArgParser {
         defaultsTo: defaultsTo,
         callback: callback,
         hide: hide,
+      );
+
+  void addVerboseFlutterCmdFlag() => addFlagArg(
+        _kArgVerboseFlutterCmd,
+        help: 'All flutter commands will be run with verbose flag',
+        defaultsTo: false,
       );
 }
 

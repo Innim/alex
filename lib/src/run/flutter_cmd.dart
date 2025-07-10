@@ -137,7 +137,12 @@ class FlutterCmd extends CmdBase {
     bool prependWithPubGet = false,
   }) async {
     if (prependWithPubGet) {
-      final pubGetRes = await pub('get', workingDir: workingDir);
+      final pubGetRes = await pub(
+        'get',
+        workingDir: workingDir,
+        immediatePrintStd: immediatePrintStd,
+        immediatePrintErr: immediatePrintErr,
+      );
       if (pubGetRes.exitCode != 0) return pubGetRes;
     }
 
@@ -145,6 +150,8 @@ class FlutterCmd extends CmdBase {
       'run',
       arguments: [cmd, ...arguments],
       workingDir: workingDir,
+      immediatePrintStd: immediatePrintStd,
+      immediatePrintErr: immediatePrintErr,
     );
   }
 
@@ -191,7 +198,8 @@ class FlutterCmd extends CmdBase {
       );
 
       if (res.exitCode == 0) {
-        logger.info('Use FVM v${res.stdout}');
+        final version = res.stdout.trim();
+        logger.info('Use FVM v$version');
         return true;
       } else {
         logger.fine('Failed: ${res.stderr} [code: ${res.exitCode}]');

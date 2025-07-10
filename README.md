@@ -158,10 +158,10 @@ You should specify the path to the directory for files with changes.
 alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
 ```
 
-#### Check availability translations for all strings in locale ("en" by default)
+#### Check translations for all strings
 
 ```
-alex l10n check_translate -l<locale>
+alex l10n check_translate
 ```
 
 #### Import translations from XML
