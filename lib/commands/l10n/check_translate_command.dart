@@ -506,14 +506,20 @@ class CheckTranslateCommand extends L10nCommandBase {
     List<_CheckResult> results, {
     String? noteForNotExpected,
   }) {
-    final sb = StringBuffer('❌ $title:');
     final printLocale = results.length > 1;
+
+    final sb = StringBuffer('❌ $title');
+    final fails = results.where((e) => !e.isOk);
+
+    if (printLocale) {
+      sb.write(' (${fails.length} locales)');
+    }
+    sb.write(':');
+
     const indent = '  ';
 
     var hasNotExpected = false;
-    for (final res in results) {
-      if (res.isOk) continue;
-
+    for (final res in fails) {
       if (printLocale) {
         sb
           ..writeln()
