@@ -14,12 +14,12 @@ import 'src/l10n_command_base.dart';
 /// Command to check if translations exist for all strings.
 ///
 /// By default it checks for all locales, but you can specify a locale.
-class CheckTranslateCommand extends L10nCommandBase {
+class CheckTranslationsCommand extends L10nCommandBase {
   static const _argLocale = 'locale';
 
-  CheckTranslateCommand()
+  CheckTranslationsCommand()
       : super(
-          'check_translate',
+          'check_translations',
           'Check if translations exist for all strings and prints detailed report about problems.\n'
               'Checks:\n'
               '- if all strings from the localization file (alex.l10n.source_file) have translation in ARB for the language; \n'
@@ -30,6 +30,11 @@ class CheckTranslateCommand extends L10nCommandBase {
               '- if the XML for the language has not redundant strings that are not in the localization file (alex.l10n.source_file); \n'
               '- if all code is generated for the language.\n'
               'By default it checks for all locales, but you can specify locale with --$_argLocale option.',
+          const [
+            'check',
+            // for compatibility with old command
+            'check_translate',
+          ],
         ) {
     argParser
       ..addOption(

@@ -1,6 +1,6 @@
 ## 1.8.0
 
-[L10n] `check_translate`:
+[L10n] `check_translations` (formerly `check_translate`):
 
 * **BREAKING CHANGE**: Now it checks for all locales by default, not only `en`. You can specify locale with `-l` or `--locale` argument.
 * **Power up the command with additional checks**:

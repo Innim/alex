@@ -160,8 +160,21 @@ alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
 
 #### Check translations for all strings
 
+To check all translations for all locales, you can use the command:
+
 ```
-alex l10n check_translate
+alex l10n check_translations
+```
+
+or just:
+
+```
+alex l10n check
+```
+
+If you want to check translations for a specific locale, you can use the `--locale` option:
+
+```alex l10n check --locale=en
 ```
 
 #### Import translations from XML
