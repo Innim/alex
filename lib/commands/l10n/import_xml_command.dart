@@ -519,7 +519,8 @@ class ImportXmlCommand extends L10nCommandBase {
     final localeRaw = _convertGooglePlayLocale(googlePlayLocale);
     final XmlLocale locale;
 
-    if (allowedLocales != null && !allowedLocales.contains(localeRaw)) {
+    if (allowedLocales != null &&
+        !allowedLocales.any((l) => l.value == localeRaw)) {
       // Maybe we have locale with region in an app
       final XmlLocale? allowedLocale;
 

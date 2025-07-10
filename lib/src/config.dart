@@ -209,7 +209,7 @@ class L10nConfig {
   /// This includes (i.e. they are allowed) all special symbols from
   /// German, Spanish, Turkish, Slovenian, Vietnamese, etc alphabets.
   /// But exclude (i.e. they are forbidden) Cyrillic, Persian, etc symbols.
-  final List<String> requireLatin;
+  final List<XmlLocale> requireLatin;
 
   L10nConfig({
     this.outputDir = _defaultOutputDir,
@@ -219,9 +219,11 @@ class L10nConfig {
     String baseLocaleForXml = _defaultBaseLocaleForXml,
     this.xmlOutputDir = _defaultXmlOutputDir,
     this.xmlOutputName,
-    this.requireLatin = _defaultRequireLatin,
+    List<String> requireLatin = _defaultRequireLatin,
   })  : baseLocaleForArb = baseLocaleForArb.asArbLocale(),
-        baseLocaleForXml = baseLocaleForXml.asXmlLocale();
+        baseLocaleForXml = baseLocaleForXml.asXmlLocale(),
+        requireLatin =
+            requireLatin.map((e) => e.asXmlLocale()).toList(growable: false);
 
   factory L10nConfig.fromYaml(YamlMap data) {
     return L10nConfig(

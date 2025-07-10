@@ -633,10 +633,10 @@ class _CheckResult {
 
   _CheckResult({
     required this.locale,
-    // ignore: unused_element
+    // ignore: unused_element, unused_element_parameter
     this.notPresentedKeys = const [],
     this.notExpectedKeys = const [],
-    // ignore: unused_element
+    // ignore: unused_element, unused_element_parameter
     this.error,
     this.notExpectedKeysLabel,
   });
