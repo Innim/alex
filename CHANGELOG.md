@@ -1,3 +1,5 @@
+## 1.8.0
+
 [L10n] `check_translate`:
 
 * **BREAKING CHANGE**: Now it checks for all locales by default, not only `en`. You can specify locale with `-l` or `--locale` argument.
