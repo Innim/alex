@@ -88,13 +88,18 @@ class CheckTranslateCommand extends L10nCommandBase {
         required String successMessage,
         required String failMessage,
         required Future<_CheckReport> check,
+        String? noteForNotExpected,
       }) async {
         final report = await check;
 
         if (report.isOk) {
           _printCheckSuccess(successMessage);
         } else {
-          _printCheckFailReport(failMessage, report.results);
+          _printCheckFailReport(
+            failMessage,
+            report.results,
+            noteForNotExpected: noteForNotExpected,
+          );
         }
 
         reports.add(report);
@@ -116,6 +121,9 @@ class CheckTranslateCommand extends L10nCommandBase {
         successMessage: 'All strings have translation in XML',
         failMessage: 'Untranslated or redundant strings found in XML',
         check: _checkForUntranslatedXml(l10nConfig, locale).report(),
+        noteForNotExpected: 'If you see this message, '
+            'it means that some strings are presented in XML for the locale, but not in the base XML. '
+            'Before do anything about it, check that all required strings are present in the base XML file.',
       );
 
       await check(
@@ -493,10 +501,16 @@ class CheckTranslateCommand extends L10nCommandBase {
     printInfo('✅ $title');
   }
 
-  void _printCheckFailReport(String title, List<_CheckResult> results) {
+  void _printCheckFailReport(
+    String title,
+    List<_CheckResult> results, {
+    String? noteForNotExpected,
+  }) {
     final sb = StringBuffer('❌ $title:');
     final printLocale = results.length > 1;
     const indent = '  ';
+
+    var hasNotExpected = false;
     for (final res in results) {
       if (res.isOk) continue;
 
@@ -526,6 +540,8 @@ class CheckTranslateCommand extends L10nCommandBase {
       }
 
       if (res.notExpectedKeys.isNotEmpty) {
+        hasNotExpected = true;
+
         sb
           ..writeln()
           ..write(indent)
@@ -534,6 +550,13 @@ class CheckTranslateCommand extends L10nCommandBase {
           ..write(' (${res.notExpectedKeys.length}): ')
           ..write(res.notExpectedKeys.join(', '));
       }
+    }
+    if (hasNotExpected && noteForNotExpected != null) {
+      sb
+        ..writeln()
+        ..write(indent)
+        ..write('💡 ')
+        ..write(noteForNotExpected);
     }
     printInfo(sb.toString());
   }
