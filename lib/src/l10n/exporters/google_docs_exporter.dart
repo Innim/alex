@@ -1,11 +1,14 @@
+import 'package:alex/src/l10n/locale/locales.dart';
+
 import '../l10n_entry.dart';
 import 'l10n_exporter.dart';
 import 'package:alex/internal/print.dart' as print;
 
-class GoogleDocsExporter extends L10nExporter {
+class GoogleDocsExporter extends L10nExporter<XmlLocale> {
   final List<String> keys;
 
-  GoogleDocsExporter(String locale, Map<String, L10nEntry> data, this.keys)
+  // TODO: use custom locale type
+  GoogleDocsExporter(XmlLocale locale, Map<String, L10nEntry> data, this.keys)
       : super(locale, data);
 
   @override

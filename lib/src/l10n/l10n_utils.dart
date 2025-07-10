@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:alex/alex.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:path/path.dart' as path;
 
 /// Localization utils.
@@ -14,12 +15,15 @@ class L10nUtils {
       path.join(path.current, config.outputDir);
 
   /// Returns ARB file name by locale.
-  static String getArbFile(L10nConfig config, String locale) =>
-      config.translationFilesPattern.replaceFirst(_localeVar, locale);
+  static String getArbFile(L10nConfig config, ArbLocale locale) =>
+      config.translationFilesPattern.replaceFirst(_localeVar, locale.value);
+
+  static String _getArbFile(L10nConfig config, String suffix) =>
+      config.translationFilesPattern.replaceFirst(_localeVar, suffix);
 
   /// Returns ARB messages file name.
   static String getArbMessagesFile(L10nConfig config) =>
-      getArbFile(config, arbMessagesSuffix);
+      _getArbFile(config, arbMessagesSuffix);
 
   /// Returns 2 parts of ARB file name.
   ///
@@ -32,9 +36,9 @@ class L10nUtils {
       getArbFile(config, config.baseLocaleForArb);
 
   /// Returns dir path with xml translations files for [locale].
-  static String getXmlFilesPath(L10nConfig config, String locale) {
+  static String getXmlFilesPath(L10nConfig config, XmlLocale locale) {
     final parentDirPath = config.xmlOutputDir;
-    return path.join(parentDirPath, locale);
+    return path.join(parentDirPath, locale.value);
   }
 
   /// Returns name for xml file of main project localization.
@@ -84,11 +88,11 @@ extension L10nConfigExtension on L10nConfig {
   String getMainXmlFileName() => L10nUtils.getMainXmlFileName(this);
 
   /// Returns dir path with xml translations files for [locale].
-  String getXmlFilesPath(String locale) =>
+  String getXmlFilesPath(XmlLocale locale) =>
       L10nUtils.getXmlFilesPath(this, locale);
 
   /// Returns arb file path for the [locale].
-  String getArbFilePath(String locale) =>
+  String getArbFilePath(ArbLocale locale) =>
       path.join(L10nUtils.getDirPath(this), L10nUtils.getArbFile(this, locale));
 
   /// Returns path of directory with localization files.

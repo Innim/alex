@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:logging/logging.dart';
 import 'package:recase/recase.dart';
 import 'package:path/path.dart' as path;
@@ -31,9 +31,9 @@ class L10nIosPathProvider {
 
   Directory get iosProjectDir => Directory(iosProjectPath);
 
-  Future<void> forEachLocalizationFile(String locale,
+  Future<void> forEachLocalizationFile(XmlLocale locale,
       FutureOr<void> Function(String projectName, File file) f) async {
-    final iosLocale = L10nIosUtils.getIosLocale(locale);
+    final iosLocale = locale.toIosLocale();
     await for (final item in iosProjectDir.list()) {
       if (item is Directory) {
         final tmpName = path.basename(item.path);
@@ -72,22 +72,22 @@ class L10nIosPathProvider {
     return res;
   }
 
-  Directory getLocalizationDir(String projectName, String iosLocale) {
+  Directory getLocalizationDir(String projectName, IosLocale iosLocale) {
     return Directory(getLocalizationDirPath(projectName, iosLocale));
   }
 
   File getLocalizationFile(
-      String projectName, String iosLocale, String targetFileName) {
+      String projectName, IosLocale iosLocale, String targetFileName) {
     return File(
         getLocalizationFilePath(projectName, iosLocale, targetFileName));
   }
 
-  String getLocalizationDirPath(String projectName, String iosLocale) {
+  String getLocalizationDirPath(String projectName, IosLocale iosLocale) {
     return path.join(iosProjectPath, '$projectName/$iosLocale.lproj');
   }
 
   String getLocalizationFilePath(
-      String projectName, String iosLocale, String targetFileName) {
+      String projectName, IosLocale iosLocale, String targetFileName) {
     return path.join(
         getLocalizationDirPath(projectName, iosLocale), targetFileName);
   }

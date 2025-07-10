@@ -10,6 +10,7 @@ import 'package:alex/src/l10n/exporters/google_docs_exporter.dart';
 import 'package:alex/src/l10n/exporters/ios_strings_exporter.dart';
 import 'package:alex/src/l10n/exporters/json_exported.dart';
 import 'package:alex/src/l10n/l10n_entry.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
 import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 import 'package:alex/src/l10n/validators/l10n_validator.dart';
@@ -92,13 +93,10 @@ class FromXmlCommand extends L10nCommandBase {
     final l10nConfig = config.l10n;
 
     final target = args[_argTo] as String;
-    final locale = args[_argLocale] as String?;
+    final locale = args.getLocale(_argLocale);
     final name = (args[_argName] as String?)?.trim();
 
-    final locales = locale != null && locale.isNotEmpty
-        ? [locale]
-        : await getLocales(l10nConfig);
-
+    final locales = locale != null ? [locale] : await getLocales(l10nConfig);
     if (locales.isEmpty) {
       return success(
           message: 'No locales found. Check ${l10nConfig.xmlOutputDir} folder');
@@ -137,7 +135,7 @@ class FromXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _importToArb(L10nConfig config, List<String> locales) async {
+  Future<int> _importToArb(L10nConfig config, List<XmlLocale> locales) async {
     final baseArbFile = File(path.join(
         L10nUtils.getDirPath(config), L10nUtils.getArbMessagesFile(config)));
     final baseArb =
@@ -145,19 +143,14 @@ class FromXmlCommand extends L10nCommandBase {
 
     final fileName = config.getMainXmlFileName();
 
-    const localeMap = {
-      // Use Norwegian Bokmål for Norwegian
-      'no': 'nb',
-    };
-
     for (final locale in locales) {
-      final arbLocale = localeMap[locale] ?? locale;
+      final arbLocale = locale.toArbLocale();
       // ignore: prefer_interpolation_to_compose_strings
       printVerbose('Import locale: $locale' +
-          (arbLocale != locale ? ' -> $arbLocale' : ''));
+          (arbLocale.value != locale.value ? ' -> $arbLocale' : ''));
 
       final arbFilePath = config.getArbFilePath(arbLocale);
-      final exporter = ArbExporter(baseArb, arbFilePath, locale,
+      final exporter = ArbExporter(baseArb, arbFilePath, arbLocale,
           await _loadMap(config, fileName, locale));
       try {
         if (await exporter.execute()) {
@@ -177,29 +170,15 @@ class FromXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _importToAndroid(
-      L10nConfig config, List<String> locales, Set<String> dirs) async {
+      L10nConfig config, List<XmlLocale> locales, Set<String> dirs) async {
     const dirName = 'values';
     const filename = 'strings.xml';
     final resPath = _findAndroidResPath(dirs);
 
-    // http://developer.android.com/reference/java/util/Locale.html
-    // Note that Java uses several deprecated two-letter codes.
-    // The Hebrew ("he") language code is rewritten as "iw",
-    // Indonesian ("id") as "in", and Yiddish ("yi") as "ji".
-    // This rewriting happens even if you construct your own Locale object,
-    // not just for instances returned by the various lookup methods.
-    const localeMap = <String, String>{
-      'he': 'iw',
-      'id': 'in',
-      'yi': 'ji',
-      // Custom map: use nb for Norwegian
-      'no': 'nb',
-    };
-
     // Here file already in required format, just copy it
     for (final locale in locales) {
       printVerbose('Import locale: $locale');
-      final androidLocale = (localeMap[locale] ?? locale).replaceAll('_', '-r');
+      final androidLocale = locale.toAndroidLocale();
       final targetDirPath = path.join(resPath, '$dirName-$androidLocale');
 
       final targetDir = Directory(targetDirPath);
@@ -224,7 +203,10 @@ class FromXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _importToIos(
-      L10nConfig config, List<String> locales, Set<String> dirs) async {
+    L10nConfig config,
+    List<XmlLocale> locales,
+    Set<String> dirs,
+  ) async {
     final provider = L10nIosPathProvider.from(dirs);
 
     final baseLocale = config.baseLocaleForXml;
@@ -302,7 +284,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
             provider,
             projectName,
             fileName,
-            locale,
+            locale.toIosLocale(),
             xmlData.map(mapKeys),
           );
           if (await exporter.execute()) updated++;
@@ -322,7 +304,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
   }
 
   Future<int> _importToJson(
-      L10nConfig config, List<String> locales, String? name) async {
+      L10nConfig config, List<XmlLocale> locales, String? name) async {
     final args = argResults!;
     final jsonDirPath = args[_argDir] as String?;
 
@@ -334,21 +316,14 @@ The search for a matching key was performed in the file for base locale ($baseLo
 
     const ext = '.json';
 
-    const localeMap = {
-      // Use Norwegian Bokmål for Norwegian
-      'no': 'nb',
-    };
-
-    String jsonLocale(String locale) =>
-        localeMap[locale] ?? locale.replaceAll('_', '-');
-    String getPath(String locale, [String? fileBasename]) => path.join(
+    String getPath(JsonLocale locale, [String? fileBasename]) => path.join(
         jsonDirPath,
-        jsonLocale(locale),
+        locale.value,
         fileBasename != null ? path.setExtension(fileBasename, ext) : null);
 
     // Get list of files to import from base locale dir
     final baseLocale = config.baseLocaleForXml;
-    final baseLocaleDir = getPath(baseLocale);
+    final baseLocaleDir = getPath(baseLocale.toJsonLocale());
     final names = <String>{};
     await for (final file in Directory(baseLocaleDir).list()) {
       final basename = path.basename(file.path);
@@ -373,15 +348,16 @@ The search for a matching key was performed in the file for base locale ($baseLo
 
     printVerbose('Files to import: ${names.join(', ')}');
 
-    final exportedLocales = <String>[];
+    final exportedLocales = <XmlLocale>[];
     for (final locale in locales) {
       printVerbose('Import locale: $locale');
+      final jsonLocale = locale.toJsonLocale();
 
       var updated = 0;
       for (final name in names) {
-        final targetPath = getPath(locale, name);
+        final targetPath = getPath(jsonLocale, name);
         final exporter = JsonExporter(
-            targetPath, locale, await _loadMap(config, name, locale));
+            targetPath, jsonLocale, await _loadMap(config, name, locale));
 
         if (await exporter.execute()) updated++;
       }
@@ -402,7 +378,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
   }
 
   Future<int> _importToGoogleDocs(
-      L10nConfig config, String fileBaseName, List<String> locales) async {
+      L10nConfig config, String fileBaseName, List<XmlLocale> locales) async {
     final baseLocale = config.baseLocaleForXml;
     final keys = await _loadKeys(config, fileBaseName, baseLocale);
 
@@ -428,7 +404,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
   }
 
   Future<List<String>> _loadKeys(
-      L10nConfig config, String fileBaseName, String locale) async {
+      L10nConfig config, String fileBaseName, XmlLocale locale) async {
     final list = <String>[];
     await _loadAndParseXml(config, fileBaseName, locale, (name, value) {
       list.add(name);
@@ -438,7 +414,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
   }
 
   Future<Map<String, L10nEntry>> _loadMap(
-      L10nConfig config, String fileBaseName, String locale) async {
+      L10nConfig config, String fileBaseName, XmlLocale locale) async {
     final map = <String, L10nEntry>{};
     await _loadAndParseXml(config, fileBaseName, locale, (name, value) {
       map[name] = value;
@@ -449,7 +425,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
   Future<void> _loadAndParseXml(
     L10nConfig config,
     String fileBaseName,
-    String locale,
+    XmlLocale locale,
     void Function(String name, L10nEntry value) handle,
   ) async {
     final xml = await _loadXml(config, fileBaseName, locale);
@@ -538,7 +514,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
   }
 
   Future<XmlDocument> _loadXml(
-      L10nConfig config, String fileBaseName, String locale) async {
+      L10nConfig config, String fileBaseName, XmlLocale locale) async {
     final file = _getXmlFile(config, fileBaseName, locale);
     try {
       return XmlDocument.parse(await file.readAsString());
@@ -549,7 +525,7 @@ The search for a matching key was performed in the file for base locale ($baseLo
     }
   }
 
-  File _getXmlFile(L10nConfig config, String fileBaseName, String locale) {
+  File _getXmlFile(L10nConfig config, String fileBaseName, XmlLocale locale) {
     final dirPath = config.getXmlFilesPath(locale);
     return File(path.join(dirPath, path.setExtension(fileBaseName, '.xml')));
   }

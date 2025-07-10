@@ -3,11 +3,13 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:alex/alex.dart';
+import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 import 'package:alex/commands/l10n/src/mixins/intl_mixin.dart';
 import 'package:alex/src/changelog/changelog.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
@@ -121,7 +123,9 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
                 "You can't pass --$_argSkipL10n and --$_argLocale at the same time");
       }
     } else {
-      final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
+      final baseLocale =
+          args.getLocale(_argLocale) ?? _defaultLocale.asXmlLocale();
+
       final processLocResult = await _processLocalization(baseLocale);
       if (processLocResult != 0) {
         return processLocResult;
@@ -495,9 +499,12 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     git.commit(commitMessage);
   }
 
-  Future<void> _checkTranslations(L10nConfig l10nConfig, String locale) async {
-    final comparer = ArbComparer(l10nConfig, locale);
-    final notTranslatedKeys = await comparer.compare(
+  Future<void> _checkTranslations(
+    L10nConfig l10nConfig,
+    XmlLocale locale,
+  ) async {
+    final comparer = ArbComparer(l10nConfig, locale.toArbLocale());
+    final notTranslatedKeys = await comparer.extractAndCompare(
       () async {
         printInfo('Running extract to arb...');
         await extractLocalization(l10nConfig);
@@ -515,7 +522,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return Entry(locale, isRequired: !isDefaultChangelogExists);
   }
 
-  Future<int> _processLocalization(String locale) async {
+  Future<int> _processLocalization(XmlLocale locale) async {
     final currentPath = p.current;
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;

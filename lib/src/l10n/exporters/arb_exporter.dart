@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:alex/src/l10n/decoders/arb_decoder.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 
 import '../l10n_entry.dart';
 import 'l10n_exporter.dart';
 
-class ArbExporter extends L10nExporter {
+class ArbExporter extends L10nExporter<ArbLocale> {
   static final _paramRegExp = RegExp(r'\{([\p{L}\P{Me}][\p{L}\P{Me}0-9_]*?)\}',
       caseSensitive: false, unicode: true, multiLine: true);
 
@@ -15,9 +16,7 @@ class ArbExporter extends L10nExporter {
   final Map<String, dynamic> baseArb;
   final String targetPath;
 
-  ArbExporter(
-      this.baseArb, this.targetPath, String locale, Map<String, L10nEntry> data)
-      : super(locale, data);
+  ArbExporter(this.baseArb, this.targetPath, super.locale, super.data);
 
   @override
   Future<bool> execute() async {

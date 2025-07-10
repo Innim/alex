@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:alex/alex.dart';
 import 'package:alex/commands/l10n/src/l10n_command_base.dart';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
@@ -88,7 +89,7 @@ class ImportXmlCommand extends L10nCommandBase {
     final sourcePath = args[_argPath] as String?;
     final fileForImport = args[_argFile] as String?;
     final targetFileName = args[_argTarget] as String?;
-    final locale = args[_argLocale] as String?;
+    final locale = args.getLocale(_argLocale);
     final importAll = args[_argAll] as bool;
     final importNew = args[_argNew] as bool;
     final importDiffs = args[_argDiffs] as bool?;
@@ -147,7 +148,7 @@ class ImportXmlCommand extends L10nCommandBase {
     String? targetFileName,
     bool importAll = false,
     bool? importDiffs,
-    List<String>? locales,
+    List<XmlLocale>? locales,
   }) async {
     final srcFilename = importAll
         ? null
@@ -215,7 +216,7 @@ class ImportXmlCommand extends L10nCommandBase {
         '\tDestination: $destFilename.');
 
     // TODO: check that all locales (rather than base and gp base) presented
-    final imported = <String>{};
+    final imported = <XmlLocale>{};
     final skippedLocales = <String>{};
     final processedItems = <String>{};
 
@@ -505,38 +506,41 @@ class ImportXmlCommand extends L10nCommandBase {
 
   Future<void> _importFile(
     L10nConfig config,
-    Set<String> imported,
+    Set<XmlLocale> imported,
     Set<String> skipped,
     Directory sourceDir,
     String sourceFilename,
     String googlePlayLocale,
     String? targetFilename,
-    List<String>? allowedLocales,
+    List<XmlLocale>? allowedLocales,
     bool? importDiffs,
   ) async {
     printVerbose('Import file $sourceFilename');
-    var locale = _convertGooglePlayLocale(googlePlayLocale);
+    final localeRaw = _convertGooglePlayLocale(googlePlayLocale);
+    final XmlLocale locale;
 
-    if (allowedLocales != null && !allowedLocales.contains(locale)) {
+    if (allowedLocales != null && !allowedLocales.contains(localeRaw)) {
       // Maybe we have locale with region in an app
-      final String? allowedLocale;
+      final XmlLocale? allowedLocale;
 
-      if (locale.contains(_localeJoint)) {
+      if (localeRaw.contains(_localeJoint)) {
         allowedLocale = null;
       } else {
-        allowedLocale = allowedLocales
-            .firstWhereOrNull((l) => l.startsWith('$locale$_localeJoint'));
+        allowedLocale = allowedLocales.firstWhereOrNull(
+            (l) => l.value.startsWith('$localeRaw$_localeJoint'));
       }
 
       if (allowedLocale != null) {
-        printInfo('Locale $locale not found: '
+        printInfo('Locale $localeRaw not found: '
             'import $googlePlayLocale to $allowedLocale');
         locale = allowedLocale;
       } else {
-        printInfo('Skip locale <$locale>');
-        skipped.add(locale);
+        printInfo('Skip locale <$localeRaw>');
+        skipped.add(localeRaw);
         return;
       }
+    } else {
+      locale = localeRaw.asXmlLocale();
     }
 
     if (imported.contains(locale)) {

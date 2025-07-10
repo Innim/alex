@@ -1,21 +1,20 @@
 import 'dart:io';
 
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
-import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 
 import '../l10n_entry.dart';
 import 'l10n_exporter.dart';
 
 /// Export to iOS localization .strings file.
-class IosStringsExporter extends L10nExporter {
+class IosStringsExporter extends L10nExporter<IosLocale> {
   final L10nIosPathProvider provider;
   final String projectName;
   final String xmlFileName;
 
   IosStringsExporter(this.provider, this.projectName, this.xmlFileName,
-      String locale, Map<String, L10nEntry> data)
-      : super(locale, data);
+      super.locale, super.data);
 
   @override
   Future<bool> execute() async {
@@ -51,7 +50,7 @@ class IosStringsExporter extends L10nExporter {
       result.writeln('";');
     });
 
-    final iosLocale = L10nIosUtils.getIosLocale(locale);
+    final iosLocale = locale;
 
     final target = await _requireTargetFile(iosLocale, targetFileName);
     final newContent = result.toString();
@@ -62,10 +61,10 @@ class IosStringsExporter extends L10nExporter {
   }
 
   Future<File> _requireTargetFile(
-      String iosLocale, String targetFileName) async {
-    File _getTargetFile(String l) =>
+      IosLocale iosLocale, String targetFileName) async {
+    File _getTargetFile(IosLocale l) =>
         provider.getLocalizationFile(projectName, l, targetFileName);
-    Future<File?> _checkAltLocale(String altLocale) async {
+    Future<File?> _checkAltLocale(IosLocale altLocale) async {
       final altRes = _getTargetFile(altLocale);
       final altExist = await altRes.exists();
       return altExist ? altRes : null;
@@ -75,17 +74,9 @@ class IosStringsExporter extends L10nExporter {
     final exist = await res.exists();
 
     if (!exist) {
-      // process some locales which is not presented or dirrefent in ios
-      if (iosLocale.startsWith('zh-') && iosLocale.split('-').length == 2) {
-        // chinese
-        for (final altLocale in ['Hans', 'Hant']
-            .map((s) => iosLocale.replaceFirst('zh-', 'zh-$s-'))) {
-          final altRes = await _checkAltLocale(altLocale);
-          if (altRes != null) return altRes;
-        }
-      } else if (iosLocale == 'no') {
-        // norwegian
-        final altRes = await _checkAltLocale('nb');
+      // process some locales which is not presented or different in ios
+      for (final altLocale in iosLocale.getAltLocales()) {
+        final altRes = await _checkAltLocale(altLocale);
         if (altRes != null) return altRes;
       }
 

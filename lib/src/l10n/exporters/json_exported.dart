@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:alex/src/l10n/locale/locales.dart';
+
 import '../l10n_entry.dart';
 import 'l10n_exporter.dart';
 
-class JsonExporter extends L10nExporter {
+class JsonExporter extends L10nExporter<JsonLocale> {
   final String targetPath;
 
-  JsonExporter(this.targetPath, String locale, Map<String, L10nEntry> data)
-      : super(locale, data);
+  JsonExporter(this.targetPath, super.locale, super.data);
 
   @override
   Future<bool> execute() async {

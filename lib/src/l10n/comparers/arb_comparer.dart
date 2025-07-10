@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:path/path.dart' as path;
 import 'package:alex/alex.dart';
 
@@ -8,10 +9,16 @@ const _jsonDecoder = JsonCodec();
 
 class ArbComparer {
   final L10nConfig l10nConfig;
-  final String locale;
+  final ArbLocale locale;
+
   const ArbComparer(this.l10nConfig, this.locale);
 
-  Future<List<String>> compare(Future<void> Function() extractArb) async {
+  Future<List<String>> compare() => _compare(null);
+
+  Future<List<String>> extractAndCompare(Future<void> Function() extractArb) =>
+      _compare(extractArb);
+
+  Future<List<String>> _compare(Future<void> Function()? extractArb) async {
     final l10nSubpath = l10nConfig.outputDir;
 
     final l10nPath = path.join(path.current, l10nSubpath);
@@ -22,7 +29,7 @@ class ArbComparer {
 
     final exists = await toCompareFile.exists();
     if (exists) {
-      await extractArb.call();
+      await extractArb?.call();
       final mainFile = await L10nUtils.getMainArb(l10nConfig);
       final notTranslatedKeys =
           await _compareArb(mainFile, toCompareFile, locale);
@@ -34,7 +41,10 @@ class ArbComparer {
   }
 
   Future<List<String>> _compareArb(
-      File mainFile, File toCompareFile, String locale) async {
+    File mainFile,
+    File toCompareFile,
+    ArbLocale locale,
+  ) async {
     final mainData = _jsonDecoder.decode(await mainFile.readAsString())
         as Map<String, dynamic>;
     final compareData = _jsonDecoder.decode(await toCompareFile.readAsString())

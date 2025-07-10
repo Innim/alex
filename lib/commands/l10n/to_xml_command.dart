@@ -3,6 +3,7 @@ import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/decoders/arb_decoder.dart';
 import 'package:alex/src/l10n/decoders/ios_strings_decoder.dart';
 import 'package:alex/src/l10n/l10n_entry.dart';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:alex/src/l10n/path_providers/l10n_ios_path_provider.dart';
 import 'package:alex/src/l10n/utils/l10n_ios_utils.dart';
 import 'dart:convert';
@@ -79,7 +80,7 @@ class ToXmlCommand extends L10nCommandBase {
 
     final target = args[_argFrom] as String;
     final baseLocale =
-        args[_argLocale] as String? ?? l10nConfig.baseLocaleForXml;
+        args.getLocale(_argLocale) ?? l10nConfig.baseLocaleForXml;
 
     switch (target) {
       case _sourceArb:
@@ -93,13 +94,13 @@ class ToXmlCommand extends L10nCommandBase {
     }
   }
 
-  Future<int> _exportArb(L10nConfig config, String locale) async {
+  Future<int> _exportArb(L10nConfig config, XmlLocale locale) async {
     final l10nSubpath = config.outputDir;
 
     final l10nPath = path.join(path.current, l10nSubpath);
     final l10nDir = Directory(l10nPath);
 
-    final sourceFileName = L10nUtils.getArbFile(config, locale);
+    final sourceFileName = L10nUtils.getArbFile(config, locale.toArbLocale());
     final file = File(path.join(l10nDir.path, sourceFileName));
 
     final exists = await file.exists();
@@ -111,7 +112,7 @@ class ToXmlCommand extends L10nCommandBase {
         file, config.getXmlFilesPath(locale), config.getMainXmlFileName());
   }
 
-  Future<int> _exportJson(L10nConfig config, String locale) async {
+  Future<int> _exportJson(L10nConfig config, XmlLocale locale) async {
     final args = argResults!;
     final jsonBaseDirPath = args[_argSource] as String?;
 
@@ -121,22 +122,15 @@ class ToXmlCommand extends L10nCommandBase {
               'alex l10n to_xml --from=json --source=/path/to/json/localization/dir');
     }
 
-    final locales = [locale, locale.replaceAll('_', '-')];
+    final jsonLocale = locale.toJsonLocale();
     final checkedPaths = <String>[];
-    Directory? jsonDir;
 
-    for (final l in locales) {
-      final curPath = path.join(jsonBaseDirPath, l);
-      checkedPaths.add(curPath);
+    final curPath = path.join(jsonBaseDirPath, jsonLocale.value);
+    checkedPaths.add(curPath);
 
-      final curDir = Directory(curPath);
-      if (await curDir.exists()) {
-        jsonDir = curDir;
-        break;
-      }
-    }
+    final jsonDir = Directory(curPath);
 
-    if (jsonDir == null) {
+    if (!jsonDir.existsSync()) {
       throw Exception('Directory for locale $locale is not exits. '
           'Searched:\n${checkedPaths.join('\n')}');
     }
@@ -160,7 +154,7 @@ class ToXmlCommand extends L10nCommandBase {
   }
 
   Future<int> _exportIos(
-      L10nConfig config, String locale, Set<String> dirs) async {
+      L10nConfig config, XmlLocale locale, Set<String> dirs) async {
     final provider = L10nIosPathProvider.from(dirs);
 
     final outputDirPath = config.getXmlFilesPath(locale);

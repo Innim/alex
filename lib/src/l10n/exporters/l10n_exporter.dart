@@ -1,11 +1,12 @@
 import 'dart:io';
 
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:meta/meta.dart';
 
 import '../l10n_entry.dart';
 
-abstract class L10nExporter {
-  final String locale;
+abstract class L10nExporter<T extends LocaleValue> {
+  final T locale;
   final Map<String, L10nEntry> data;
 
   L10nExporter(this.locale, this.data);

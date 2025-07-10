@@ -1,14 +1,10 @@
 import 'package:alex/alex.dart';
 import 'package:alex/src/exception/run_exception.dart';
-import 'dart:convert';
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'dart:io';
-
-import 'package:path/path.dart' as path;
 import 'package:xml/xml.dart';
 
 import 'src/l10n_command_base.dart';
-
-const _jsonDecoder = JsonCodec();
 
 /// Command to remove unused strings from XML files.
 ///
@@ -38,39 +34,25 @@ class CleanupXmlCommand extends L10nCommandBase {
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;
 
-    final baseLocale =
-        args[_argLocale] as String? ?? l10nConfig.baseLocaleForArb;
+    final baseLocale = args.getLocale(_argLocale)?.toArbLocale() ??
+        l10nConfig.baseLocaleForArb;
 
     return _cleanUp(l10nConfig, baseLocale);
   }
 
-  Future<int> _cleanUp(L10nConfig config, String baseLocale) async {
-    final l10nSubpath = config.outputDir;
+  Future<int> _cleanUp(L10nConfig config, ArbLocale baseLocale) async {
+    final file = getArbFile(config, baseLocale);
 
-    final l10nPath = path.join(path.current, l10nSubpath);
-    final l10nDir = Directory(l10nPath);
-
-    final sourceFileName = L10nUtils.getArbFile(config, baseLocale);
-    final file = File(path.join(l10nDir.path, sourceFileName));
-
-    final exists = await file.exists();
-    if (!exists) {
-      return error(2, message: 'ABR file for locale $baseLocale is not found');
-    }
-
-    final keys = await _getKeysFromArb(file);
+    final keys = await getKeysFromArb(file);
 
     final locales = await getLocales(config, includeBase: true);
     printVerbose('Locales (${locales.length}): ${locales.join(', ')}');
 
-    final xmlFileName = config.getMainXmlFileName();
     var filesProcessed = 0;
     var stringsRemoved = 0;
     for (final locale in locales) {
       printVerbose('Processing locale: $locale');
-      final xmlFileDirPath = config.getXmlFilesPath(locale);
-      final xmlFilePath = path.join(xmlFileDirPath, xmlFileName);
-      final xmlFile = File(xmlFilePath);
+      final xmlFile = getXmlFile(config, locale: locale);
 
       final removed = await _removeOmitted(xmlFile, keys.toSet());
 
@@ -105,12 +87,6 @@ class CleanupXmlCommand extends L10nCommandBase {
 
       return success(message: sb.toString());
     }
-  }
-
-  Future<Set<String>> _getKeysFromArb(File file) async {
-    final src = await file.readAsString();
-    final data = _jsonDecoder.decode(src) as Map<String, dynamic>;
-    return data.keys.where((k) => !k.startsWith('@')).toSet();
   }
 
   Future<int> _removeOmitted(File xmlFile, Set<String> keys) async {

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
@@ -182,14 +183,14 @@ class L10nConfig {
   /// Base locale for abr files.
   ///
   /// Should be a locale code: ru, en, etc.
-  final String baseLocaleForArb;
+  final ArbLocale baseLocaleForArb;
 
   /// Base locale for generate xml files by arb.
   ///
   /// Should be a locale code: ru, en, etc.
   ///
   /// See [xmlOutputDir].
-  final String baseLocaleForXml;
+  final XmlLocale baseLocaleForXml;
 
   /// Path to the output directory for xml files.
   ///
@@ -214,12 +215,13 @@ class L10nConfig {
     this.outputDir = _defaultOutputDir,
     this.sourceFile = _defaultSourceFile,
     this.translationFilesPattern = _defaultTranslationFilesPattern,
-    this.baseLocaleForArb = _defaultBaseLocaleForArb,
-    this.baseLocaleForXml = _defaultBaseLocaleForXml,
+    String baseLocaleForArb = _defaultBaseLocaleForArb,
+    String baseLocaleForXml = _defaultBaseLocaleForXml,
     this.xmlOutputDir = _defaultXmlOutputDir,
     this.xmlOutputName,
     this.requireLatin = _defaultRequireLatin,
-  });
+  })  : baseLocaleForArb = baseLocaleForArb.asArbLocale(),
+        baseLocaleForXml = baseLocaleForXml.asXmlLocale();
 
   factory L10nConfig.fromYaml(YamlMap data) {
     return L10nConfig(
