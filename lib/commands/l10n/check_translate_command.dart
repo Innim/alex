@@ -25,6 +25,7 @@ class CheckTranslateCommand extends L10nCommandBase {
               '- if all strings from the localization file (alex.l10n.source_file) have translation in ARB for the language; \n'
               '- if all strings from the localization file (alex.l10n.source_file) was sent for translation (contained in base XML); \n'
               '- if all strings from the base XML file have translation in XML for the language; \n'
+              '- if there are not duplicated keys in XML for the language; \n'
               '- if all strings from the XML for the language are imported to ARB for this language; \n'
               '- if the XML for the language has not redundant strings that are not in the localization file (alex.l10n.source_file); \n'
               '- if all code is generated for the language.\n'
@@ -101,7 +102,7 @@ class CheckTranslateCommand extends L10nCommandBase {
 
       await check(
         successMessage: 'All strings have translation in ARB',
-        failMessage: 'Untranslated strings found',
+        failMessage: 'Untranslated strings found in ARB',
         check: _checkForUntranslated(l10nConfig, locale).report(),
       );
 
@@ -113,8 +114,14 @@ class CheckTranslateCommand extends L10nCommandBase {
 
       await check(
         successMessage: 'All strings have translation in XML',
-        failMessage: 'Untranslated strings found in XML',
+        failMessage: 'Untranslated or redundant strings found in XML',
         check: _checkForUntranslatedXml(l10nConfig, locale).report(),
+      );
+
+      await check(
+        successMessage: 'No duplicated keys in XML',
+        failMessage: 'Duplicated keys found in XML',
+        check: _checkXmlForDuplicates(l10nConfig, locale).report(),
       );
 
       await check(
@@ -272,6 +279,57 @@ class CheckTranslateCommand extends L10nCommandBase {
     return _CheckResult.byKeysCheck(locale, res);
   }
 
+  /// Checks for duplicated strings in XML.
+  Future<List<_CheckResult>> _checkXmlForDuplicates(
+    L10nConfig l10nConfig,
+    XmlLocale? locale,
+  ) async {
+    printVerbose('Check for duplicated strings in XML');
+
+    final res = <_CheckResult>[];
+    final locales = locale != null
+        ? [locale]
+        : await getLocales(l10nConfig, includeBase: false);
+
+    for (final loc in locales) {
+      res.add(await _checkLocaleXmlForDuplicates(l10nConfig, loc));
+    }
+
+    return res;
+  }
+
+  Future<_CheckResult> _checkLocaleXmlForDuplicates(
+    L10nConfig l10nConfig,
+    XmlLocale locale,
+  ) async {
+    printVerbose('Check for XML for duplicated keys for locale: $locale');
+    final xmlFile = getXmlFile(l10nConfig, locale: locale);
+
+    final xml = getXML(xmlFile);
+    final countByKeys = <String, int>{};
+
+    xml.forEachResource((child) {
+      if (child is XmlElement) {
+        final name = child.attributeName;
+        final count = countByKeys[name] ?? 0;
+        if (count > 0) {
+          printVerbose('  Duplicated key "$name" found in XML');
+        }
+        countByKeys[name] = count + 1;
+      }
+    });
+
+    final duplicates = countByKeys.entries
+        .where((e) => e.value > 1)
+        .map((e) => '${e.key} (${e.value})');
+
+    return _CheckResult(
+      locale: locale,
+      notExpectedKeysLabel: 'duplicated keys',
+      notExpectedKeys: duplicates.toSet(),
+    );
+  }
+
   /// Checks for keys in XML for locale that are not imported to ARB for this locale.
   Future<List<_CheckResult>> _checkForNotImportedToArb(
     L10nConfig l10nConfig,
@@ -414,16 +472,14 @@ class CheckTranslateCommand extends L10nCommandBase {
     File xmlFile,
     Set<String> expectedKeys,
   ) async {
-    final xml = getXML(xmlFile);
     final notPresentedKeys = expectedKeys.toSet();
     final notExpectedKeys = <String>{};
 
-    xml.forEachResource((child) {
-      if (child is XmlElement) {
-        final name = child.attributeName;
-        if (!notPresentedKeys.remove(name)) {
-          notExpectedKeys.add(name);
-        }
+    // ignoring duplicated keys here
+    final keys = await getKeysFromXml(xmlFile);
+    keys.forEach((key) {
+      if (!notPresentedKeys.remove(key)) {
+        notExpectedKeys.add(key);
       }
     });
 
@@ -473,8 +529,9 @@ class CheckTranslateCommand extends L10nCommandBase {
         sb
           ..writeln()
           ..write(indent)
-          ..write('- not expected keys ')
-          ..write('(${res.notExpectedKeys.length}): ')
+          ..write('- ')
+          ..write(res.notExpectedKeysLabel ?? 'not expected keys')
+          ..write(' (${res.notExpectedKeys.length}): ')
           ..write(res.notExpectedKeys.join(', '));
       }
     }
@@ -538,31 +595,39 @@ class _CheckResult {
   final Iterable<String> notPresentedKeys;
   final Iterable<String> notExpectedKeys;
   final String? error;
+  final String? notExpectedKeysLabel;
 
   _CheckResult({
     required this.locale,
-    required this.notPresentedKeys,
-    required this.notExpectedKeys,
-    required this.error,
+    // ignore: unused_element
+    this.notPresentedKeys = const [],
+    this.notExpectedKeys = const [],
+    // ignore: unused_element
+    this.error,
+    this.notExpectedKeysLabel,
   });
 
   _CheckResult.ok(this.locale)
       : notPresentedKeys = [],
         notExpectedKeys = [],
-        error = null;
+        error = null,
+        notExpectedKeysLabel = null;
 
   _CheckResult.error(this.locale, this.error)
       : notPresentedKeys = [],
-        notExpectedKeys = [];
+        notExpectedKeys = [],
+        notExpectedKeysLabel = null;
 
   _CheckResult.missedKeys(this.locale, this.notPresentedKeys)
       : notExpectedKeys = const [],
-        error = null;
+        error = null,
+        notExpectedKeysLabel = null;
 
   _CheckResult.byKeysCheck(this.locale, _KeysCheckResult keyCheckResult)
       : notPresentedKeys = keyCheckResult.notPresented,
         notExpectedKeys = keyCheckResult.notExpected,
-        error = null;
+        error = null,
+        notExpectedKeysLabel = null;
 
   bool get isOk =>
       notPresentedKeys.isEmpty && notExpectedKeys.isEmpty && error == null;

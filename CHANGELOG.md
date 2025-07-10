@@ -8,6 +8,7 @@
   * Check if all strings from base XML file have translation in XML for the specified locale.
   * Check if all strings from XML for the specified locale are imported to ARB for this locale.
   * Check if XML for the specified locale has redundant strings that are not in the localization file.
+  * Check if there are not duplicated keys in XML for the specified locale.
   * Check if all code is generated for the specified locale.
 * Ensure that GIT repository is clean before checking translations. Reset all changes after command execution.
 
