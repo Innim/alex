@@ -259,6 +259,15 @@ class GitCommands {
     return git("branch --show-current", desc ?? "get current branch");
   }
 
+  bool resetHard() {
+    try {
+      git("reset --hard", "reset hard");
+      return true;
+    } on RunException catch (_) {
+      return false;
+    }
+  }
+
   Iterable<String> getBranches({bool all = false, bool merged = false}) {
     final cmd = StringBuffer('branch');
     if (all) cmd.write(' -a');

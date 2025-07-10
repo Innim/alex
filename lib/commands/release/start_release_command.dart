@@ -83,15 +83,14 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     final args = argResults!;
     final isDemo = args[_argDemo] as bool;
 
-    final gitConfig = config.git;
     if (!isDemo) {
       fs = const IOFileSystem();
-      git = GitCommands(GitClient(), gitConfig);
     } else {
       printInfo("Demonstration mode");
       fs = DemoFileSystem();
-      git = GitCommands(DemoGit(verbose: isVerbose), gitConfig);
     }
+
+    git = getGit(config, isDemo: isDemo);
 
     final skipL10n = args[_argSkipL10n] as bool? ?? false;
     final isLocalRelease = args[_argLocal] as bool? ?? false;

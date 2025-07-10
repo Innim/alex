@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:alex/commands/release/demo.dart';
 import 'package:alex/src/config.dart';
 import 'package:alex/src/console/console.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/internal/print.dart' as print;
+import 'package:alex/src/git/git.dart';
 import 'package:alex/src/run/cmd.dart';
 import 'package:alex/src/run/flutter_cmd.dart';
 import 'package:alex/src/settings.dart';
@@ -168,6 +170,18 @@ abstract class AlexCommand extends Command<int> {
 
     return ProcessResult(
         process.pid, exitCode, stdout.toString(), stderr.toString());
+  }
+
+  GitCommands getGit(AlexConfig config, {bool isDemo = false}) {
+    final gitConfig = config.git;
+    final Git gitClient;
+    if (!isDemo) {
+      gitClient = GitClient();
+    } else {
+      gitClient = DemoGit(verbose: isVerbose);
+    }
+
+    return GitCommands(gitClient, gitConfig);
   }
 }
 

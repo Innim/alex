@@ -1,3 +1,7 @@
+[L10n] `check_translate`:
+
+* Ensure that GIT repository is clean before checking translations. Reset all changes after command execution.
+
 ## 1.7.0
 
 [L10n]

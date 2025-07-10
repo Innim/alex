@@ -25,20 +25,31 @@ class CheckTranslateCommand extends L10nCommandBase {
     final l10nConfig = config.l10n;
     final args = argResults!;
     final baseLocale = args[_argLocale] as String? ?? _defaultLocale;
-    final comparer = ArbComparer(l10nConfig, baseLocale);
-    final notTranslatedKeys = await comparer.compare(
-      () async {
-        printInfo('Running extract to arb...');
-        await extractLocalization(l10nConfig);
-      },
-    );
-    if (notTranslatedKeys.isEmpty) {
-      return success(
-          message: 'All strings have translation for locale: $baseLocale');
-    } else {
-      return error(2,
-          message:
-              'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $baseLocale');
+    final git = getGit(config);
+
+    git.ensureCleanStatus();
+
+    try {
+      final comparer = ArbComparer(l10nConfig, baseLocale);
+      final notTranslatedKeys = await comparer.compare(
+        () async {
+          printInfo('Running extract to arb...');
+          await extractLocalization(l10nConfig);
+        },
+      );
+      if (notTranslatedKeys.isEmpty) {
+        return success(
+            message: 'All strings have translation for locale: $baseLocale');
+      } else {
+        return error(2,
+            message:
+                'No translations for strings: ${notTranslatedKeys.join(',')} in locale: $baseLocale');
+      }
+
+    } finally {
+      // Reset all changes after command execution
+      printVerbose('Resetting all changes in GIT repository...');
+      git.resetHard();
     }
   }
 }
