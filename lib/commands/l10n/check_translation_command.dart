@@ -11,6 +11,8 @@ import 'package:path/path.dart' as path;
 
 import 'src/l10n_command_base.dart';
 
+const _kExitCodeCheckFailed = 10;
+
 /// Command to check if translations exist for all strings.
 ///
 /// By default it checks for all locales, but you can specify a locale.
@@ -28,8 +30,10 @@ class CheckTranslationsCommand extends L10nCommandBase {
               '- if there are not duplicated keys in XML for the language; \n'
               '- if all strings from the XML for the language are imported to ARB for this language; \n'
               '- if the XML for the language has not redundant strings that are not in the localization file (alex.l10n.source_file); \n'
-              '- if all code is generated for the language.\n'
-              'By default it checks for all locales, but you can specify locale with --$_argLocale option.',
+              '- if all code is generated for the language.\n\n'
+              'By default it checks for all locales, but you can specify locale with --$_argLocale option. \n\n'
+              'Exit code is 0 if all checks passed, $_kExitCodeCheckFailed if some checks failed.\n'
+              'Other exit codes are used for errors.',
           const [
             'check',
             // for compatibility with old command
@@ -167,7 +171,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
     final total = reports.length;
     if (total == 0) {
       return error(
-        2,
+        _kExitCodeCheckFailed,
         message: 'No checks were performed. This is probably a bug.',
       );
     } else if (reports.every((e) => e.isOk)) {
