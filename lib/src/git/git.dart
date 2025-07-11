@@ -100,7 +100,7 @@ class GitCommands {
             ..writeln('Changes:')
             ..writeln(r);
         }
-        return sb.toString();
+        return sb.toString().trim();
       },
     );
   }
