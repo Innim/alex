@@ -85,20 +85,38 @@ class GitCommands {
 
   String get defaultRemote => _config.remote;
 
-  void ensureCleanStatus() {
-    ensure(() => status("check status of current branch", porcelain: true),
-        (r) {
-      return r != "";
-    }, "There are unstaged changes. Commit or reset them to proceed.");
+  void ensureCleanStatus({
+    bool printChanges = false,
+  }) {
+    ensure(
+      () => status("check status of current branch", porcelain: true),
+      (r) => r != "",
+      (r) {
+        final sb = StringBuffer(
+            'There are unstaged changes. Commit or reset them to proceed.');
+        if (printChanges) {
+          sb
+            ..writeln()
+            ..writeln('Changes:')
+            ..writeln(r);
+        }
+        return sb.toString();
+      },
+    );
   }
 
   void ensureRemoteUrl() {
     // TODO: not sure that's correct
-    ensure(() => remoteGetUrl("ensure that upstream remote is valid"), (r) {
-      // print("r: " + r);
-      return !(r.startsWith("http") && r.length > 8 ||
-          r.startsWith('git@') && r.endsWith('.git'));
-    }, "Current directory has no valid upstream setting. Check remote URL.");
+    ensure(
+      () => remoteGetUrl("ensure that upstream remote is valid"),
+      (r) {
+        // print("r: " + r);
+        return !(r.startsWith("http") && r.length > 8 ||
+            r.startsWith('git@') && r.endsWith('.git'));
+      },
+      (r) =>
+          'Current directory has no valid upstream setting. Check remote URL.',
+    );
   }
 
   void gitflowReleaseStart(String name, [String? desc]) {
@@ -293,10 +311,14 @@ class GitCommands {
     return res.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty);
   }
 
-  void ensure(String Function() action, bool Function(String) isFailed,
-      String message) {
-    if (isFailed(action())) {
-      fail(message);
+  void ensure(
+    String Function() action,
+    bool Function(String) isFailed,
+    String Function(String) message,
+  ) {
+    final res = action();
+    if (isFailed(res)) {
+      fail(message(res));
     }
   }
 

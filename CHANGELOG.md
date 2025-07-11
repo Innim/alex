@@ -1,3 +1,7 @@
+## 1.8.0+3
+
+[L10n] `check_translations`: prints changes if there are any in the repository before checking translations.
+
 ## 1.8.0+2
 
 [L10n] `check_translations`: returns exit code `10` if some checks failed.

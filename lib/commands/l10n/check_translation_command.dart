@@ -61,7 +61,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
 
     final git = getGit(config);
 
-    git.ensureCleanStatus();
+    git.ensureCleanStatus(printChanges: true);
 
     final reports = <_CheckReport>[];
     try {
