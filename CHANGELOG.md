@@ -1,6 +1,10 @@
-## 1.8.0+1
+## 1.8.0+2
 
 [L10n] `check_translations`: returns exit code `10` if some checks failed.
+
+## 1.8.0+1
+
+~~[L10n] `check_translations`: returns exit code `10` if some checks failed.~~ (broken, use `1.8.0+2`).
 
 ## 1.8.0
 

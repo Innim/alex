@@ -171,7 +171,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
     final total = reports.length;
     if (total == 0) {
       return error(
-        _kExitCodeCheckFailed,
+        2,
         message: 'No checks were performed. This is probably a bug.',
       );
     } else if (reports.every((e) => e.isOk)) {
@@ -179,7 +179,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
     } else {
       final failed = reports.countWhere((e) => !e.isOk);
       return error(
-        2,
+        _kExitCodeCheckFailed,
         message: '🚨 $failed of $total checks failed. See details above',
       );
     }
