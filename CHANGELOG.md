@@ -1,3 +1,7 @@
+## 1.8.1
+
+* Handle temporary lock errors when opening local store boxes.
+
 ## 1.8.0+3
 
 [L10n] `check_translations`: prints changes if there are any in the repository before checking translations.

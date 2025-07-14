@@ -4,7 +4,7 @@ homepage: https://github.com/innim/
 repository: https://github.com/Innim/alex
 issue_tracker: https://github.com/Innim/alex/issues
 
-version: 1.8.0+3
+version: 1.8.1
 
 environment:
   sdk: ">=2.19.6 <4.0.0"
@@ -12,6 +12,8 @@ environment:
 dependencies:
   archive: ^3.4.10
   args: ^2.3.0
+  async: ^2.11.0
+  cancelable_retry: ^0.1.0+1
   dart_openai: ">=1.9.91 <1.9.92"
   glob: ^2.0.1
   hive: ^2.2.3
