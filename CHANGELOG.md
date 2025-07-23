@@ -1,3 +1,7 @@
+## 1.8.1+1
+
+* **Fixed**: Incorrect error message when there are uncommitted changes.
+
 ## 1.8.1
 
 * Handle temporary lock errors when opening local store boxes.

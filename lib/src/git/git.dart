@@ -93,7 +93,7 @@ class GitCommands {
       (r) => r != "",
       (r) {
         final sb = StringBuffer(
-            'There are unstaged changes. Commit or reset them to proceed.');
+            'There are uncommitted changes. Commit or reset them to proceed.');
         if (printChanges) {
           sb
             ..writeln()
