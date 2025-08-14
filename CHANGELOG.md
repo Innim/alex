@@ -1,3 +1,5 @@
+## 1.8.2
+
 * **Fixed**: Double log for intl commands.
 * More cleaner output for `l10n generate` and some other commands.
 
