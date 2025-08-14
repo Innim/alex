@@ -10,6 +10,8 @@ import 'package:list_ext/list_ext.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as path;
 
+const _kDefaultIgnorePubGetOutput = true;
+
 /// Mixin for work with intl generation.
 mixin IntlMixin {
   @protected
@@ -21,17 +23,21 @@ mixin IntlMixin {
   Future<ProcessResult> runIntl(
     String cmd,
     List<String> arguments, {
+    required String? title,
     String? workingDir,
     bool prependWithPubGet = false,
-    bool printStdOut = true,
+    bool immediatePrintStd = true,
+    bool ignorePubGetOutput = _kDefaultIgnorePubGetOutput,
   }) async {
     final packageName = await _getIntlGeneratorPackageName();
     return flutter.runPub(
       '$packageName:$cmd',
       arguments,
+      title: title,
       workingDir: workingDir,
       prependWithPubGet: prependWithPubGet,
-      immediatePrintStd: printStdOut,
+      immediatePrintStd: immediatePrintStd,
+      ignorePubGetOutput: ignorePubGetOutput,
     );
   }
 
@@ -39,19 +45,24 @@ mixin IntlMixin {
   Future<ProcessResult> runIntlOrFail(
     String cmd,
     List<String> arguments, {
+    required String? title,
     bool printStdOut = true,
+    bool immediatePrint = true,
     String? workingDir,
     bool prependWithPubGet = false,
+    bool ignorePubGetOutput = _kDefaultIgnorePubGetOutput,
   }) async {
     return flutter.runOrFail(
       () => runIntl(
         cmd,
         arguments,
+        title: title,
         workingDir: workingDir,
         prependWithPubGet: prependWithPubGet,
-        printStdOut: printStdOut,
+        immediatePrintStd: printStdOut && immediatePrint,
+        ignorePubGetOutput: ignorePubGetOutput,
       ),
-      printStdOut: printStdOut,
+      printStdOut: printStdOut && !immediatePrint,
     );
   }
 
@@ -70,6 +81,7 @@ mixin IntlMixin {
           sourcePath,
           '--warnings-are-errors',
         ],
+        title: 'Extracting localization',
         printStdOut: printStdOut,
         prependWithPubGet: prependWithPubGet,
       );
@@ -101,6 +113,7 @@ mixin IntlMixin {
         l10nConfig.sourceFile,
         ...arbFiles,
       ],
+      title: 'Generating code from ARB files',
       prependWithPubGet: prependWithPubGet,
       printStdOut: printStdOut,
     );

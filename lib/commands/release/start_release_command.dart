@@ -143,6 +143,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         final res = await flutter.runPubOrFail(
           '${config.rootPath}/$path',
           const [],
+          title: null,
         );
         if (res.exitCode == 0) {
           printInfo('Pre release script $path run - OK');

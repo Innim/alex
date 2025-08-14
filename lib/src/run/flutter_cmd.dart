@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:alex/src/run/cmd.dart';
 import 'package:logging/logging.dart';
 
+const _kDefaultIgnorePubGetOutput = true;
+
 class FlutterCmd extends CmdBase {
   final Cmd cmd;
   final bool isVerbose;
@@ -131,19 +133,35 @@ class FlutterCmd extends CmdBase {
   Future<ProcessResult> runPub(
     String cmd,
     List<String> arguments, {
+    required String? title,
     bool immediatePrintStd = true,
     bool immediatePrintErr = true,
     String? workingDir,
     bool prependWithPubGet = false,
+    bool ignorePubGetOutput = _kDefaultIgnorePubGetOutput,
   }) async {
     if (prependWithPubGet) {
+      final printStdOut = !ignorePubGetOutput || isVerbose;
+      logger.info('Getting dependencies...');
+
       final pubGetRes = await pub(
         'get',
         workingDir: workingDir,
-        immediatePrintStd: immediatePrintStd,
+        immediatePrintStd: immediatePrintStd && printStdOut,
         immediatePrintErr: immediatePrintErr,
       );
+
+      if (printStdOut && !immediatePrintStd) {
+        logger.info(pubGetRes.stdout.toString());
+      }
+
       if (pubGetRes.exitCode != 0) return pubGetRes;
+
+      logger.info('Dependencies - OK');
+    }
+
+    if (title != null) {
+      logger.info(title);
     }
 
     return pub(
@@ -158,9 +176,11 @@ class FlutterCmd extends CmdBase {
   Future<ProcessResult> runPubOrFail(
     String cmd,
     List<String> arguments, {
+    required String? title,
     bool printStdOut = true,
     bool immediatePrint = true,
     bool prependWithPubGet = false,
+    bool ignorePubGetOutput = _kDefaultIgnorePubGetOutput,
   }) async {
     assert(printStdOut || !immediatePrint,
         "You can't disable std output if immediatePrint enabled");
@@ -168,9 +188,11 @@ class FlutterCmd extends CmdBase {
       () => runPub(
         cmd,
         arguments,
+        title: title,
         immediatePrintStd: immediatePrint && printStdOut,
         immediatePrintErr: false,
         prependWithPubGet: prependWithPubGet,
+        ignorePubGetOutput: ignorePubGetOutput,
       ),
       printStdOut: !immediatePrint && printStdOut,
     );

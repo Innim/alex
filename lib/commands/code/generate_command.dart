@@ -26,6 +26,7 @@ class GenerateCommand extends CodeCommandBase {
         '--delete-conflicting-outputs',
       ],
       prependWithPubGet: true,
+      title: 'Running code generation',
     );
 
     return success(message: 'Code generation complete!');

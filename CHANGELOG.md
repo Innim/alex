@@ -1,3 +1,6 @@
+* **Fixed**: Double log for intl commands.
+* More cleaner output for `l10n generate` and some other commands.
+
 ## 1.8.1+1
 
 * **Fixed**: Incorrect error message when there are uncommitted changes.
