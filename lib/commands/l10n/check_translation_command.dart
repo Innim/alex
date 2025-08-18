@@ -93,48 +93,49 @@ class CheckTranslationsCommand extends L10nCommandBase {
         printInfo('Checking translations for locale: $locale');
       }
 
-      final List<Future<void>> checks = [];
+      final checks = <Future<void> Function()>[];
 
-      Future<void> check({
+      Future<void> Function() check({
         required String successMessage,
         required String failMessage,
-        required Future<_CheckReport> check,
+        required Future<_CheckReport> Function() check,
         String? noteForNotExpected,
-      }) async {
-        final report = await check;
-        final checkNum = reports.length + 1;
-        final checksTotal = checks.length;
+      }) =>
+          () async {
+            final report = await check();
+            final checkNum = reports.length + 1;
+            final checksTotal = checks.length;
 
-        if (report.isOk) {
-          _printCheckSuccess(successMessage, checkNum, checksTotal);
-        } else {
-          _printCheckFailReport(
-            failMessage,
-            checkNum,
-            checksTotal,
-            report.results,
-            noteForNotExpected: noteForNotExpected,
-          );
-        }
+            if (report.isOk) {
+              _printCheckSuccess(successMessage, checkNum, checksTotal);
+            } else {
+              _printCheckFailReport(
+                failMessage,
+                checkNum,
+                checksTotal,
+                report.results,
+                noteForNotExpected: noteForNotExpected,
+              );
+            }
 
-        reports.add(report);
-      }
+            reports.add(report);
+          };
 
       checks.addAll([
         check(
           successMessage: 'All strings have translation in ARB',
           failMessage: 'Untranslated strings found in ARB',
-          check: _checkForUntranslated(l10nConfig, locale).report(),
+          check: () => _checkForUntranslated(l10nConfig, locale).report(),
         ),
         check(
           successMessage: 'All strings were sent for translation',
           failMessage: 'Some strings probably were not sent for translation',
-          check: _checkForUnsent(l10nConfig).report(),
+          check: () => _checkForUnsent(l10nConfig).report(),
         ),
         check(
           successMessage: 'All strings have translation in XML',
           failMessage: 'Untranslated or redundant strings found in XML',
-          check: _checkForUntranslatedXml(l10nConfig, locale).report(),
+          check: () => _checkForUntranslatedXml(l10nConfig, locale).report(),
           noteForNotExpected: 'If you see this message, '
               'it means that some strings are presented in XML for the locale, but not in the base XML. '
               'Before do anything about it, check that all required strings are present in the base XML file.',
@@ -142,18 +143,18 @@ class CheckTranslationsCommand extends L10nCommandBase {
         check(
           successMessage: 'No duplicated keys in XML',
           failMessage: 'Duplicated keys found in XML',
-          check: _checkXmlForDuplicates(l10nConfig, locale).report(),
+          check: () => _checkXmlForDuplicates(l10nConfig, locale).report(),
         ),
         check(
           successMessage: 'All strings are imported to ARB',
           failMessage: 'Some strings are not imported to ARB from XML',
-          check: _checkForNotImportedToArb(l10nConfig, locale).report(),
+          check: () => _checkForNotImportedToArb(l10nConfig, locale).report(),
         ),
         check(
           successMessage: 'Generated localization code is up to date',
           failMessage:
               'Localization code probably is not generated after last changes',
-          check: _checkForNotGeneratedCode(
+          check: () => _checkForNotGeneratedCode(
             git,
             l10nConfig,
             locale,
@@ -164,7 +165,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
 
       // Run all checks in sequential order
       for (final check in checks) {
-        await check;
+        await check();
       }
 
       printInfo('Checks completed.');
