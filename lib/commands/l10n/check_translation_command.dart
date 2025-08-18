@@ -536,28 +536,35 @@ class CheckTranslationsCommand extends L10nCommandBase {
     }
     sb.write(':');
 
+    // try to group by keys
+    final missedKeysForLocales =
+        _groupByKeysSetIfRelevant(fails, (f) => f.notPresentedKeys);
+    final notExpectedKeysForLocales =
+        _groupByKeysSetIfRelevant(fails, (f) => f.notExpectedKeys);
+
+    // print detailed report
     const indent = '  ';
 
     var hasNotExpected = false;
     for (final res in fails) {
-      if (printLocale) {
-        sb
-          ..writeln()
-          ..write(indent)
-          ..write('Locale: ${res.locale}');
-      }
+      final skipMissedKeys = missedKeysForLocales != null && res.locale != null;
+
+      final skipNotExpectedKeys =
+          notExpectedKeysForLocales != null && res.locale != null;
+
+      final out = StringBuffer();
 
       final errorMessage = res.error;
       if (errorMessage != null) {
-        sb
+        out
           ..writeln()
           ..write(indent)
           ..write('Description: ')
           ..write(errorMessage);
       }
 
-      if (res.notPresentedKeys.isNotEmpty) {
-        sb
+      if (res.notPresentedKeys.isNotEmpty && !skipMissedKeys) {
+        out
           ..writeln()
           ..write(indent)
           ..write('- missed keys ')
@@ -565,10 +572,10 @@ class CheckTranslationsCommand extends L10nCommandBase {
           ..write(res.notPresentedKeys.join(', '));
       }
 
-      if (res.notExpectedKeys.isNotEmpty) {
+      if (res.notExpectedKeys.isNotEmpty && !skipNotExpectedKeys) {
         hasNotExpected = true;
 
-        sb
+        out
           ..writeln()
           ..write(indent)
           ..write('- ')
@@ -576,7 +583,38 @@ class CheckTranslationsCommand extends L10nCommandBase {
           ..write(' (${res.notExpectedKeys.length}): ')
           ..write(res.notExpectedKeys.join(', '));
       }
+
+      if (out.isNotEmpty) {
+        if (printLocale) {
+          sb
+            ..writeln()
+            ..write(indent)
+            ..write('Locale: ${res.locale}');
+        }
+
+        sb.write(out);
+      }
     }
+
+    if (missedKeysForLocales != null) {
+      _printKeysForLocales(
+        sb,
+        'Missed keys',
+        missedKeysForLocales,
+        indent: indent,
+      );
+    }
+
+    if (notExpectedKeysForLocales != null) {
+      hasNotExpected = true;
+      _printKeysForLocales(
+        sb,
+        'Not expected keys',
+        notExpectedKeysForLocales,
+        indent: indent,
+      );
+    }
+
     if (hasNotExpected && noteForNotExpected != null) {
       sb
         ..writeln()
@@ -612,6 +650,91 @@ class CheckTranslationsCommand extends L10nCommandBase {
       }
 
       printVerbose(sb.toString());
+    }
+  }
+
+  Iterable<_KeysForLocales>? _groupByKeysSetIfRelevant(
+    Iterable<_CheckResult> fails,
+    Iterable<String> Function(_CheckResult) keysSelector, {
+    double relevancyFactor = 0.5,
+  }) {
+    final res = _groupByKeysSet(fails, keysSelector);
+    if (res.isEmpty || res.length >= fails.length * relevancyFactor) {
+      return null;
+    }
+
+    return res;
+  }
+
+  Iterable<_KeysForLocales> _groupByKeysSet(
+    Iterable<_CheckResult> fails,
+    Iterable<String> Function(_CheckResult) keysSelector,
+  ) {
+    final localesByKeys = <String, Set<String>>{};
+
+    for (final res in fails) {
+      final locale = res.locale?.toString();
+      if (locale == null) {
+        continue;
+      }
+
+      final keys = keysSelector(res);
+      keys.forEach((k) {
+        localesByKeys.putIfAbsent(k, () => {}).add(locale);
+      });
+    }
+
+    final localesByLocalesStr = <String, Set<String>>{};
+
+    final localesStrByKeys = localesByKeys.map((key, locales) {
+      final localesList = locales.toList()..sort();
+      final localesStr = localesList.join(',');
+      localesByLocalesStr.putIfAbsent(localesStr, () => locales);
+      return MapEntry(key, localesStr);
+    });
+
+    final keysByLocaleSet = <Set<String>, Set<String>>{};
+    localesStrByKeys.forEach((key, localesStr) {
+      keysByLocaleSet
+          .putIfAbsent(localesByLocalesStr[localesStr]!, () => {})
+          .add(key);
+    });
+
+    return keysByLocaleSet.entries.map((e) {
+      final keys = e.value.toList()..sort();
+      final locales = e.key.toList()..sort();
+      return _KeysForLocales(keys, locales);
+    });
+  }
+
+  void _printKeysForLocales(
+    StringBuffer sb,
+    String title,
+    Iterable<_KeysForLocales> keysForLocales, {
+    required String indent,
+  }) {
+    if (keysForLocales.isEmpty) {
+      sb
+        ..writeln()
+        ..write(indent)
+        ..write('$title: none');
+
+      return;
+    }
+
+    for (final k in keysForLocales) {
+      sb
+        ..writeln()
+        ..write(indent)
+        ..write(title)
+        ..write(' (${k.keys.length}): ')
+        ..write(k.keys.join(', '))
+        ..writeln('.')
+        ..write(indent)
+        ..write('-> for locales ')
+        ..write('(${k.locales.length}): ')
+        ..write(k.locales.join(', '))
+        ..write('.');
     }
   }
 }
@@ -688,4 +811,14 @@ extension _CheckResultListFutureExt on Future<List<_CheckResult>> {
 
 extension _CheckResultFutureExt on Future<_CheckResult> {
   Future<_CheckReport> report() => then(_CheckReport.single);
+}
+
+class _KeysForLocales {
+  final List<String> keys;
+  final List<String> locales;
+
+  _KeysForLocales(this.keys, this.locales);
+
+  @override
+  String toString() => 'KeysForLocales{keys: $keys, locales: $locales}';
 }

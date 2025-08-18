@@ -1,6 +1,7 @@
 ## 1.8.3
 
 [L10n] `check_translations`:
+* More cleaner output for problems with similar keys in different locales.
 * Print number of checks and total checks for each check output.
 
 ## 1.8.2
