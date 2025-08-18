@@ -1,3 +1,5 @@
+## 1.8.4
+
 [L10n] `import_xml`:
 * Hint and more detailed log for skipped keys if they are not in the base file.
 
