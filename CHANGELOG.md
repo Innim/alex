@@ -1,3 +1,8 @@
+## 1.8.3
+
+[L10n] `check_translations`:
+* Print number of checks and total checks for each check output.
+
 ## 1.8.2
 
 * **Fixed**: Double log for intl commands.

@@ -93,6 +93,8 @@ class CheckTranslationsCommand extends L10nCommandBase {
         printInfo('Checking translations for locale: $locale');
       }
 
+      final List<Future<void>> checks = [];
+
       Future<void> check({
         required String successMessage,
         required String failMessage,
@@ -100,12 +102,16 @@ class CheckTranslationsCommand extends L10nCommandBase {
         String? noteForNotExpected,
       }) async {
         final report = await check;
+        final checkNum = reports.length + 1;
+        final checksTotal = checks.length;
 
         if (report.isOk) {
-          _printCheckSuccess(successMessage);
+          _printCheckSuccess(successMessage, checkNum, checksTotal);
         } else {
           _printCheckFailReport(
             failMessage,
+            checkNum,
+            checksTotal,
             report.results,
             noteForNotExpected: noteForNotExpected,
           );
@@ -114,50 +120,52 @@ class CheckTranslationsCommand extends L10nCommandBase {
         reports.add(report);
       }
 
-      await check(
-        successMessage: 'All strings have translation in ARB',
-        failMessage: 'Untranslated strings found in ARB',
-        check: _checkForUntranslated(l10nConfig, locale).report(),
-      );
+      checks.addAll([
+        check(
+          successMessage: 'All strings have translation in ARB',
+          failMessage: 'Untranslated strings found in ARB',
+          check: _checkForUntranslated(l10nConfig, locale).report(),
+        ),
+        check(
+          successMessage: 'All strings were sent for translation',
+          failMessage: 'Some strings probably were not sent for translation',
+          check: _checkForUnsent(l10nConfig).report(),
+        ),
+        check(
+          successMessage: 'All strings have translation in XML',
+          failMessage: 'Untranslated or redundant strings found in XML',
+          check: _checkForUntranslatedXml(l10nConfig, locale).report(),
+          noteForNotExpected: 'If you see this message, '
+              'it means that some strings are presented in XML for the locale, but not in the base XML. '
+              'Before do anything about it, check that all required strings are present in the base XML file.',
+        ),
+        check(
+          successMessage: 'No duplicated keys in XML',
+          failMessage: 'Duplicated keys found in XML',
+          check: _checkXmlForDuplicates(l10nConfig, locale).report(),
+        ),
+        check(
+          successMessage: 'All strings are imported to ARB',
+          failMessage: 'Some strings are not imported to ARB from XML',
+          check: _checkForNotImportedToArb(l10nConfig, locale).report(),
+        ),
+        check(
+          successMessage: 'Generated localization code is up to date',
+          failMessage:
+              'Localization code probably is not generated after last changes',
+          check: _checkForNotGeneratedCode(
+            git,
+            l10nConfig,
+            locale,
+            printFlutterOut: printFlutterOut,
+          ).report(),
+        ),
+      ]);
 
-      await check(
-        successMessage: 'All strings were sent for translation',
-        failMessage: 'Some strings probably were not sent for translation',
-        check: _checkForUnsent(l10nConfig).report(),
-      );
-
-      await check(
-        successMessage: 'All strings have translation in XML',
-        failMessage: 'Untranslated or redundant strings found in XML',
-        check: _checkForUntranslatedXml(l10nConfig, locale).report(),
-        noteForNotExpected: 'If you see this message, '
-            'it means that some strings are presented in XML for the locale, but not in the base XML. '
-            'Before do anything about it, check that all required strings are present in the base XML file.',
-      );
-
-      await check(
-        successMessage: 'No duplicated keys in XML',
-        failMessage: 'Duplicated keys found in XML',
-        check: _checkXmlForDuplicates(l10nConfig, locale).report(),
-      );
-
-      await check(
-        successMessage: 'All strings are imported to ARB',
-        failMessage: 'Some strings are not imported to ARB from XML',
-        check: _checkForNotImportedToArb(l10nConfig, locale).report(),
-      );
-
-      await check(
-        successMessage: 'Generated localization code is up to date',
-        failMessage:
-            'Localization code probably is not generated after last changes',
-        check: _checkForNotGeneratedCode(
-          git,
-          l10nConfig,
-          locale,
-          printFlutterOut: printFlutterOut,
-        ).report(),
-      );
+      // Run all checks in sequential order
+      for (final check in checks) {
+        await check;
+      }
 
       printInfo('Checks completed.');
     } finally {
@@ -506,18 +514,20 @@ class CheckTranslationsCommand extends L10nCommandBase {
     );
   }
 
-  void _printCheckSuccess(String title) {
-    printInfo('✅ $title');
+  void _printCheckSuccess(String title, int checkNum, int checksTotal) {
+    printInfo('[$checkNum/$checksTotal] ✅ $title');
   }
 
   void _printCheckFailReport(
     String title,
+    int checkNum,
+    int checksTotal,
     List<_CheckResult> results, {
     String? noteForNotExpected,
   }) {
     final printLocale = results.length > 1;
 
-    final sb = StringBuffer('❌ $title');
+    final sb = StringBuffer('[$checkNum/$checksTotal] ❌ $title');
     final fails = results.where((e) => !e.isOk);
 
     if (printLocale) {
