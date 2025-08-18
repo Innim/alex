@@ -574,6 +574,7 @@ class ImportXmlCommand extends L10nCommandBase {
   Future<void> _importDifference(
       L10nConfig config, File source, File target) async {
     printInfo('Import file ${source.path} as diff for ${target.path}');
+    const prefix = ' ';
     final baseLocale = config.baseLocaleForXml;
     final baseFileName = path.basename(target.path);
     final baseFile =
@@ -589,13 +590,22 @@ class ImportXmlCommand extends L10nCommandBase {
       final targetElements = targetXML.resources.children.toList();
 
       final outputElements = <XmlNode>{};
+      var importedCount = 0;
 
       baseXML.forEachResource((child) {
         if (child is XmlElement) {
-          final element = sourceElements.firstWhereOrNull((e) =>
-                  e is XmlElement && e.attributeName == child.attributeName) ??
-              targetElements.firstWhereOrNull((e) =>
-                  e is XmlElement && e.attributeName == child.attributeName);
+          final sourceElement = sourceElements.firstWhereOrNull(
+              (e) => e is XmlElement && e.attributeName == child.attributeName);
+
+          final XmlNode? element;
+          if (sourceElement != null) {
+            importedCount++;
+            element = sourceElement;
+          } else {
+            element = targetElements.firstWhereOrNull((e) =>
+                e is XmlElement && e.attributeName == child.attributeName);
+          }
+
           if (element != null) {
             outputElements.add(element.copy());
           }
@@ -606,11 +616,19 @@ class ImportXmlCommand extends L10nCommandBase {
 
       final notImported = sourceElements.where((e) =>
           !outputElements.any((oe) => oe.attributeName == e.attributeName));
-      if (notImported.isNotEmpty) {
-        printVerbose('${notImported.length} keys were not imported '
-            'because they are not presented in the base file');
+
+      if (importedCount == 0) {
+        printInfo('$prefix⚠️ No keys were imported.');
+      } else if (notImported.isNotEmpty) {
+        printInfo('$prefix⚠️ Not all keys were imported.');
       }
-      notImported.forEach((e) => printInfo('Skip key [${e.attributeName}]'));
+
+      if (notImported.isNotEmpty) {
+        printInfo(
+            '${prefix}Skipped ${notImported.length} keys: ${notImported.map((e) => e.attributeName).join(', ')}.');
+        printInfo(
+            '$prefix💡 If this keys are needed, check if they are present in the base file [${baseFile.path}].');
+      }
 
       await writeXML(target, outputElements);
     } else {

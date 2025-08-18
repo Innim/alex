@@ -1,3 +1,6 @@
+[L10n] `import_xml`:
+* Hint and more detailed log for skipped keys if they are not in the base file.
+
 ## 1.8.3
 
 [L10n] `check_translations`:
