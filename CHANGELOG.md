@@ -1,3 +1,4 @@
+## 1.8.6
 
 [L10n]
 * Auto adding `@@locale` to ARB files.
