@@ -1,3 +1,7 @@
+## 1.8.6+1
+
+* **Fixed**: `from_xml` write `@@locale` at second place in ARB files, but `extract` at first.
+
 ## 1.8.6
 
 [L10n]
