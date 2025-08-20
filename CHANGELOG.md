@@ -1,3 +1,7 @@
+
+[L10n] `to_xml`:
+* Base XML file now formatted with 2 spaces indent.
+
 ## 1.8.4
 
 [L10n] `import_xml`:

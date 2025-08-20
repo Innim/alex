@@ -16,6 +16,7 @@ import 'src/l10n_command_base.dart';
 
 const _jsonDecoder = JsonCodec();
 const _iosStringsDecoder = IosStringsDecoder();
+const _kXmlIndent = '  ';
 
 /// Command to put localization to xml.
 class ToXmlCommand extends L10nCommandBase {
@@ -239,6 +240,8 @@ Filename: $baseName
       {String? header}) async {
     final xml = StringBuffer();
 
+    var level = 0;
+
     xml.writeln('<?xml version="1.0" encoding="utf-8"?>');
     if (header != null) {
       header.split('\n').forEach((l) {
@@ -250,8 +253,9 @@ Filename: $baseName
       });
     }
     xml.writeln('<resources>');
+    level++;
     data.values.forEach((item) {
-      item.add2Xml(xml);
+      item.add2Xml(xml, level);
     });
     xml.writeln('</resources>');
 
@@ -341,24 +345,31 @@ class _StrData {
 
   _StrData(this.key, this.value);
 
-  void add2Xml(StringBuffer xml) {
+  void add2Xml(StringBuffer xml, int startLevel) {
+    final level = startLevel;
+
     final desc = meta != null ? meta!['description'] as String? : null;
-    if (desc?.isNotEmpty ?? false) xml.writeln('<!-- $desc -->');
+    if (desc?.isNotEmpty ?? false) xml.writeElement('<!-- $desc -->', level);
 
     final parsed = arbDecoder.decodeValue(key, value);
     if (parsed is L10nTextEntry) {
-      xml.writeln('<string name="$key">${_prepareStr(parsed.text)}</string>');
+      xml.writeElement(
+          '<string name="$key">${_prepareStr(parsed.text)}</string>', level);
     } else if (parsed is L10nPluralEntry) {
-      xml.writeln('<plurals name="$key">');
+      xml.writeElement('<plurals name="$key">', level);
       final plural = parsed;
+      final sublevel = level + 1;
       plural.codeAttributeNames.forEach((quantity) {
         final val = plural[quantity];
         if (val != null) {
-          xml.writeln('<item quantity="$quantity">${_prepareStr(val)}</item>');
+          xml.writeElement(
+            '<item quantity="$quantity">${_prepareStr(val)}</item>',
+            sublevel,
+          );
         }
       });
 
-      xml.writeln('</plurals>');
+      xml.writeElement('</plurals>', level);
     } else {
       throw UnimplementedError(
           'Process is not implemented for type ${parsed.runtimeType}. '
@@ -367,4 +378,19 @@ class _StrData {
   }
 
   String _prepareStr(String value) => value.replaceAll('\n', r'\n');
+}
+
+String _indent(int level) {
+  return _kXmlIndent * level;
+}
+
+extension _XmlWriterStringBufferExt on StringBuffer {
+  /// Writes an XML element with indentation.
+  StringBuffer writeElement(String str, int level) {
+    final indent = _indent(level);
+    return this
+      ..write(indent)
+      ..write(str)
+      ..writeln();
+  }
 }
