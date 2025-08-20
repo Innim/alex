@@ -174,7 +174,8 @@ alex l10n check
 
 If you want to check translations for a specific locale, you can use the `--locale` option:
 
-```alex l10n check --locale=en
+```
+alex l10n check --locale=en
 ```
 
 #### Import translations from XML
