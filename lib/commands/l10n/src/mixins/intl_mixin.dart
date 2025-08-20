@@ -72,6 +72,7 @@ mixin IntlMixin {
     bool printStdOut = true,
   }) async {
     try {
+      final locale = l10nConfig.baseLocaleForArb;
       final outputDir = l10nConfig.outputDir;
       final sourcePath = l10nConfig.sourceFile;
       await runIntlOrFail(
@@ -79,6 +80,7 @@ mixin IntlMixin {
         [
           '--output-dir=$outputDir',
           sourcePath,
+          '--locale=${locale.value}',
           '--warnings-are-errors',
         ],
         title: 'Extracting localization',

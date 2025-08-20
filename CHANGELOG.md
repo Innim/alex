@@ -1,3 +1,7 @@
+
+[L10n]
+* Auto adding `@@locale` to ARB files.
+
 ## 1.8.5
 
 [L10n] `to_xml`:

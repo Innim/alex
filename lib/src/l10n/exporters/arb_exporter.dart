@@ -22,6 +22,7 @@ class ArbExporter extends L10nExporter<ArbLocale> {
   Future<bool> execute() async {
     final map = <String, Object>{
       '@@last_modified': DateTime.now().toIso8601String(),
+      '@@locale': locale.value,
     };
 
     data.forEach((key, value) {
