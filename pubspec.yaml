@@ -26,9 +26,8 @@ dependencies:
   meta: ^1.7.0
   open_url: ^2.0.0
   path: ^1.8.0
-  plain_optional: ^1.0.0
   pub_updater: ^0.3.0
-  pubspec_yaml_2: ^3.2.0
+  pubspec_yaml_2: ^4.0.0
   recase: ^4.0.0
   tuple: ^2.0.0
   version: ^2.0.0

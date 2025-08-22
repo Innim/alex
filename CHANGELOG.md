@@ -1,3 +1,6 @@
+[Pub] `get`:
+* Added support for **workspaces**. See [documentation](https://dart.dev/tools/pub/workspaces).
+
 ## 1.8.6+1
 
 * **Fixed**: `from_xml` write `@@locale` at second place in ARB files, but `extract` at first.

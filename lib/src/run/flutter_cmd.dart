@@ -19,6 +19,10 @@ class FlutterCmd extends CmdBase {
     Logger? logger,
   }) : logger = logger ?? Logger('flutter');
 
+  Future<bool> initFvm() async {
+    return _hasFvm ??= await _checkIfHasFvm();
+  }
+
   /// Runs `flutter` command.
   Future<ProcessResult> run(
     String command, {
@@ -32,7 +36,7 @@ class FlutterCmd extends CmdBase {
     final String executable;
     final args = <String>[];
 
-    final hasFvm = _hasFvm ??= await _checkIfHasFvm();
+    final hasFvm = await initFvm();
     if (hasFvm) {
       executable = _fvmCmd();
       args.add(flutter);

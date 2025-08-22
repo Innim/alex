@@ -6,7 +6,6 @@ import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
-import 'package:plain_optional/plain_optional.dart';
 import 'package:pubspec_yaml_2/pubspec_yaml_2.dart';
 import 'package:version/version.dart';
 
@@ -124,12 +123,12 @@ class Spec {
   /// Returns version.
   ///
   /// Throws exception if no version found.
-  Version get version => _yamlMap.version.iif(
-      some: Version.parse, none: () => throw StateError('Version not found'));
+  Version get version => Version.parse(
+      _yamlMap.version.valueOr(() => throw StateError('Version not found')));
 
   /// Updates version.
   Spec setVersion(Version value) {
-    return Spec(_yamlMap.copyWith(version: Optional("$value")));
+    return Spec(_yamlMap.copyWith(version: Optional.value("$value")));
   }
 
   String getContent() {
@@ -153,4 +152,9 @@ class Spec {
   bool _hasDependency(
           Iterable<PackageDependencySpec> dependencies, String name) =>
       dependencies.any((d) => d.package() == name);
+
+  bool isResolveFromWorkspace() =>
+      _yamlMap.resolution.valueOr(() => '') == 'workspace';
+
+  bool isWorkspaceRoot() => _yamlMap.workspace?.isNotEmpty ?? false;
 }
