@@ -1,3 +1,5 @@
+## 1.8.7
+
 [Pub] `get`:
 * Added support for **workspaces**. See [documentation](https://dart.dev/tools/pub/workspaces).
 
