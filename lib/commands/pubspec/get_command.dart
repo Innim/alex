@@ -62,10 +62,13 @@ class GetCommand extends PubspecCommandBase {
         printInfo(
           'Getting dependencies for ./$relativePath [${done + 1}/$total]',
         );
+
+        final printOutput = isVerbose;
         await flutter.pubGetOrFail(
-            path: p.dirname(file.path),
-            printStdOut: false,
-            immediatePrint: false);
+          path: p.dirname(file.path),
+          printStdOut: printOutput,
+          immediatePrint: printOutput,
+        );
         done++;
       }
 
