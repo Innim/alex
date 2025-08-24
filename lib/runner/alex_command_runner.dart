@@ -7,6 +7,7 @@ import 'package:alex/commands/pubspec/pubspec_command.dart';
 import 'package:alex/commands/release/release_command.dart';
 import 'package:alex/commands/settings/settings_command.dart';
 import 'package:alex/runner/alex_command.dart';
+import 'package:alex/commands/update_command.dart';
 import 'package:alex/src/const.dart';
 import 'package:alex/src/local_data.dart';
 import 'package:alex/src/version.dart';
@@ -38,6 +39,7 @@ class AlexCommandRunner extends CommandRunner<int> {
       PubspecCommand(),
       FeatureCommand(),
       SettingsCommand(),
+      UpdateCommand(),
     ].forEach(addCommand);
 
     argParser.addFlag(
