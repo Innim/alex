@@ -42,7 +42,13 @@ In such case you can edit specified file (`~/Development/flutter/.pub-cache/bin/
 
 #### Updating
 
-To update alex you should execute the same command as for installing:
+To update alex you can use the command:
+
+```
+$ alex update
+```
+
+Or, if you want, you can update alex by executing the same command as for installing:
 
 ```
 $ flutter pub global activate alex

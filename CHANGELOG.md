@@ -1,3 +1,5 @@
+* New command `l10n update` to update **alex** to the latest version.
+
 ## 1.8.7
 
 [Pub] `get`:
