@@ -1,12 +1,19 @@
 import 'dart:io';
 import 'package:alex/runner/alex_command.dart';
+import 'package:alex/src/version.dart';
 
 class UpdateCommand extends AlexCommand {
-  UpdateCommand() : super('update', 'Update alex to the latest version from pub.dev.');
+  UpdateCommand()
+      : super(
+          'update',
+          'Update alex to the latest version from pub.dev.',
+        );
 
   @override
   Future<int> doRun() async {
     printInfo('Updating alex...');
+    const currentVersion = packageVersion;
+
     final result = await Process.run(
       'dart',
       ['pub', 'global', 'activate', 'alex'],
@@ -19,9 +26,26 @@ class UpdateCommand extends AlexCommand {
       printError(result.stderr.toString());
     }
     if (result.exitCode == 0) {
-      return success(message: 'alex has been updated to the latest version.');
+      final newVersion = _parseNewVersion(result.stdout?.toString());
+      final String message;
+      if (newVersion == null) {
+        printInfo('⚠️ Failed to parse new version. Contact developer.');
+        message = '🎯 alex has been updated to the latest version.';
+      } else if (newVersion == currentVersion) {
+        message = '✅ alex is already at the latest version ($currentVersion).';
+      } else {
+        message = '⬆️ alex updated from $currentVersion to $newVersion.';
+      }
+      return success(message: message);
     } else {
       return error(result.exitCode, message: 'Failed to update alex.');
     }
+  }
+
+  String? _parseNewVersion(String? output) {
+    if (output == null) return null;
+    final versionRegex = RegExp(r'Activated alex (\d+\.\d+\.\d+).');
+    final match = versionRegex.firstMatch(output);
+    return match?.group(1);
   }
 }
