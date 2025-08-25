@@ -30,6 +30,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _argLocal = 'local';
   static const _argEntryPoint = 'entry-point';
   static const _argBuildPlatforms = 'platforms';
+  static const _argTargetPath = 'target-path';
   static const _argSkipL10n = 'skip_l10n';
   static const _argDemo = 'demo';
 
@@ -73,6 +74,13 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
             'Only for local release builds.',
         defaultsTo: [_BuildPlatform.android, _BuildPlatform.ios].asArgs(),
         valueHelp: 'PLATFORMS',
+      )
+      ..addOption(
+        _argTargetPath,
+        abbr: 't',
+        help: 'Target directory path where build artifacts will be copied. '
+            'Only for local release builds.',
+        valueHelp: 'DIR_PATH',
       )
       ..addFlag(
         _argDemo,
@@ -195,13 +203,14 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     if (isLocalRelease) {
       final entryPoint = args[_argEntryPoint] as String?;
+      final targetPath = args[_argTargetPath] as String?;
       final platforms =
           _BuildPlatform.parseArgs(args[_argBuildPlatforms] as String);
 
       printVerbose('Platforms: ${platforms.asDesc()}');
 
       for (final platform in platforms) {
-        final localBuildResult = await _localBuild(entryPoint, platform);
+        final localBuildResult = await _localBuild(entryPoint, platform, targetPath);
         if (localBuildResult != 0) return localBuildResult;
       }
     }
@@ -539,7 +548,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return 0;
   }
 
-  Future<int> _localBuild(String? entryPoint, _BuildPlatform platform) async {
+  Future<int> _localBuild(String? entryPoint, _BuildPlatform platform, String? targetPath) async {
     printInfo('Run local build for ${platform.name}');
 
     final String subcommand;
@@ -577,7 +586,15 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       final buildLine = message
           ?.split('\n')
           .firstWhere((line) => line.contains('✓ Built '), orElse: () => '');
-      if (buildLine != null && buildLine.isNotEmpty) printInfo(buildLine);
+      
+      if (buildLine != null && buildLine.isNotEmpty) {
+        printInfo(buildLine);
+        
+        // Copy build artifact to target path if specified
+        if (targetPath != null) {
+          await _copyBuildArtifact(buildLine, targetPath, platform);
+        }
+      }
       return 0;
     } else {
       return error(
@@ -586,6 +603,47 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
             res.stdout?.toString() ??
             'Local build failed',
       );
+    }
+  }
+
+  Future<void> _copyBuildArtifact(String buildLine, String targetPath, _BuildPlatform platform) async {
+    // Extract the source file path from the build output line
+    // Examples:
+    // ✓ Built build/app/outputs/bundle/release/app-release.aab (27.1MB).
+    // ✓ Built build/ios/ipa/myapp.ipa (45.2MB).
+    
+    final builtPattern = RegExp(r'✓ Built (.+?) \(');
+    final match = builtPattern.firstMatch(buildLine);
+    
+    if (match == null) {
+      printWarning('Could not parse build output to find artifact path: $buildLine');
+      return;
+    }
+    
+    final sourcePath = match.group(1)!;
+    final sourceFile = File(sourcePath);
+    
+    if (!await sourceFile.exists()) {
+      printWarning('Build artifact not found at: $sourcePath');
+      return;
+    }
+    
+    // Ensure target directory exists
+    final targetDir = Directory(targetPath);
+    if (!await targetDir.exists()) {
+      await targetDir.create(recursive: true);
+      printInfo('Created target directory: $targetPath');
+    }
+    
+    // Copy the file to target directory
+    final fileName = p.basename(sourcePath);
+    final targetFile = File(p.join(targetPath, fileName));
+    
+    try {
+      await sourceFile.copy(targetFile.path);
+      printInfo('Copied ${platform.name} build artifact to: ${targetFile.path}');
+    } catch (e) {
+      printWarning('Failed to copy build artifact to target path: $e');
     }
   }
 }
