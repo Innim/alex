@@ -54,6 +54,12 @@ Or, if you want, you can update alex by executing the same command as for instal
 $ flutter pub global activate alex
 ```
 
+To check for updates, you can use the command:
+
+```
+$ alex update check
+```
+
 #### Fix problems with cyrillic encoding on Windows
 
 When entering Cyrillic characters (while saving changelog) they may not be displayed correctly or may not be displayed at all.
