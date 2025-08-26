@@ -1,3 +1,5 @@
+## 1.9.1
+
 * New command `alex update check` to check if there are updates available for **alex**.
 
 ## 1.9.0
