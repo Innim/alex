@@ -26,8 +26,8 @@ void verbose(String message) {
   }
 }
 
-void setupRootLogger() {
-  Logger.root.level = Level.INFO;
+void setupRootLogger({bool isVerbose = false}) {
+  setRootLoggerLevel(isVerbose: isVerbose);
   _setupLogger(Logger.root);
 }
 

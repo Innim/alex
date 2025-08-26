@@ -42,19 +42,22 @@ class AlexCommandRunner extends CommandRunner<int> {
       UpdateCommand(),
     ].forEach(addCommand);
 
-    argParser.addFlag(
-      _argVersion,
-      abbr: 'v',
-      help: 'Show current version of alex',
-      negatable: false,
-    );
+    argParser
+      ..addFlag(
+        _argVersion,
+        abbr: 'v',
+        help: 'Show current version of alex',
+        negatable: false,
+      )
+      ..addVerboseFlag();
   }
 
   @override
   Future<int?> runCommand(ArgResults topLevelResults) async {
     final version = topLevelResults[_argVersion] as bool;
+    final isVerbose = _hasVerbose(topLevelResults);
 
-    print.setupRootLogger();
+    print.setupRootLogger(isVerbose: isVerbose);
 
     await _checkForUpdates();
 
@@ -102,5 +105,10 @@ class AlexCommandRunner extends CommandRunner<int> {
       // TODO: print verbose
       _out.info('Failed to check for a new version');
     }
+  }
+
+  bool _hasVerbose(ArgResults? results) {
+    return results != null &&
+        (results.isVerbose() || _hasVerbose(results.command));
   }
 }
