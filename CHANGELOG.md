@@ -1,6 +1,8 @@
+* New command `alex update check` to check if there are updates available for **alex**.
+
 ## 1.9.0
 
-* New command `l10n update` to update **alex** to the latest version.
+* New command `alex update` to update **alex** to the latest version.
 
 ## 1.8.7
 

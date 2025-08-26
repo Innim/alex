@@ -2,12 +2,16 @@ import 'dart:io';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/version.dart';
 
+import 'check_command.dart';
+
 class UpdateCommand extends AlexCommand {
   UpdateCommand()
       : super(
           'update',
           'Update alex to the latest version from pub.dev.',
-        );
+        ) {
+    addSubcommand(UpdateCheckCommand());
+  }
 
   @override
   Future<int> doRun() async {

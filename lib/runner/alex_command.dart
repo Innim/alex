@@ -116,6 +116,9 @@ abstract class AlexCommand extends Command<int> {
     }
   }
 
+  @protected
+  Logger get out => _logger;
+
   /// Prints message if verbose flag is on.
   @protected
   void printVerbose(String message) {
