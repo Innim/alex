@@ -110,11 +110,10 @@ alex release start
 **Options:**
 
 - `--check_locale=<LOCALE>` (`-l`) - Locale to check before release if translations exist for all strings. If not specified, "en" locale will be checked.
-- `--skip_l10n` (`-s`) - Skip localization process during release.
+- `--skip_l10n` (`-s`) - Skip translations check during release.
 - `--local` (`-b`) - Run local release build for Android and iOS platforms.
 - `--entry-point=<path>` (`-e`) - Entry point of the app (e.g., lib/main_test.dart). Only for local release builds.
-- `--platforms=<PLATFORMS>` (`-p`) - Target build platforms: ios, android. You can pass multiple platforms separated by commas. Defaults to "android,ios".
-- `--demo` - Run command in demonstration mode for testing.
+- `--platforms=<PLATFORMS>` (`-p`) - Target build platforms: ios, android. You can pass multiple platforms separated by commas. Defaults to "android,ios". Only for local release builds.
 
 **Examples:**
 
@@ -123,7 +122,7 @@ Basic release (default mode):
 alex release start
 ```
 
-Local build for testing:
+Local build for manual upload to store or any other distribution:
 ```
 alex release start --local
 ```
@@ -133,7 +132,7 @@ Release with custom entry point and specific platform:
 alex release start --local --entry-point=lib/main_dev.dart --platforms=android
 ```
 
-Skip localization process:
+Skip translations check:
 ```
 alex release start --skip_l10n
 ```
