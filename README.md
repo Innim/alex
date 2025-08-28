@@ -84,7 +84,58 @@ More about specified configuration parameters - in modules descriptions in the [
 ## Commands
 
 ### Release
-// TODO @chessmax: `release` command description
+
+Manage app releases with automated version control, changelog updates, and build processes.
+
+```
+alex release <command>
+```
+
+#### Start release
+
+Start a new release process using gitflow:
+- checkout and create release branch from `develop`
+- increment version number
+- update CHANGELOG.md
+- validate translations (optional)
+- run pre-release scripts (if configured)
+- generate release notes (with ChatGPT if API key is configured)
+- create local builds (optional)
+- finish release and merge to `master`
+
+```
+alex release start
+```
+
+**Options:**
+
+- `--check_locale=<LOCALE>` (`-l`) - Locale to check before release if translations exist for all strings. If not specified, "en" locale will be checked.
+- `--skip_l10n` (`-s`) - Skip translations check during release.
+- `--local` (`-b`) - Run local release build for Android and iOS platforms.
+- `--entry-point=<path>` (`-e`) - Entry point of the app (e.g., lib/main_test.dart). Only for local release builds.
+- `--platforms=<PLATFORMS>` (`-p`) - Target build platforms: ios, android. You can pass multiple platforms separated by commas. Defaults to "android,ios". Only for local release builds.
+
+**Examples:**
+
+Basic release (default mode):
+```
+alex release start
+```
+
+Local build for manual upload to store or any other distribution:
+```
+alex release start --local
+```
+
+Release with custom entry point and specific platform:
+```
+alex release start --local --entry-point=lib/main_dev.dart --platforms=android
+```
+
+Skip translations check:
+```
+alex release start --skip_l10n
+```
 
 ### Feature
 
