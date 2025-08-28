@@ -60,6 +60,8 @@ To check for updates, you can use the command:
 $ alex update check
 ```
 
+See [Commands > Update](#update).
+
 #### Fix problems with cyrillic encoding on Windows
 
 When entering Cyrillic characters (while saving changelog) they may not be displayed correctly or may not be displayed at all.
@@ -355,6 +357,23 @@ or
 
 ```
 alex pub get
+```
+
+### Update
+
+Manage updates for `alex`.
+
+To update `alex` to the latest version:
+
+```
+alex update
+```
+
+
+To check if a new version is available:
+
+```
+alex update check
 ```
 
 ### Global settings
