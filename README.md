@@ -99,13 +99,15 @@ Start a new release process using gitflow:
 - update CHANGELOG.md
 - validate translations (optional)
 - run pre-release scripts (if configured)
-- generate release notes (with ChatGPT if API key is configured)
+- generate release notes for CI/CD (with ChatGPT if API key is configured, see [Global settings](#global-settings))
 - create local builds (optional)
 - finish release and merge to `master`
 
 ```
 alex release start
 ```
+
+_Note: You can change GIT branches, localization parameters, CI/CD and other settings in your project's [configuration](#configuration)._
 
 **Options:**
 
@@ -114,6 +116,17 @@ alex release start
 - `--local` (`-b`) - Run local release build for Android and iOS platforms.
 - `--entry-point=<path>` (`-e`) - Entry point of the app (e.g., lib/main_test.dart). Only for local release builds.
 - `--platforms=<PLATFORMS>` (`-p`) - Target build platforms: ios, android. You can pass multiple platforms separated by commas. Defaults to "android,ios". Only for local release builds.
+
+**Pre-release scripts:**
+
+You can define pre-release scripts in your project's [configuration](#configuration):
+
+```yaml
+scripts:
+    pre_release_scripts_paths: [ 'tools/generate_rates_cache.dart' ]
+```
+
+These scripts will be executed before the release process starts.
 
 **Examples:**
 
