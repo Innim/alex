@@ -14,7 +14,7 @@ It is recommended to install the package globally and use it as an executable.
 
 You can install the package from the command line with Flutter:
 
-```
+```bash
 $ flutter pub global activate alex
 ```
 
@@ -22,13 +22,13 @@ And follow the instructions after installation (on Unix systems, you may need to
 
 Once installed, you can run commands with:
 
-```
+```bash
 $ alex
 ```
 
 Check the installed version with:
 
-```
+```bash
 $ alex --version
 ```
 
@@ -38,19 +38,19 @@ If you encounter issues during installation or while running alex, see the [Prob
 
 To update alex you can use the command:
 
-```
+```bash
 $ alex update
 ```
 
 Or, if you want, you can update alex by executing the same command as for installing:
 
-```
+```bash
 $ flutter pub global activate alex
 ```
 
 To check for updates, you can use the command:
 
-```
+```bash
 $ alex update check
 ```
 
@@ -77,8 +77,8 @@ More about specified configuration parameters - in modules descriptions in the [
 
 Manage app releases with automated version control, changelog updates, and build processes.
 
-```
-alex release <command>
+```bash
+$ alex release <command>
 ```
 
 #### Start release
@@ -93,8 +93,8 @@ Start a new release process using gitflow:
 - create local builds (optional)
 - finish release and merge to `master`
 
-```
-alex release start
+```bash
+$ alex release start
 ```
 
 _Note: You can change GIT branches, localization parameters, CI/CD and other settings in your project's [configuration](#configuration)._
@@ -121,37 +121,37 @@ These scripts will be executed before the release process starts.
 **Examples:**
 
 Basic release (default mode):
-```
-alex release start
+```bash
+$ alex release start
 ```
 
 Local build for manual upload to store or any other distribution:
-```
-alex release start --local
+```bash
+$ alex release start --local
 ```
 
 Release with custom entry point and specific platform:
-```
-alex release start --local --entry-point=lib/main_dev.dart --platforms=android
+```bash
+$ alex release start --local --entry-point=lib/main_dev.dart --platforms=android
 ```
 
 Skip translations check:
-```
-alex release start --skip_l10n
+```bash
+$ alex release start --skip_l10n
 ```
 
 ### Feature
 
 Work with feature branches and issues.
 
-```
-alex feature <command>
+```bash
+$ alex feature <command>
 ```
 
-or 
+or
 
-```
-alex f <command>
+```bash
+$ alex f <command>
 ```
 
 #### Finish feature 
@@ -162,20 +162,20 @@ Finish feature by issue id:
 - delete feature branch from remote;
 - merge `develop` in `pipe/test`.
 
-```
-alex feature finish --issue={issueId}
+```bash
+$ alex feature finish --issue={issueId}
 ```
 
 or
 
-```
-alex f f -i{issueId}
+```bash
+$ alex f f -i{issueId}
 ```
 
 Also you can run command without issue id:
 
-```
-alex f f
+```bash
+$ alex f f
 ```
 
 Then alex will print all current feature branches and ask for issue id in interactive mode.
@@ -183,8 +183,8 @@ Then alex will print all current feature branches and ask for issue id in intera
 If you have a problem with interactive mode (for example encoding issues on Window),
 you can provide changelog line as an argument:
 
-```
-alex f f -i{issueId} -c"Some new feature"
+```bash
+$ alex f f -i{issueId} -c"Some new feature"
 ```
 
 It's important to use double quote (`"`) on Windows, but on macOS or Linux you can also use a single quote (`'`).
@@ -195,53 +195,54 @@ Work with localization files.
 
 #### Extract string to ARB
 
-```
-alex l10n extract
+```bash
+$ alex l10n extract
 ```
 
 #### Generate Dart code by ARB
 
-```
-alex l10n generate
+```bash
+$ alex l10n generate
 ```
 
 #### Generate XML for translation
 
+```bash
+$ alex l10n to_xml
 ```
-alex l10n to_xml
-```
+
 Also you can export json localization to xml.
 Json localization can be used for a backend localization.
 
-```
-alex l10n to_xml --from=json --source=/path/to/json/localization/dir
+```bash
+$ alex l10n to_xml --from=json --source=/path/to/json/localization/dir
 ```
 
 Also you can export only difference (new and changed strings) to xml.
 You should specify the path to the directory for files with changes.
 
-```
-alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
+```bash
+$ alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
 ```
 
 #### Check translations for all strings
 
 To check all translations for all locales, you can use the command:
 
-```
-alex l10n check_translations
+```bash
+$ alex l10n check_translations
 ```
 
 or just:
 
-```
-alex l10n check
+```bash
+$ alex l10n check
 ```
 
 If you want to check translations for a specific locale, you can use the `--locale` option:
 
-```
-alex l10n check --locale=en
+```bash
+$ alex l10n check --locale=en
 ```
 
 #### Import translations from XML
@@ -250,20 +251,20 @@ It's for working with translations from Google Play.
 
 You can export xml translations to the project arb translations:
 
-```
-alex l10n from_xml
+```bash
+$ alex l10n from_xml
 ```
 
 Also you can export to the Android localization:
 
-```
-alex l10n from_xml --to=android
+```bash
+$ alex l10n from_xml --to=android
 ```
 
 And to the iOS localization:
 
-```
-alex l10n from_xml --to=ios
+```bash
+$ alex l10n from_xml --to=ios
 ```
 
 Localization xml files for iOS should start with `ios_` prefix.
@@ -275,8 +276,8 @@ you need to import them in project's xml files. You can
 copy it all manually, but it's very inconvenient.
 So you can use the command `import_xml` to do it.
 
-```
-alex l10n import_xml --path=path/to/dir/with/translations
+```bash
+$ alex l10n import_xml --path=path/to/dir/with/translations
 ```
 
 If the files have the suffix `_diffs` then they will be imported as a list of changes.
@@ -287,8 +288,8 @@ If the files have the suffix `_diffs` then they will be imported as a list of ch
 Remove unused strings from XML files. Check ARB files for all keys and remove
 unused strings from XML files for all locales.
 
-```
-alex l10n cleanup_xml
+```bash
+$ alex l10n cleanup_xml
 ```
 
 ### Code 
@@ -299,22 +300,22 @@ Work with code.
 
 Generate `JsonSerializable` and other.
 
-```
-alex code gen
+```bash
+$ alex code gen
 ```
 
 ### Pubspec
 
 Work with pubspec and dependencies.
 
-```
-alex pubspec <command>
+```bash
+$ alex pubspec <command>
 ```
 
 or 
 
-```
-alex pub <command>
+```bash
+$ alex pub <command>
 ```
 
 #### Update dependency
@@ -322,14 +323,14 @@ alex pub <command>
 Update specified dependency. It's useful when you want to update
 dependency for git. 
 
-```
-alex pubspec update
+```bash
+$ alex pubspec update
 ```
 
 and input package name. Or define it right in a command:
 
-```
-alex pubspec update -dPACKAGE_NAME
+```bash
+$ alex pubspec update -dPACKAGE_NAME
 ```
 
 #### Get dependencies
@@ -337,14 +338,14 @@ alex pubspec update -dPACKAGE_NAME
 Run `pub get` for all projects/packages in folder (recursively). It's useful
 when you have multiple packages or project and package in single repository.
 
-```
-alex pubspec get
+```bash
+$ alex pubspec get
 ```
 
 or 
 
-```
-alex pub get
+```bash
+$ alex pub get
 ```
 
 ### Update
@@ -353,15 +354,15 @@ Manage updates for `alex`.
 
 To update `alex` to the latest version:
 
-```
-alex update
+```bash
+$ alex update
 ```
 
 
 To check if a new version is available:
 
-```
-alex update check
+```bash
+$ alex update check
 ```
 
 ### Global settings
@@ -376,14 +377,14 @@ Currently supported settings:
 
 Allow to set setting's value.
 
-```
-alex settings set <name> <value>
+```bash
+$ alex settings set <name> <value>
 ```
 
 For example:
 
-```
-alex settings set open_ai_api_key abc123
+```bash
+$ alex settings set open_ai_api_key abc123
 ```
 
 ## Problem solving
@@ -416,12 +417,12 @@ Options -> Text -> Character set -> UTF-8.
 
 Do not forget regenerate code when updating the version:
 
-```
-alex code gen
+```bash
+$ alex code gen
 ```
 
 or 
 
-```
-dart pub run build_runner build --delete-conflicting-outputs
+```bash
+$ dart pub run build_runner build --delete-conflicting-outputs
 ```
