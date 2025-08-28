@@ -10,7 +10,7 @@
 
 ### Installing
 
-It's recommended to install the package globally and use as an executable.
+It is recommended to install the package globally and use it as an executable.
 
 You can install the package from the command line with Flutter:
 
@@ -18,27 +18,21 @@ You can install the package from the command line with Flutter:
 $ flutter pub global activate alex
 ```
 
-And follow the instructions (you should add PATH variable on unix systems).
+And follow the instructions after installation (on Unix systems, you may need to modify your PATH variable).
 
-Now you can execute commands with
+Once installed, you can run commands with:
 
 ```
 $ alex
 ```
 
-Check the version with:
+Check the installed version with:
 
 ```
 $ alex --version
 ```
 
-⚠️ **Attention!** If when you try to run `alex` you will see something like:
-
-```
-~/Development/flutter/.pub-cache/bin/alex: line 17: pub: command not found
-```
-
-In such case you can edit specified file (`~/Development/flutter/.pub-cache/bin/alex` in this example). All you need to change in it - it's use `flutter pub` instead of `pub` or `dart pub`, so replace `pub global run alex:alex "$@"` with `flutter pub global run alex:alex "$@"`, save the file, and you are all set.
+If you encounter issues during installation or while running alex, see the [Problem Solving](#problem-solving) section.
 
 #### Updating
 
@@ -62,12 +56,6 @@ $ alex update check
 
 See [Commands > Update](#update).
 
-#### Fix problems with cyrillic encoding on Windows
-
-When entering Cyrillic characters (while saving changelog) they may not be displayed correctly or may not be displayed at all.
-To avoid this, it is recommended to use the external git bash terminal (C:\Program Files\Git), in the settings of which you must specify encoding (Options -> Text -> Character set -> UTF-8).
-
-![](https://raw.githubusercontent.com/Innim/alex/master/readme_images/bash.png)
 
 ### Usage
 
@@ -397,6 +385,32 @@ For example:
 ```
 alex settings set open_ai_api_key abc123
 ```
+
+## Problem solving
+
+### Command not found
+
+If, when trying to run `alex`, you see an error like this:
+
+```
+~/Development/flutter/.pub-cache/bin/alex: line 17: pub: command not found
+```
+
+You can fix it by editing the file mentioned in the error (in this example: `~/Development/flutter/.pub-cache/bin/alex`).
+You need to se `dart pub` or `flutter pub` instead of `pub`. So replace the line `pub global run alex:alex "$@"` with `dart pub global run alex:alex "$@"` 
+(or `flutter pub global run alex:alex "$@"`, depending on your setup).
+
+Save the file, and you’re good to go.
+
+### Cyrillic Encoding Issues on Windows
+
+
+When entering Cyrillic characters (e.g., while saving a changelog), they may be displayed incorrectly or not at all.
+
+To fix this, it is recommended to use the external Git Bash terminal (C:\Program Files\Git). In its settings, set the character encoding to UTF-8:
+Options -> Text -> Character set -> UTF-8.
+
+![](https://raw.githubusercontent.com/Innim/alex/master/readme_images/bash.png)
 
 ## Development
 
