@@ -49,7 +49,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       ..addFlag(
         _argSkipL10n,
         abbr: 's',
-        help: 'Skip process localization',
+        help: 'Skip translations check during release.',
       )
       ..addFlag(
         _argLocal,
