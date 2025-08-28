@@ -13,6 +13,10 @@ l10n:
   xml_output_name: 
   require_latin: [ 'ca', 'cs', 'da', 'de', 'en', 'es', 'fi', 'fr', 'hr', 'hu', 'id', 'it', 'ms', 'nl', 'no', 'pl', 'pt', 'pt_BR', 'ro', 'sk', 'sl', 'sr', 'sv', 'tr' ]
 
+# Custom scripts
+scripts:
+  pre_release_scripts_paths: []
+
 # CI settings
 ci:
   enabled: true
