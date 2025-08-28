@@ -141,6 +141,11 @@ class Spec {
     file.writeAsStringSync(content);
   }
 
+  bool hasEnvironmentConstraint() => _yamlMap.environment.isNotEmpty;
+
+  bool hasAnyDependencies() =>
+      _yamlMap.dependencies.isNotEmpty || _yamlMap.devDependencies.isNotEmpty;
+
   bool hasDependency(String name) =>
       _hasDependency(_yamlMap.dependencies, name);
 

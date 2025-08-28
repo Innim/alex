@@ -1,3 +1,4 @@
+* [pubspec] `get`: Skip not valid pubspec files. Different result output when pubspec files are not found.
 * README: added "Release" and "Update" sections. Improvements and fixes.
 
 ## 1.9.1

@@ -21,61 +21,87 @@ class GetCommand extends PubspecCommandBase {
     if (pubspecFiles.isNotEmpty) {
       printVerbose('Found ${pubspecFiles.length} pubspec files.');
 
+      var workspaceDetected = false;
       final filtered = (pubspecFiles.length == 1
               ? pubspecFiles
-              : pubspecFiles.where((e) {
-                  final pubspec = Spec.byFile(e);
-                  return !pubspec.isResolveFromWorkspace() ||
-                      pubspec.isWorkspaceRoot();
+              : pubspecFiles.where((f) {
+                  final pubspec = Spec.byFile(f);
+
+                  if (pubspec.isWorkspaceRoot()) {
+                    workspaceDetected = true;
+                    return true;
+                  }
+
+                  if (pubspec.isResolveFromWorkspace()) {
+                    printVerbose('Skipping ${f.path}: resolved from workspace');
+                    workspaceDetected = true;
+                    return false;
+                  }
+
+                  if (!pubspec.hasAnyDependencies() &&
+                      !pubspec.hasEnvironmentConstraint()) {
+                    printVerbose(
+                      'Skipping ${f.path}: no dependencies and no environment constraint',
+                    );
+                    return false;
+                  }
+
+                  return true;
                 }))
           .toList();
 
       if (filtered.isEmpty) {
-        // we have at least one pubspec to process
-        // assume that all pubspecs belong to one workspace
-        printInfo(
-          'All pubspec files belong to workspace, but no root pubspec found. '
-          'Using the first one.',
-        );
-        filtered.add(pubspecFiles.first);
+        if (workspaceDetected) {
+          // we have at least one pubspec to process
+          // assume that all pubspecs belong to one workspace
+          printInfo(
+            'All pubspec files belong to workspace, but no root pubspec found. '
+            'Using the first one.',
+          );
+          filtered.add(pubspecFiles.first);
+        }
       } else if (filtered.length < pubspecFiles.length) {
         // TODO: check workspace to make sure that they include all filtered pubspecs
-        printInfo('Workspace detected.');
+        if (workspaceDetected) printInfo('Workspace detected.');
 
         final skipped = pubspecFiles.length - filtered.length;
+        printVerbose('Skipped $skipped pubspec ${_files(skipped)}');
+      }
+
+      if (filtered.isNotEmpty) {
+        final total = filtered.length;
         printVerbose(
-          'Skipped $skipped pubspec ${_files(skipped)} as part of the workspace.',
+          'Getting dependencies for $total pubspec ${_files(total)}.',
         );
+
+        await flutter.initFvm();
+
+        var done = 0;
+
+        for (final file in filtered) {
+          final relativePath = p.relative(file.path, from: rootDir);
+          printInfo(
+            'Getting dependencies for ./$relativePath [${done + 1}/$total]',
+          );
+
+          final printOutput = isVerbose;
+          await flutter.pubGetOrFail(
+            path: p.dirname(file.path),
+            printStdOut: printOutput,
+            immediatePrint: printOutput,
+          );
+          done++;
+        }
+
+        printInfo('Got dependencies for $done pubspec ${_files(done)}.');
+
+        return success(message: 'Done ✅');
+      } else {
+        return success(message: 'No valid pubspec files found.');
       }
-
-      final total = filtered.length;
-      printVerbose(
-        'Getting dependencies for $total pubspec ${_files(total)}.',
-      );
-
-      await flutter.initFvm();
-
-      var done = 0;
-
-      for (final file in filtered) {
-        final relativePath = p.relative(file.path, from: rootDir);
-        printInfo(
-          'Getting dependencies for ./$relativePath [${done + 1}/$total]',
-        );
-
-        final printOutput = isVerbose;
-        await flutter.pubGetOrFail(
-          path: p.dirname(file.path),
-          printStdOut: printOutput,
-          immediatePrint: printOutput,
-        );
-        done++;
-      }
-
-      printInfo('Got dependencies for $done pubspec ${_files(done)}.');
+    } else {
+      return success(message: 'No pubspec files found.');
     }
-
-    return success(message: 'Done ✅');
   }
 }
 
