@@ -51,7 +51,7 @@ $ flutter pub global activate alex
 To check for updates, you can use the command:
 
 ```bash
-$ alex update check
+$ alex update --check
 ```
 
 See [Commands > Update](#update).
@@ -362,7 +362,7 @@ $ alex update
 To check if a new version is available:
 
 ```bash
-$ alex update check
+$ alex update --check
 ```
 
 ### Global settings

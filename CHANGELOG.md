@@ -1,3 +1,6 @@
+* **Fixed**: `alex update` command not working.
+* Command `alex update check` replaced with `alex update --check`.
+
 ## 1.9.2
 
 * [pubspec] `get`: Skip not valid pubspec files. Different result output when pubspec files are not found.

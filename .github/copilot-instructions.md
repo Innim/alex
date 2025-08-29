@@ -151,7 +151,7 @@ test/              # Test files
 
 **Update**:
 - `alex update` - Update alex itself.
-- `alex update check` - Check for updates to alex.
+- `alex update --check` - Check for updates to alex.
 
 ## Development Workflow
 
