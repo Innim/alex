@@ -1,3 +1,5 @@
+## 1.9.3
+
 * **Fixed**: `alex update` command not working.
 * Command `alex update check` replaced with `alex update --check`.
 
