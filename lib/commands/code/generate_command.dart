@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:alex/internal/print.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'src/code_command_base.dart';
 import 'package:path/path.dart' as p;
