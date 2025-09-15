@@ -1,3 +1,5 @@
+* [Code] `code gen` command supports run generation for subproject from root folder.
+
 ## 1.9.3
 
 * **Fixed**: `alex update` command not working.
