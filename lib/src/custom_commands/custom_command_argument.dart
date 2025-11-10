@@ -62,9 +62,9 @@ class CustomCommandArgument {
       name: data['name'] as String? ??
           (throw Exception('Argument requires "name" field')),
       type: type,
-      help: data['help'] as String?,
-      abbr: data['abbr'] as String?,
-      defaultValue: data['default'] as String?,
+      help: data['help']?.toString(),
+      abbr: data['abbr']?.toString(),
+      defaultValue: data['default']?.toString(),
       allowed: allowedList?.map((e) => e.toString()).toList(),
       required: data['required'] as bool? ?? false,
     );

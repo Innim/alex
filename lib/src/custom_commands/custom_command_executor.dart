@@ -25,7 +25,7 @@ class CustomCommandExecutor {
 
     for (var i = 0; i < definition.actions.length; i++) {
       final action = definition.actions[i];
-      _logger.fine('Executing action ${i + 1}/${definition.actions.length}: ${action.type}');
+      _logger.fine('Executing action ${i + 1}/${definition.actions.length}: ${action.type.value}');
 
       final exitCode = await _executeAction(action, arguments);
       if (exitCode != 0) {
@@ -42,54 +42,53 @@ class CustomCommandExecutor {
     CustomCommandAction action,
     Map<String, dynamic> arguments,
   ) async {
-    if (action is ExecAction) {
-      return _executeExecAction(action, arguments);
-    } else if (action is AlexAction) {
-      return _executeAlexAction(action, arguments);
-    } else if (action is ScriptAction) {
-      return _executeScriptAction(action, arguments);
-    } else if (action is CheckGitBranchAction) {
-      return _executeCheckGitBranchAction(action, arguments);
-    } else if (action is CheckGitCleanAction) {
-      return _executeCheckGitCleanAction(action, arguments);
-    } else if (action is ChangeDirAction) {
-      return _executeChangeDirAction(action, arguments);
-    } else if (action is DeleteFileAction) {
-      return _executeDeleteFileAction(action, arguments);
-    } else if (action is CheckFileExistsAction) {
-      return _executeCheckFileExistsAction(action, arguments);
-    } else if (action is CopyFileAction) {
-      return _executeCopyFileAction(action, arguments);
-    } else if (action is RenameFileAction) {
-      return _executeRenameFileAction(action, arguments);
-    } else if (action is MoveFileAction) {
-      return _executeMoveFileAction(action, arguments);
-    } else if (action is CreateFileAction) {
-      return _executeCreateFileAction(action, arguments);
-    } else if (action is CreateDirAction) {
-      return _executeCreateDirAction(action, arguments);
-    } else if (action is DeleteDirAction) {
-      return _executeDeleteDirAction(action, arguments);
-    } else if (action is RenameDirAction) {
-      return _executeRenameDirAction(action, arguments);
-    } else if (action is ReplaceInFileAction) {
-      return _executeReplaceInFileAction(action, arguments);
-    } else if (action is AppendToFileAction) {
-      return _executeAppendToFileAction(action, arguments);
-    } else if (action is PrependToFileAction) {
-      return _executePrependToFileAction(action, arguments);
-    } else if (action is PrintAction) {
-      return _executePrintAction(action, arguments);
-    } else if (action is WaitAction) {
-      return _executeWaitAction(action, arguments);
-    } else if (action is CheckPlatformAction) {
-      return _executeCheckPlatformAction(action, arguments);
-    } else if (action is CreateArchiveAction) {
-      return _executeCreateArchiveAction(action, arguments);
-    } else if (action is ExtractArchiveAction) {
-      return _executeExtractArchiveAction(action, arguments);
-    } else {
-      throw Exception('Unknown action type: ${action.type}');
+    switch (action.type) {
+      case CustomCommandActionType.exec:
+        return _executeExecAction(action as ExecAction, arguments);
+      case CustomCommandActionType.alex:
+        return _executeAlexAction(action as AlexAction, arguments);
+      case CustomCommandActionType.script:
+        return _executeScriptAction(action as ScriptAction, arguments);
+      case CustomCommandActionType.checkGitBranch:
+        return _executeCheckGitBranchAction(action as CheckGitBranchAction, arguments);
+      case CustomCommandActionType.checkGitClean:
+        return _executeCheckGitCleanAction(action as CheckGitCleanAction, arguments);
+      case CustomCommandActionType.changeDir:
+        return _executeChangeDirAction(action as ChangeDirAction, arguments);
+      case CustomCommandActionType.deleteFile:
+        return _executeDeleteFileAction(action as DeleteFileAction, arguments);
+      case CustomCommandActionType.checkFileExists:
+        return _executeCheckFileExistsAction(action as CheckFileExistsAction, arguments);
+      case CustomCommandActionType.copyFile:
+        return _executeCopyFileAction(action as CopyFileAction, arguments);
+      case CustomCommandActionType.renameFile:
+        return _executeRenameFileAction(action as RenameFileAction, arguments);
+      case CustomCommandActionType.moveFile:
+        return _executeMoveFileAction(action as MoveFileAction, arguments);
+      case CustomCommandActionType.createFile:
+        return _executeCreateFileAction(action as CreateFileAction, arguments);
+      case CustomCommandActionType.createDir:
+        return _executeCreateDirAction(action as CreateDirAction, arguments);
+      case CustomCommandActionType.deleteDir:
+        return _executeDeleteDirAction(action as DeleteDirAction, arguments);
+      case CustomCommandActionType.renameDir:
+        return _executeRenameDirAction(action as RenameDirAction, arguments);
+      case CustomCommandActionType.replaceInFile:
+        return _executeReplaceInFileAction(action as ReplaceInFileAction, arguments);
+      case CustomCommandActionType.appendToFile:
+        return _executeAppendToFileAction(action as AppendToFileAction, arguments);
+      case CustomCommandActionType.prependToFile:
+        return _executePrependToFileAction(action as PrependToFileAction, arguments);
+      case CustomCommandActionType.print:
+        return _executePrintAction(action as PrintAction, arguments);
+      case CustomCommandActionType.wait:
+        return _executeWaitAction(action as WaitAction, arguments);
+      case CustomCommandActionType.checkPlatform:
+        return _executeCheckPlatformAction(action as CheckPlatformAction, arguments);
+      case CustomCommandActionType.createArchive:
+        return _executeCreateArchiveAction(action as CreateArchiveAction, arguments);
+      case CustomCommandActionType.extractArchive:
+        return _executeExtractArchiveAction(action as ExtractArchiveAction, arguments);
     }
   }
 
@@ -737,9 +736,10 @@ class CustomCommandExecutor {
     if (action.message != null) {
       final message = _substituteVariables(action.message!, arguments);
       _logger.info(message);
+    } else {
+      _logger.info('Waiting for ${action.milliseconds}ms...');
     }
 
-    _logger.info('Waiting for ${action.milliseconds}ms...');
     await Future<void>.delayed(Duration(milliseconds: action.milliseconds));
 
     return 0;

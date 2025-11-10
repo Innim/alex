@@ -3,67 +3,67 @@ import 'package:yaml/yaml.dart';
 /// Base class for custom command actions.
 abstract class CustomCommandAction {
   /// Type of the action.
-  String get type;
+  CustomCommandActionType get type;
 
   /// Custom error message to display if action fails.
   String? get errorMessage;
 
   /// Create action from YAML data.
   factory CustomCommandAction.fromYaml(YamlMap data) {
-    final type = data['type'] as String?;
-    if (type == null) {
+    final typeStr = data['type'] as String?;
+    if (typeStr == null) {
       throw Exception('Action type is required');
     }
 
+    final type = CustomCommandActionType.fromString(typeStr);
+
     switch (type) {
-      case 'exec':
+      case CustomCommandActionType.exec:
         return ExecAction.fromYaml(data);
-      case 'alex':
+      case CustomCommandActionType.alex:
         return AlexAction.fromYaml(data);
-      case 'script':
+      case CustomCommandActionType.script:
         return ScriptAction.fromYaml(data);
-      case 'check_git_branch':
+      case CustomCommandActionType.checkGitBranch:
         return CheckGitBranchAction.fromYaml(data);
-      case 'check_git_clean':
+      case CustomCommandActionType.checkGitClean:
         return CheckGitCleanAction.fromYaml(data);
-      case 'change_dir':
+      case CustomCommandActionType.changeDir:
         return ChangeDirAction.fromYaml(data);
-      case 'create_dir':
+      case CustomCommandActionType.createDir:
         return CreateDirAction.fromYaml(data);
-      case 'delete_dir':
+      case CustomCommandActionType.deleteDir:
         return DeleteDirAction.fromYaml(data);
-      case 'rename_dir':
+      case CustomCommandActionType.renameDir:
         return RenameDirAction.fromYaml(data);
-      case 'delete_file':
+      case CustomCommandActionType.deleteFile:
         return DeleteFileAction.fromYaml(data);
-      case 'check_file_exists':
+      case CustomCommandActionType.checkFileExists:
         return CheckFileExistsAction.fromYaml(data);
-      case 'copy_file':
+      case CustomCommandActionType.copyFile:
         return CopyFileAction.fromYaml(data);
-      case 'rename_file':
+      case CustomCommandActionType.renameFile:
         return RenameFileAction.fromYaml(data);
-      case 'move_file':
+      case CustomCommandActionType.moveFile:
         return MoveFileAction.fromYaml(data);
-      case 'create_file':
+      case CustomCommandActionType.createFile:
         return CreateFileAction.fromYaml(data);
-      case 'replace_in_file':
+      case CustomCommandActionType.replaceInFile:
         return ReplaceInFileAction.fromYaml(data);
-      case 'append_to_file':
+      case CustomCommandActionType.appendToFile:
         return AppendToFileAction.fromYaml(data);
-      case 'prepend_to_file':
+      case CustomCommandActionType.prependToFile:
         return PrependToFileAction.fromYaml(data);
-      case 'print':
+      case CustomCommandActionType.print:
         return PrintAction.fromYaml(data);
-      case 'wait':
+      case CustomCommandActionType.wait:
         return WaitAction.fromYaml(data);
-      case 'check_platform':
+      case CustomCommandActionType.checkPlatform:
         return CheckPlatformAction.fromYaml(data);
-      case 'create_archive':
+      case CustomCommandActionType.createArchive:
         return CreateArchiveAction.fromYaml(data);
-      case 'extract_archive':
+      case CustomCommandActionType.extractArchive:
         return ExtractArchiveAction.fromYaml(data);
-      default:
-        throw Exception('Unknown action type: $type');
     }
   }
 
@@ -74,7 +74,7 @@ abstract class CustomCommandAction {
 /// Execute shell command or program.
 class ExecAction implements CustomCommandAction {
   @override
-  final String type = 'exec';
+  final CustomCommandActionType type = CustomCommandActionType.exec;
 
   /// Command to execute.
   final String command;
@@ -103,7 +103,7 @@ class ExecAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'command': command,
     };
     if (workingDir != null) {
@@ -119,7 +119,7 @@ class ExecAction implements CustomCommandAction {
 /// Execute existing alex command.
 class AlexAction implements CustomCommandAction {
   @override
-  final String type = 'alex';
+  final CustomCommandActionType type = CustomCommandActionType.alex;
 
   /// Alex command to execute (e.g., 'code gen', 'l10n extract').
   final String command;
@@ -149,7 +149,7 @@ class AlexAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'command': command,
     };
     if (args.isNotEmpty) {
@@ -165,7 +165,7 @@ class AlexAction implements CustomCommandAction {
 /// Execute Dart script.
 class ScriptAction implements CustomCommandAction {
   @override
-  final String type = 'script';
+  final CustomCommandActionType type = CustomCommandActionType.script;
 
   /// Path to Dart script file.
   final String path;
@@ -195,7 +195,7 @@ class ScriptAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
     };
     if (args.isNotEmpty) {
@@ -211,7 +211,7 @@ class ScriptAction implements CustomCommandAction {
 /// Check git branch and optionally switch to it.
 class CheckGitBranchAction implements CustomCommandAction {
   @override
-  final String type = 'check_git_branch';
+  final CustomCommandActionType type = CustomCommandActionType.checkGitBranch;
 
   /// Expected branch name.
   final String branch;
@@ -240,7 +240,7 @@ class CheckGitBranchAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'branch': branch,
     };
     if (!autoSwitch) {
@@ -256,7 +256,7 @@ class CheckGitBranchAction implements CustomCommandAction {
 /// Check that git working directory is clean.
 class CheckGitCleanAction implements CustomCommandAction {
   @override
-  final String type = 'check_git_clean';
+  final CustomCommandActionType type = CustomCommandActionType.checkGitClean;
 
   @override
   final String? errorMessage;
@@ -274,7 +274,7 @@ class CheckGitCleanAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
     };
     if (errorMessage != null) {
       result['error_message'] = errorMessage;
@@ -286,7 +286,7 @@ class CheckGitCleanAction implements CustomCommandAction {
 /// Change working directory.
 class ChangeDirAction implements CustomCommandAction {
   @override
-  final String type = 'change_dir';
+  final CustomCommandActionType type = CustomCommandActionType.changeDir;
 
   /// Directory path to change to.
   final String path;
@@ -310,7 +310,7 @@ class ChangeDirAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
     };
     if (errorMessage != null) {
@@ -323,7 +323,7 @@ class ChangeDirAction implements CustomCommandAction {
 /// Delete a file or directory.
 class DeleteFileAction implements CustomCommandAction {
   @override
-  final String type = 'delete_file';
+  final CustomCommandActionType type = CustomCommandActionType.deleteFile;
 
   /// Path to file or directory to delete.
   final String path;
@@ -357,7 +357,7 @@ class DeleteFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
     };
     if (recursive) {
@@ -376,7 +376,7 @@ class DeleteFileAction implements CustomCommandAction {
 /// Check if file or directory exists.
 class CheckFileExistsAction implements CustomCommandAction {
   @override
-  final String type = 'check_file_exists';
+  final CustomCommandActionType type = CustomCommandActionType.checkFileExists;
 
   /// Path to file or directory to check.
   final String path;
@@ -405,7 +405,7 @@ class CheckFileExistsAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
     };
     if (!shouldExist) {
@@ -421,7 +421,7 @@ class CheckFileExistsAction implements CustomCommandAction {
 /// Copy a file.
 class CopyFileAction implements CustomCommandAction {
   @override
-  final String type = 'copy_file';
+  final CustomCommandActionType type = CustomCommandActionType.copyFile;
 
   /// Source file path.
   final String source;
@@ -456,7 +456,7 @@ class CopyFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'source': source,
       'destination': destination,
     };
@@ -473,7 +473,7 @@ class CopyFileAction implements CustomCommandAction {
 /// Rename a file.
 class RenameFileAction implements CustomCommandAction {
   @override
-  final String type = 'rename_file';
+  final CustomCommandActionType type = CustomCommandActionType.renameFile;
 
   /// Current file path.
   final String oldPath;
@@ -503,7 +503,7 @@ class RenameFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'old_path': oldPath,
       'new_path': newPath,
     };
@@ -517,7 +517,7 @@ class RenameFileAction implements CustomCommandAction {
 /// Move a file.
 class MoveFileAction implements CustomCommandAction {
   @override
-  final String type = 'move_file';
+  final CustomCommandActionType type = CustomCommandActionType.moveFile;
 
   /// Source file path.
   final String source;
@@ -547,7 +547,7 @@ class MoveFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'source': source,
       'destination': destination,
     };
@@ -561,7 +561,7 @@ class MoveFileAction implements CustomCommandAction {
 /// Create a file with optional content.
 class CreateFileAction implements CustomCommandAction {
   @override
-  final String type = 'create_file';
+  final CustomCommandActionType type = CustomCommandActionType.createFile;
 
   /// File path to create.
   final String path;
@@ -595,7 +595,7 @@ class CreateFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
     };
     if (content != null) {
@@ -614,7 +614,7 @@ class CreateFileAction implements CustomCommandAction {
 /// Create a directory.
 class CreateDirAction implements CustomCommandAction {
   @override
-  final String type = 'create_dir';
+  final CustomCommandActionType type = CustomCommandActionType.createDir;
 
   /// Directory path to create.
   final String path;
@@ -643,7 +643,7 @@ class CreateDirAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
     };
     if (!recursive) {
@@ -659,7 +659,7 @@ class CreateDirAction implements CustomCommandAction {
 /// Delete a directory.
 class DeleteDirAction implements CustomCommandAction {
   @override
-  final String type = 'delete_dir';
+  final CustomCommandActionType type = CustomCommandActionType.deleteDir;
 
   /// Directory path to delete.
   final String path;
@@ -693,7 +693,7 @@ class DeleteDirAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
     };
     if (!recursive) {
@@ -712,7 +712,7 @@ class DeleteDirAction implements CustomCommandAction {
 /// Rename a directory.
 class RenameDirAction implements CustomCommandAction {
   @override
-  final String type = 'rename_dir';
+  final CustomCommandActionType type = CustomCommandActionType.renameDir;
 
   /// Current directory path.
   final String oldPath;
@@ -742,7 +742,7 @@ class RenameDirAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'old_path': oldPath,
       'new_path': newPath,
     };
@@ -756,7 +756,7 @@ class RenameDirAction implements CustomCommandAction {
 /// Replace text in file.
 class ReplaceInFileAction implements CustomCommandAction {
   @override
-  final String type = 'replace_in_file';
+  final CustomCommandActionType type = CustomCommandActionType.replaceInFile;
 
   /// Path to file.
   final String path;
@@ -797,7 +797,7 @@ class ReplaceInFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
       'find': find,
       'replace': replace,
@@ -815,7 +815,7 @@ class ReplaceInFileAction implements CustomCommandAction {
 /// Append text to file.
 class AppendToFileAction implements CustomCommandAction {
   @override
-  final String type = 'append_to_file';
+  final CustomCommandActionType type = CustomCommandActionType.appendToFile;
 
   /// Path to file.
   final String path;
@@ -850,7 +850,7 @@ class AppendToFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
       'content': content,
     };
@@ -867,7 +867,7 @@ class AppendToFileAction implements CustomCommandAction {
 /// Prepend text to file.
 class PrependToFileAction implements CustomCommandAction {
   @override
-  final String type = 'prepend_to_file';
+  final CustomCommandActionType type = CustomCommandActionType.prependToFile;
 
   /// Path to file.
   final String path;
@@ -902,7 +902,7 @@ class PrependToFileAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'path': path,
       'content': content,
     };
@@ -919,7 +919,7 @@ class PrependToFileAction implements CustomCommandAction {
 /// Print message to console.
 class PrintAction implements CustomCommandAction {
   @override
-  final String type = 'print';
+  final CustomCommandActionType type = CustomCommandActionType.print;
 
   /// Message to print.
   final String message;
@@ -948,7 +948,7 @@ class PrintAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'message': message,
     };
     if (level != 'info') {
@@ -964,7 +964,7 @@ class PrintAction implements CustomCommandAction {
 /// Wait for specified duration.
 class WaitAction implements CustomCommandAction {
   @override
-  final String type = 'wait';
+  final CustomCommandActionType type = CustomCommandActionType.wait;
 
   /// Duration in milliseconds.
   final int milliseconds;
@@ -993,7 +993,7 @@ class WaitAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'milliseconds': milliseconds,
     };
     if (message != null) {
@@ -1009,7 +1009,7 @@ class WaitAction implements CustomCommandAction {
 /// Check current platform.
 class CheckPlatformAction implements CustomCommandAction {
   @override
-  final String type = 'check_platform';
+  final CustomCommandActionType type = CustomCommandActionType.checkPlatform;
 
   /// Expected platform (macos, linux, windows).
   final String platform;
@@ -1033,7 +1033,7 @@ class CheckPlatformAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'platform': platform,
     };
     if (errorMessage != null) {
@@ -1046,7 +1046,7 @@ class CheckPlatformAction implements CustomCommandAction {
 /// Create archive from files or directory.
 class CreateArchiveAction implements CustomCommandAction {
   @override
-  final String type = 'create_archive';
+  final CustomCommandActionType type = CustomCommandActionType.createArchive;
 
   /// Source path (file or directory).
   final String source;
@@ -1072,7 +1072,8 @@ class CreateArchiveAction implements CustomCommandAction {
       source: data['source'] as String? ??
           (throw Exception('create_archive action requires "source" field')),
       destination: data['destination'] as String? ??
-          (throw Exception('create_archive action requires "destination" field')),
+          (throw Exception(
+              'create_archive action requires "destination" field')),
       format: data['format'] as String? ?? 'zip',
       errorMessage: data['error_message'] as String?,
     );
@@ -1081,7 +1082,7 @@ class CreateArchiveAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'source': source,
       'destination': destination,
     };
@@ -1098,7 +1099,7 @@ class CreateArchiveAction implements CustomCommandAction {
 /// Extract archive.
 class ExtractArchiveAction implements CustomCommandAction {
   @override
-  final String type = 'extract_archive';
+  final CustomCommandActionType type = CustomCommandActionType.extractArchive;
 
   /// Source archive path.
   final String source;
@@ -1120,7 +1121,8 @@ class ExtractArchiveAction implements CustomCommandAction {
       source: data['source'] as String? ??
           (throw Exception('extract_archive action requires "source" field')),
       destination: data['destination'] as String? ??
-          (throw Exception('extract_archive action requires "destination" field')),
+          (throw Exception(
+              'extract_archive action requires "destination" field')),
       errorMessage: data['error_message'] as String?,
     );
   }
@@ -1128,12 +1130,59 @@ class ExtractArchiveAction implements CustomCommandAction {
   @override
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
-      'type': type,
+      'type': type.value,
       'source': source,
       'destination': destination,
     };
     if (errorMessage != null) {
       result['error_message'] = errorMessage;
+    }
+    return result;
+  }
+}
+
+/// Type of custom command action.
+enum CustomCommandActionType {
+  exec('exec', 'Execute shell command'),
+  alex('alex', 'Execute alex command'),
+  script('script', 'Execute Dart script'),
+  checkGitBranch('check_git_branch', 'Check/switch git branch'),
+  checkGitClean('check_git_clean', 'Check git is clean'),
+  changeDir('change_dir', 'Change directory'),
+  deleteFile('delete_file', 'Delete file'),
+  checkFileExists('check_file_exists', 'Check file exists'),
+  copyFile('copy_file', 'Copy file'),
+  renameFile('rename_file', 'Rename file'),
+  moveFile('move_file', 'Move file'),
+  createFile('create_file', 'Create file'),
+  createDir('create_dir', 'Create directory'),
+  deleteDir('delete_dir', 'Delete directory'),
+  renameDir('rename_dir', 'Rename directory'),
+  replaceInFile('replace_in_file', 'Replace text in file'),
+  appendToFile('append_to_file', 'Append to file'),
+  prependToFile('prepend_to_file', 'Prepend to file'),
+  print('print', 'Print message'),
+  wait('wait', 'Wait/sleep'),
+  checkPlatform('check_platform', 'Check platform'),
+  createArchive('create_archive', 'Create archive'),
+  extractArchive('extract_archive', 'Extract archive');
+
+  const CustomCommandActionType(this.value, this.description);
+
+  /// YAML serialization value
+  final String value;
+
+  /// Command description
+  final String description;
+
+  static final Map<String, CustomCommandActionType> _values = {
+    for (final e in values) e.value: e
+  };
+
+  static CustomCommandActionType fromString(String value) {
+    final result = _values[value];
+    if (result == null) {
+      throw ArgumentError('Unknown action type: $value');
     }
     return result;
   }

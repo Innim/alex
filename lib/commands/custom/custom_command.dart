@@ -1,4 +1,5 @@
 import 'package:alex/commands/custom/add_custom_command.dart';
+import 'package:alex/commands/custom/check_custom_commands.dart';
 import 'package:alex/commands/custom/edit_custom_command.dart';
 import 'package:alex/commands/custom/list_custom_commands.dart';
 import 'package:alex/commands/custom/remove_custom_command.dart';
@@ -14,6 +15,7 @@ class CustomCommand extends AlexCommand {
     addSubcommand(AddCustomCommand());
     addSubcommand(EditCustomCommand());
     addSubcommand(RemoveCustomCommand());
+    addSubcommand(CheckCustomCommandsCommand());
   }
 
   @override
