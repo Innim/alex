@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:alex/commands/code/code_command.dart';
+import 'package:alex/commands/custom/custom_command.dart';
+import 'package:alex/commands/custom/user_custom_command.dart';
 import 'package:alex/commands/feature/feature_command.dart';
 import 'package:alex/commands/l10n/l10n_command.dart';
 import 'package:alex/commands/pubspec/pubspec_command.dart';
@@ -8,6 +10,7 @@ import 'package:alex/commands/release/release_command.dart';
 import 'package:alex/commands/settings/settings_command.dart';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/commands/update/update_command.dart';
+import 'package:alex/src/custom_commands/custom_command_config.dart';
 import 'package:alex/src/local_data.dart';
 import 'package:alex/src/system/update_checker.dart';
 import 'package:alex/src/version.dart';
@@ -37,7 +40,11 @@ class AlexCommandRunner extends CommandRunner<int> {
       FeatureCommand(),
       SettingsCommand(),
       UpdateCommand(),
+      CustomCommand(),
     ].forEach(addCommand);
+
+    // Load and register custom commands
+    _loadCustomCommands();
 
     argParser
       ..addFlag(
@@ -47,6 +54,29 @@ class AlexCommandRunner extends CommandRunner<int> {
         negatable: false,
       )
       ..addVerboseFlag();
+  }
+
+  void _loadCustomCommands() {
+    try {
+      CustomCommandsConfig.load();
+      final config = CustomCommandsConfig.instance;
+
+      for (final definition in config.commands) {
+        try {
+          final command = UserCustomCommand(definition);
+          addCommand(command);
+          _out.fine('Registered custom command: ${definition.name}');
+        } catch (e) {
+          _out.warning('Failed to register custom command ${definition.name}: $e');
+        }
+      }
+
+      if (config.commands.isNotEmpty) {
+        _out.fine('Loaded ${config.commands.length} custom command(s)');
+      }
+    } catch (e) {
+      _out.fine('No custom commands loaded: $e');
+    }
   }
 
   @override

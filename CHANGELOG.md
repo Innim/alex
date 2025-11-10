@@ -1,3 +1,34 @@
+## 1.10.0
+
+* **New feature**: Custom commands support! Define your own commands in `alex_custom_commands.yaml` to automate workflows.
+  - Execute shell commands, alex commands, or Dart scripts
+  - Support for command arguments (options and flags)
+  - Variable substitution in actions using `{{var}}` or `${var}` syntax
+  - Commands management: `alex custom list`, `add`, `show`, `edit`, `remove`
+  - **Advanced actions** for conditional logic and file operations:
+    - `check_git_branch` - Check/switch git branch
+    - `check_git_clean` - Verify no uncommitted changes
+    - `check_platform` - Verify current OS (macos/linux/windows)
+    - `change_dir` - Change working directory
+    - `check_file_exists` - Verify file existence
+    - `copy_file` - Copy files
+    - `rename_file` - Rename files
+    - `move_file` - Move files
+    - `create_file` - Create files with content
+    - `create_dir` - Create directories
+    - `delete_file` - Delete files
+    - `delete_dir` - Delete directories
+    - `rename_dir` - Rename directories
+    - `replace_in_file` - Replace text in files (with regex support)
+    - `append_to_file` - Append content to files
+    - `prepend_to_file` - Prepend content to files
+    - `print` - Print messages to console
+    - `wait` - Wait for specified duration (in milliseconds)
+    - `create_archive` - Create ZIP/TAR.GZ archives
+    - `extract_archive` - Extract archives
+  - **Verbose mode** support with `--verbose` flag for detailed execution logs
+  - See `alex_custom_commands.yaml.example` for examples
+
 ## 1.9.4
 
 * [Code] `code gen` command supports run generation for subproject from root folder.
