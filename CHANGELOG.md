@@ -4,7 +4,7 @@
   - Execute shell commands, alex commands, or Dart scripts
   - Support for command arguments (options and flags)
   - Variable substitution in actions using `{{var}}` or `${var}` syntax
-  - Commands management: `alex custom list`, `add`, `show`, `edit`, `remove`
+  - Commands management: `alex custom list`, `add`, `show`, `edit`, `remove`, `check`
   - **Advanced actions** for conditional logic and file operations:
     - `check_git_branch` - Check/switch git branch
     - `check_git_clean` - Verify no uncommitted changes

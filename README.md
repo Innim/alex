@@ -449,7 +449,8 @@ custom_commands:
       - type: alex
         command: code gen
       - type: exec
-        command: flutter build {{platform}} --release
+        executable: flutter
+        args: [build, '{{platform}}', --release]
 ```
 
 #### Action types
@@ -459,7 +460,8 @@ Custom commands support multiple types of actions:
 **exec** - Execute shell command or program:
 ```yaml
 - type: exec
-  command: flutter clean
+  executable: flutter
+  args: [clean]
   working_dir: /optional/path  # optional
 ```
 
@@ -641,7 +643,8 @@ arguments:
     required: true
 actions:
   - type: exec
-    command: flutter build {{platform}}
+    executable: flutter
+    args: [build, '{{platform}}']
 ```
 
 #### Using custom commands

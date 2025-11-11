@@ -23,7 +23,8 @@ custom_commands:
         command: l10n extract
       # Build for specified platform
       - type: exec
-        command: flutter build {{platform}} --release
+        executable: flutter
+        args: [build, '{{platform}}', --release]
 
   # Example 2: Quick fix for common issues
   - name: quick-fix
@@ -31,9 +32,11 @@ custom_commands:
     aliases: [qf, fix]
     actions:
       - type: exec
-        command: flutter clean
+        executable: flutter
+        args: [clean]
       - type: exec
-        command: flutter pub get
+        executable: flutter
+        args: [pub, get]
       - type: alex
         command: code gen
 
@@ -43,11 +46,14 @@ custom_commands:
     aliases: [pc, check]
     actions:
       - type: exec
-        command: dart analyze
+        executable: dart
+        args: [analyze]
       - type: exec
-        command: dart format --set-exit-if-changed .
+        executable: dart
+        args: [format, --set-exit-if-changed, .]
       - type: exec
-        command: dart test
+        executable: dart
+        args: [test]
 
   # Example 4: Create a new feature branch
   - name: new-feature
@@ -60,7 +66,8 @@ custom_commands:
         required: true
     actions:
       - type: exec
-        command: git checkout -b feature/{{name}}
+        executable: git
+        args: [checkout, -b, 'feature/{{name}}']
 
   # Example 5: Run a custom Dart script
   - name: custom-script
@@ -90,9 +97,11 @@ custom_commands:
       - type: alex
         command: code gen
       - type: exec
-        command: dart analyze
+        executable: dart
+        args: [analyze]
       - type: exec
-        command: dart test
+        executable: dart
+        args: [test]
       # Start release
       - type: alex
         command: release start
@@ -105,11 +114,13 @@ custom_commands:
     aliases: [ud]
     actions:
       - type: exec
-        command: flutter pub upgrade
+        executable: flutter
+        args: [pub, upgrade]
       - type: alex
         command: code gen
       - type: exec
-        command: dart analyze
+        executable: dart
+        args: [analyze]
 
   # Example 8: Simple command with flag argument
   - name: build-debug
@@ -121,7 +132,8 @@ custom_commands:
         abbr: v
     actions:
       - type: exec
-        command: flutter build apk --debug
+        executable: flutter
+        args: [build, apk, --debug]
 
   # Example 9: Build for App Gallery with git checks
   - name: build-app-gallery
@@ -139,7 +151,8 @@ custom_commands:
 
       # Build the app
       - type: exec
-        command: fvm flutter build apk --target lib/main_app_gallery.dart
+        executable: fvm
+        args: [flutter, build, apk, --target, lib/main_app_gallery.dart]
 
   # Example 10: Update iOS pods
   - name: update-pods
@@ -167,7 +180,8 @@ custom_commands:
 
       # Run pod install
       - type: exec
-        command: pod install --repo-update
+        executable: pod
+        args: [install, --repo-update]
 
   # Example 11: File operations workflow
   - name: file-ops-demo
@@ -270,7 +284,8 @@ custom_commands:
 
       # Build
       - type: exec
-        command: flutter build macos --release
+        executable: flutter
+        args: [build, macos, --release]
 
       # Create archive
       - type: create_archive
@@ -295,7 +310,8 @@ custom_commands:
 
       # Build
       - type: exec
-        command: flutter build web --release
+        executable: flutter
+        args: [build, web, --release]
 
       # Create deployment archive
       - type: create_archive
