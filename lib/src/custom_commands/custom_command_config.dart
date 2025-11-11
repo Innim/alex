@@ -115,9 +115,12 @@ class CustomCommandsConfig {
   static const _configFileName = 'alex_custom_commands.yaml';
   static final _logger = Logger('custom_commands_config');
 
+  // File search limits
+  static const int _maxParentDirSearchDepth = 10;
+
   static CustomCommandsConfig? _instance;
 
-  /// Returns instance of loaded configuration.
+  // Returns instance of loaded configuration.
   static CustomCommandsConfig get instance {
     if (_instance == null) {
       load();
@@ -162,7 +165,7 @@ class CustomCommandsConfig {
   static String? _findConfigFile() {
     // Look for config file in current directory and parent directories
     var dir = Directory.current;
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < _maxParentDirSearchDepth; i++) {
       final configFile = File(p.join(dir.path, _configFileName));
       if (configFile.existsSync()) {
         return configFile.path;
@@ -266,25 +269,23 @@ class CustomCommandsConfig {
     return p.join(Directory.current.path, _configFileName);
   }
 
-  /// Find command by name or alias.
+  // Find command by name or alias.
+  // Returns null if command is not found.
   CustomCommandDefinition? findCommand(String name) {
-    return _commands.firstWhere(
-      (cmd) => cmd.name == name || cmd.aliases.contains(name),
-      orElse: () => throw StateError('Command not found: $name'),
-    );
-  }
-
-  /// Check if command exists.
-  bool hasCommand(String name) {
-    try {
-      findCommand(name);
-      return true;
-    } catch (_) {
-      return false;
+    for (final cmd in _commands) {
+      if (cmd.name == name || cmd.aliases.contains(name)) {
+        return cmd;
+      }
     }
+    return null;
   }
 
-  /// Save configuration to file.
+  // Check if command exists.
+  bool hasCommand(String name) {
+    return findCommand(name) != null;
+  }
+
+  // Save configuration to file.
   void save() {
     final path = getOrCreateConfigPath();
     final file = File(path);

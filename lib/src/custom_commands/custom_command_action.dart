@@ -76,27 +76,39 @@ class ExecAction implements CustomCommandAction {
   @override
   final CustomCommandActionType type = CustomCommandActionType.exec;
 
-  /// Command to execute.
-  final String command;
+  /// Executable to run (e.g., "flutter", "git", "echo").
+  final String executable;
+
+  /// Arguments for the executable.
+  final List<String>? args;
 
   /// Working directory (optional).
   final String? workingDir;
 
+  /// Error message.
   @override
   final String? errorMessage;
 
   ExecAction({
-    required this.command,
+    required this.executable,
+    this.args,
     this.workingDir,
     this.errorMessage,
   });
 
   factory ExecAction.fromYaml(YamlMap data) {
+    final executable = data['executable'] as String?;
+    final argsList = data['args'] as YamlList?;
+
+    if (executable == null) {
+      throw Exception('exec action requires "executable" field');
+    }
+
     return ExecAction(
-      command: data['command'] as String? ??
-          (throw Exception('exec action requires "command" field')),
-      workingDir: data['working_dir'] as String?,
-      errorMessage: data['error_message'] as String?,
+      executable: executable,
+      args: argsList?.map((e) => e.toString()).toList(),
+      workingDir: data['working_dir']?.toString(),
+      errorMessage: data['error_message']?.toString(),
     );
   }
 
@@ -104,8 +116,13 @@ class ExecAction implements CustomCommandAction {
   Map<String, dynamic> toYaml() {
     final result = <String, dynamic>{
       'type': type.value,
-      'command': command,
+      'executable': executable,
     };
+
+    if (args != null && args!.isNotEmpty) {
+      result['args'] = args;
+    }
+
     if (workingDir != null) {
       result['working_dir'] = workingDir;
     }

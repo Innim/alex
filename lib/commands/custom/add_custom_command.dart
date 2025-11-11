@@ -7,6 +7,10 @@ import 'package:alex/src/custom_commands/custom_command_config.dart';
 
 /// Add a new custom command.
 class AddCustomCommand extends AlexCommand {
+  // Input validation limits
+  static const int _maxInputLength = 1000;
+  static const int _maxChoiceInputLength = 100;
+
   AddCustomCommand() : super('add', 'Add a new custom command.');
 
   @override
@@ -222,11 +226,21 @@ class AddCustomCommand extends AlexCommand {
   }
 
   ExecAction _promptExecAction() {
-    final command = _prompt('  Command');
+    printInfo('');
+    printInfo('  Executable and arguments are separate for security');
+    printInfo('');
+
+    final executable = _prompt('  Executable (e.g., "flutter", "git", "echo")');
+    final argsStr = _prompt('  Arguments (space-separated, optional)');
     final workingDir = _prompt('  Working directory (optional)');
 
+    final args = argsStr.isNotEmpty
+        ? argsStr.split(' ').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+        : <String>[];
+
     return ExecAction(
-      command: command,
+      executable: executable,
+      args: args.isNotEmpty ? args : null,
       workingDir: workingDir.isNotEmpty ? workingDir : null,
     );
   }
@@ -501,7 +515,16 @@ class AddCustomCommand extends AlexCommand {
     while (true) {
       stdout.write('  $message (1-${choices.length}) [$defaultIndex]: ');
       final input = stdin.readLineSync() ?? '';
-      final value = input.isEmpty ? defaultIndex.toString() : input.trim();
+      final rawValue = input.isEmpty ? defaultIndex.toString() : input.trim();
+
+      // Validate input
+      final error = _validateInput(rawValue, maxLength: _maxChoiceInputLength);
+      if (error != null) {
+        printError(error);
+        continue;
+      }
+
+      final value = rawValue;
 
       // Try to parse as number
       final number = int.tryParse(value);
@@ -521,14 +544,47 @@ class AddCustomCommand extends AlexCommand {
     }
   }
 
-  String _prompt(String message, {String defaultValue = ''}) {
-    if (defaultValue.isNotEmpty) {
-      stdout.write('$message [$defaultValue]: ');
-    } else {
-      stdout.write('$message: ');
+  // Validate user input to prevent injection and DoS attacks.
+  String? _validateInput(String input, {int maxLength = _maxInputLength}) {
+    // Check length
+    if (input.length > maxLength) {
+      return 'Input too long (max $maxLength characters)';
     }
 
-    final input = stdin.readLineSync() ?? '';
-    return input.isEmpty ? defaultValue : input;
+    // Check for null bytes and control characters (except newline/tab/carriage return)
+    for (var i = 0; i < input.length; i++) {
+      final code = input.codeUnitAt(i);
+      // Allow printable ASCII, tab (9), newline (10), carriage return (13), and extended Unicode
+      if (code < 32 && code != 9 && code != 10 && code != 13) {
+        return 'Input contains invalid control characters';
+      }
+      if (code == 0) {
+        return 'Input contains null bytes';
+      }
+    }
+
+    return null; // Valid
+  }
+
+  String _prompt(String message, {String defaultValue = ''}) {
+    while (true) {
+      if (defaultValue.isNotEmpty) {
+        stdout.write('$message [$defaultValue]: ');
+      } else {
+        stdout.write('$message: ');
+      }
+
+      final input = stdin.readLineSync() ?? '';
+      final value = input.isEmpty ? defaultValue : input;
+
+      // Validate input
+      final error = _validateInput(value);
+      if (error != null) {
+        printError(error);
+        continue;
+      }
+
+      return value;
+    }
   }
 }

@@ -4,9 +4,20 @@ import 'package:alex/src/custom_commands/custom_command_action.dart';
 import 'package:alex/src/custom_commands/custom_command_config.dart';
 import 'package:alex/src/run/cmd.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as p;
 
 /// Executor for custom commands.
 class CustomCommandExecutor {
+  // Security limits
+  static const int _maxRegexPatternLength = 200;
+  static const int _maxReplacementLength = 10000;
+  static const int _regexTimeoutMs = 10;
+  static const int _maxFileSizeForProcessing = 1073741824; // 1GB
+  static const int _largeFileWarningSize = 104857600; // 100MB
+
+  // File search limits
+  static const int _maxParentDirSearchDepth = 10;
+
   final Logger _logger;
   final Cmd _cmd;
 
@@ -15,6 +26,13 @@ class CustomCommandExecutor {
     Cmd? cmd,
   })  : _logger = logger ?? Logger('custom_command_executor'),
         _cmd = cmd ?? Cmd();
+
+  /// Log error with stack trace and return error code.
+  int _logError(String message, Object error, StackTrace stackTrace) {
+    _logger.severe('$message: $error');
+    _logger.fine('Stack trace:\n$stackTrace');
+    return 1;
+  }
 
   /// Execute a custom command.
   Future<int> execute(
@@ -96,34 +114,29 @@ class CustomCommandExecutor {
     ExecAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final command = _substituteVariables(action.command, arguments);
-    _logger.info('Executing: $command');
+    // Substitute variables only in arguments, not in executable
+    final args = action.args?.map((arg) => _substituteVariables(arg, arguments)).toList() ?? [];
 
-    // Parse command into executable and arguments
-    final parts = _parseCommand(command);
-    if (parts.isEmpty) {
-      _logger.severe('Empty command');
-      return 1;
-    }
-
-    final executable = parts.first;
-    final args = parts.skip(1).toList();
+    _logger.info('Executing: ${action.executable} ${args.join(" ")}');
 
     try {
       final result = await _cmd.run(
-        executable,
+        action.executable,
         arguments: args,
         workingDir: action.workingDir,
       );
 
       if (result.exitCode != 0) {
-        _logger.severe('Command failed: ${result.stderr}');
+        _logger.severe('Command failed with exit code ${result.exitCode}');
+        final stderr = result.stderr.toString();
+        if (stderr.isNotEmpty) {
+          _logger.severe('stderr: $stderr');
+        }
       }
 
       return result.exitCode;
-    } catch (e) {
-      _logger.severe('Failed to execute command: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to execute command', e, stackTrace);
     }
   }
 
@@ -161,9 +174,8 @@ class CustomCommandExecutor {
       }
 
       return result.exitCode;
-    } catch (e) {
-      _logger.severe('Failed to execute alex command: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to execute alex command', e, stackTrace);
     }
   }
 
@@ -192,9 +204,8 @@ class CustomCommandExecutor {
       }
 
       return result.exitCode;
-    } catch (e) {
-      _logger.severe('Failed to execute script: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to execute script', e, stackTrace);
     }
   }
 
@@ -217,37 +228,36 @@ class CustomCommandExecutor {
     return result;
   }
 
-  /// Parse command string into parts, respecting quotes.
-  List<String> _parseCommand(String command) {
-    final parts = <String>[];
-    final buffer = StringBuffer();
-    var inQuotes = false;
-    var quoteChar = '';
+  /// Validate and resolve path to prevent path traversal attacks.
+  ///
+  /// This method ensures that the resolved path stays within the allowed base directory.
+  /// If [baseDir] is null, uses current working directory.
+  ///
+  /// Throws [ArgumentError] if path traversal is detected.
+  String _validateAndResolvePath(String path, [String? baseDir]) {
+    // Resolve to absolute path
+    final absolutePath = p.absolute(path);
+    final normalizedPath = p.normalize(absolutePath);
 
-    for (var i = 0; i < command.length; i++) {
-      final char = command[i];
+    // Get base directory (default to current working directory)
+    final base = baseDir != null ? p.absolute(baseDir) : Directory.current.path;
+    final normalizedBase = p.normalize(base);
 
-      if ((char == '"' || char == "'") && !inQuotes) {
-        inQuotes = true;
-        quoteChar = char;
-      } else if (char == quoteChar && inQuotes) {
-        inQuotes = false;
-        quoteChar = '';
-      } else if (char == ' ' && !inQuotes) {
-        if (buffer.isNotEmpty) {
-          parts.add(buffer.toString());
-          buffer.clear();
-        }
-      } else {
-        buffer.write(char);
-      }
+    // Check if path is within allowed directory
+    if (!p.isWithin(normalizedBase, normalizedPath) && normalizedPath != normalizedBase) {
+      throw ArgumentError(
+        'Path traversal detected: "$path" resolves to "$normalizedPath" '
+        'which is outside allowed directory "$normalizedBase"'
+      );
     }
 
-    if (buffer.isNotEmpty) {
-      parts.add(buffer.toString());
-    }
+    return normalizedPath;
+  }
 
-    return parts;
+  /// Safely substitute variables in path and validate it.
+  String _safelyResolvePath(String pathTemplate, Map<String, dynamic> arguments) {
+    final pathInput = _substituteVariables(pathTemplate, arguments);
+    return _validateAndResolvePath(pathInput);
   }
 
   Future<int> _executeCheckGitBranchAction(
@@ -311,9 +321,8 @@ class CustomCommandExecutor {
       }
 
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to check git branch: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to check git branch', e, stackTrace);
     }
   }
 
@@ -346,9 +355,8 @@ class CustomCommandExecutor {
 
       _logger.info('Git working directory is clean');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to check git status: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to check git status', e, stackTrace);
     }
   }
 
@@ -356,7 +364,15 @@ class CustomCommandExecutor {
     ChangeDirAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Changing directory to: $path');
 
     final dir = Directory(path);
@@ -370,9 +386,8 @@ class CustomCommandExecutor {
       Directory.current = dir;
       _logger.info('Changed directory to: ${Directory.current.path}');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to change directory: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to change directory', e, stackTrace);
     }
   }
 
@@ -380,7 +395,17 @@ class CustomCommandExecutor {
     DeleteFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    final pathInput = _substituteVariables(action.path, arguments);
+
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _validateAndResolvePath(pathInput);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Deleting: $path');
 
     final file = File(path);
@@ -407,9 +432,8 @@ class CustomCommandExecutor {
         _logger.info('Deleted directory: $path');
       }
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to delete: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to delete', e, stackTrace);
     }
   }
 
@@ -417,7 +441,15 @@ class CustomCommandExecutor {
     CheckFileExistsAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Checking file exists: $path');
 
     final file = File(path);
@@ -442,8 +474,16 @@ class CustomCommandExecutor {
     CopyFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final source = _substituteVariables(action.source, arguments);
-    final destination = _substituteVariables(action.destination, arguments);
+    // Validate paths to prevent traversal attacks
+    String source, destination;
+    try {
+      source = _safelyResolvePath(action.source, arguments);
+      destination = _safelyResolvePath(action.destination, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Copying file: $source -> $destination');
 
     final sourceFile = File(source);
@@ -462,9 +502,8 @@ class CustomCommandExecutor {
       await sourceFile.copy(destination);
       _logger.info('File copied successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to copy file: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to copy file', e, stackTrace);
     }
   }
 
@@ -472,8 +511,16 @@ class CustomCommandExecutor {
     RenameFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final oldPath = _substituteVariables(action.oldPath, arguments);
-    final newPath = _substituteVariables(action.newPath, arguments);
+    // Validate paths to prevent traversal attacks
+    String oldPath, newPath;
+    try {
+      oldPath = _safelyResolvePath(action.oldPath, arguments);
+      newPath = _safelyResolvePath(action.newPath, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Renaming file: $oldPath -> $newPath');
 
     final file = File(oldPath);
@@ -486,9 +533,8 @@ class CustomCommandExecutor {
       await file.rename(newPath);
       _logger.info('File renamed successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to rename file: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to rename file', e, stackTrace);
     }
   }
 
@@ -496,8 +542,16 @@ class CustomCommandExecutor {
     MoveFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final source = _substituteVariables(action.source, arguments);
-    final destination = _substituteVariables(action.destination, arguments);
+    // Validate paths to prevent traversal attacks
+    String source, destination;
+    try {
+      source = _safelyResolvePath(action.source, arguments);
+      destination = _safelyResolvePath(action.destination, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Moving file: $source -> $destination');
 
     final sourceFile = File(source);
@@ -510,9 +564,8 @@ class CustomCommandExecutor {
       await sourceFile.rename(destination);
       _logger.info('File moved successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to move file: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to move file', e, stackTrace);
     }
   }
 
@@ -520,7 +573,17 @@ class CustomCommandExecutor {
     CreateFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    final pathInput = _substituteVariables(action.path, arguments);
+
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _validateAndResolvePath(pathInput);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     final content = action.content != null
         ? _substituteVariables(action.content!, arguments)
         : '';
@@ -542,9 +605,8 @@ class CustomCommandExecutor {
       await file.writeAsString(content);
       _logger.info('File created successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to create file: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to create file', e, stackTrace);
     }
   }
 
@@ -552,7 +614,15 @@ class CustomCommandExecutor {
     CreateDirAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Creating directory: $path');
 
     final dir = Directory(path);
@@ -565,9 +635,8 @@ class CustomCommandExecutor {
       await dir.create(recursive: action.recursive);
       _logger.info('Directory created successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to create directory: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to create directory', e, stackTrace);
     }
   }
 
@@ -575,7 +644,15 @@ class CustomCommandExecutor {
     DeleteDirAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Deleting directory: $path');
 
     final dir = Directory(path);
@@ -593,9 +670,8 @@ class CustomCommandExecutor {
       await dir.delete(recursive: action.recursive);
       _logger.info('Directory deleted successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to delete directory: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to delete directory', e, stackTrace);
     }
   }
 
@@ -603,8 +679,16 @@ class CustomCommandExecutor {
     RenameDirAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final oldPath = _substituteVariables(action.oldPath, arguments);
-    final newPath = _substituteVariables(action.newPath, arguments);
+    // Validate paths to prevent traversal attacks
+    String oldPath, newPath;
+    try {
+      oldPath = _safelyResolvePath(action.oldPath, arguments);
+      newPath = _safelyResolvePath(action.newPath, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     _logger.info('Renaming directory: $oldPath -> $newPath');
 
     final dir = Directory(oldPath);
@@ -617,9 +701,8 @@ class CustomCommandExecutor {
       await dir.rename(newPath);
       _logger.info('Directory renamed successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to rename directory: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to rename directory', e, stackTrace);
     }
   }
 
@@ -627,7 +710,15 @@ class CustomCommandExecutor {
     ReplaceInFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     final find = _substituteVariables(action.find, arguments);
     final replace = _substituteVariables(action.replace, arguments);
     _logger.info('Replacing in file: $path');
@@ -638,12 +729,56 @@ class CustomCommandExecutor {
       return 1;
     }
 
+    // Check file size to prevent memory issues
+    final stat = await file.stat();
+    if (stat.size > _largeFileWarningSize) {
+      _logger.warning('File is very large (${stat.size} bytes), this may take a while');
+    }
+    if (stat.size > _maxFileSizeForProcessing) {
+      _logger.severe('File too large for in-memory processing: ${stat.size} bytes');
+      return 1;
+    }
+
     try {
       var content = await file.readAsString();
 
       if (action.regex) {
-        final regex = RegExp(find);
-        content = content.replaceAll(regex, replace);
+        // Validate regex pattern length to prevent injection
+        if (find.length > _maxRegexPatternLength) {
+          _logger.severe('Regex pattern too complex (length > $_maxRegexPatternLength)');
+          return 1;
+        }
+
+        // Validate replacement string length
+        if (replace.length > _maxReplacementLength) {
+          _logger.severe('Replacement string too long (length > $_maxReplacementLength)');
+          return 1;
+        }
+
+        try {
+          final regex = RegExp(find);
+
+          // Test regex on multiple sample sizes to detect catastrophic backtracking
+          final testSizes = [100, 500, 1000];
+          for (final size in testSizes) {
+            final testContent = content.length > size ? content.substring(0, size) : content;
+            final startTime = DateTime.now();
+            regex.allMatches(testContent).toList();
+            final elapsed = DateTime.now().difference(startTime);
+
+            if (elapsed.inMilliseconds > _regexTimeoutMs) {
+              _logger.severe('Regex pattern appears to have catastrophic backtracking '
+                  '(took ${elapsed.inMilliseconds}ms on $size chars, limit: ${_regexTimeoutMs}ms)');
+              return 1;
+            }
+          }
+
+          content = content.replaceAll(regex, replace);
+        } catch (e) {
+          _logger.severe('Invalid regex pattern: $find');
+          _logger.severe('Error: $e');
+          return 1;
+        }
       } else {
         content = content.replaceAll(find, replace);
       }
@@ -651,9 +786,8 @@ class CustomCommandExecutor {
       await file.writeAsString(content);
       _logger.info('File updated successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to replace in file: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to replace in file', e, stackTrace);
     }
   }
 
@@ -661,7 +795,15 @@ class CustomCommandExecutor {
     AppendToFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     final content = _substituteVariables(action.content, arguments);
     _logger.info('Appending to file: $path');
 
@@ -675,9 +817,8 @@ class CustomCommandExecutor {
       await file.writeAsString(content, mode: FileMode.append);
       _logger.info('Content appended successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to append to file: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to append to file', e, stackTrace);
     }
   }
 
@@ -685,7 +826,15 @@ class CustomCommandExecutor {
     PrependToFileAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final path = _substituteVariables(action.path, arguments);
+    // Validate path to prevent traversal attacks
+    String path;
+    try {
+      path = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
+
     final content = _substituteVariables(action.content, arguments);
     _logger.info('Prepending to file: $path');
 
@@ -693,6 +842,16 @@ class CustomCommandExecutor {
 
     var existingContent = '';
     if (file.existsSync()) {
+      // Check file size before reading to prevent memory exhaustion
+      final stat = await file.stat();
+      if (stat.size > _largeFileWarningSize) {
+        _logger.warning('File is very large (${stat.size} bytes), this may take a while');
+      }
+      if (stat.size > _maxFileSizeForProcessing) {
+        _logger.severe('File too large for in-memory processing: ${stat.size} bytes');
+        return 1;
+      }
+
       existingContent = await file.readAsString();
     } else if (!action.createIfMissing) {
       _logger.severe('File does not exist: $path');
@@ -703,9 +862,8 @@ class CustomCommandExecutor {
       await file.writeAsString(content + existingContent);
       _logger.info('Content prepended successfully');
       return 0;
-    } catch (e) {
-      _logger.severe('Failed to prepend to file: $e');
-      return 1;
+    } catch (e, stackTrace) {
+      return _logError('Failed to prepend to file', e, stackTrace);
     }
   }
 
@@ -776,33 +934,63 @@ class CustomCommandExecutor {
     CreateArchiveAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final source = _substituteVariables(action.source, arguments);
-    final destination = _substituteVariables(action.destination, arguments);
+    // Validate paths to prevent traversal attacks
+    String source, destination;
+    try {
+      source = _safelyResolvePath(action.source, arguments);
+      destination = _safelyResolvePath(action.destination, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
 
     _logger.info('Creating archive: $destination from $source');
 
     try {
       // Use system commands for now (zip/tar)
       // TODO: Consider adding archive package for pure Dart implementation
+      ProcessResult result;
       if (action.format == 'zip') {
-        final result = await _cmd.run(
+        result = await _cmd.run(
           'zip',
           arguments: ['-r', destination, source],
         );
-        return result.exitCode;
       } else if (action.format == 'tar.gz' || action.format == 'tgz') {
-        final result = await _cmd.run(
+        result = await _cmd.run(
           'tar',
           arguments: ['-czf', destination, source],
         );
-        return result.exitCode;
       } else {
         _logger.severe('Unsupported archive format: ${action.format}');
         return 1;
       }
-    } catch (e) {
-      _logger.severe('Failed to create archive: $e');
-      return 1;
+
+      // Cleanup partially created archive on failure
+      if (result.exitCode != 0) {
+        final archiveFile = File(destination);
+        if (archiveFile.existsSync()) {
+          try {
+            archiveFile.deleteSync();
+            _logger.info('Cleaned up partially created archive: $destination');
+          } catch (cleanupError) {
+            _logger.warning('Failed to cleanup partial archive: $cleanupError');
+          }
+        }
+      }
+
+      return result.exitCode;
+    } catch (e, stackTrace) {
+      // Cleanup on exception
+      final archiveFile = File(destination);
+      if (archiveFile.existsSync()) {
+        try {
+          archiveFile.deleteSync();
+          _logger.info('Cleaned up partially created archive after error: $destination');
+        } catch (cleanupError) {
+          _logger.warning('Failed to cleanup partial archive: $cleanupError');
+        }
+      }
+      return _logError('Failed to create archive', e, stackTrace);
     }
   }
 
@@ -810,38 +998,77 @@ class CustomCommandExecutor {
     ExtractArchiveAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final source = _substituteVariables(action.source, arguments);
-    final destination = _substituteVariables(action.destination, arguments);
+    // Validate paths to prevent traversal attacks
+    String source, destination;
+    try {
+      source = _safelyResolvePath(action.source, arguments);
+      destination = _safelyResolvePath(action.destination, arguments);
+    } catch (e) {
+      _logger.severe('Invalid path: $e');
+      return 1;
+    }
 
     _logger.info('Extracting archive: $source to $destination');
 
     // Ensure destination directory exists
     final destDir = Directory(destination);
-    if (!destDir.existsSync()) {
+    final dirCreatedByUs = !destDir.existsSync();
+    if (dirCreatedByUs) {
       await destDir.create(recursive: true);
     }
 
     try {
       // Detect format from file extension
+      ProcessResult result;
       if (source.endsWith('.zip')) {
-        final result = await _cmd.run(
+        result = await _cmd.run(
           'unzip',
           arguments: [source, '-d', destination],
         );
-        return result.exitCode;
       } else if (source.endsWith('.tar.gz') || source.endsWith('.tgz')) {
-        final result = await _cmd.run(
+        result = await _cmd.run(
           'tar',
           arguments: ['-xzf', source, '-C', destination],
         );
-        return result.exitCode;
       } else {
         _logger.severe('Unsupported archive format: $source');
         return 1;
       }
-    } catch (e) {
-      _logger.severe('Failed to extract archive: $e');
-      return 1;
+
+      // Cleanup on failure: only if we created the directory and it's empty
+      if (result.exitCode != 0 && dirCreatedByUs) {
+        try {
+          final isEmpty = destDir.listSync().isEmpty;
+          if (isEmpty) {
+            destDir.deleteSync();
+            _logger.info('Cleaned up empty extraction directory: $destination');
+          } else {
+            _logger.warning('Extraction failed but directory contains files, not cleaning up: $destination');
+          }
+        } catch (cleanupError) {
+          _logger.warning('Failed to cleanup extraction directory: $cleanupError');
+        }
+      }
+
+      return result.exitCode;
+    } catch (e, stackTrace) {
+      // Cleanup on exception: only if we created the directory and it's empty
+      if (dirCreatedByUs) {
+        try {
+          if (destDir.existsSync()) {
+            final isEmpty = destDir.listSync().isEmpty;
+            if (isEmpty) {
+              destDir.deleteSync();
+              _logger.info('Cleaned up empty extraction directory after error: $destination');
+            } else {
+              _logger.warning('Extraction failed but directory contains files, not cleaning up: $destination');
+            }
+          }
+        } catch (cleanupError) {
+          _logger.warning('Failed to cleanup extraction directory: $cleanupError');
+        }
+      }
+      return _logError('Failed to extract archive', e, stackTrace);
     }
   }
 
@@ -850,7 +1077,7 @@ class CustomCommandExecutor {
   String? _findAlexExecutable() {
     // Try to find bin/alex.dart relative to current directory
     var dir = Directory.current;
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < _maxParentDirSearchDepth; i++) {
       final alexPath = '${dir.path}/bin/alex.dart';
       if (File(alexPath).existsSync()) {
         return alexPath;

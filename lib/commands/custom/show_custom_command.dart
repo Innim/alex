@@ -20,14 +20,7 @@ class ShowCustomCommand extends AlexCommand {
     final name = argResults!['name'] as String;
     final config = CustomCommandsConfig.instance;
 
-    CustomCommandDefinition? cmd;
-    try {
-      cmd = config.findCommand(name);
-    } catch (e) {
-      printError('Command not found: $name');
-      return 1;
-    }
-
+    final cmd = config.findCommand(name);
     if (cmd == null) {
       printError('Command not found: $name');
       return 1;
@@ -98,7 +91,10 @@ class ShowCustomCommand extends AlexCommand {
     printInfo('  $index. ${action.type}');
 
     if (action is ExecAction) {
-      printInfo('      command: ${action.command}');
+      printInfo('      executable: ${action.executable}');
+      if (action.args != null && action.args!.isNotEmpty) {
+        printInfo('      args: ${action.args!.join(' ')}');
+      }
       if (action.workingDir != null) {
         printInfo('      working_dir: ${action.workingDir}');
       }
