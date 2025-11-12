@@ -11,7 +11,7 @@ class CustomCommandExecutor {
   // Security limits
   static const int _maxRegexPatternLength = 200;
   static const int _maxReplacementLength = 10000;
-  static const int _regexTimeoutMs = 10;
+  static const int _regexTimeoutMs = 250;
   static const int _maxFileSizeForProcessing = 1073741824; // 1GB
   static const int _largeFileWarningSize = 104857600; // 100MB
 
