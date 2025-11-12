@@ -221,7 +221,7 @@ class CustomCommandExecutor {
 
     // Also support ${arg_name} format
     arguments.forEach((key, value) {
-      final pattern = r'\${$key}';
+      final pattern = '\${$key}';
       result = result.replaceAll(pattern, value.toString());
     });
 
