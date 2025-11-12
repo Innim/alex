@@ -18,8 +18,16 @@ class CustomCommandExecutor {
   // File search limits
   static const int _maxParentDirSearchDepth = 10;
 
+  // Resource limits per command execution
+  static const int _maxFilesCreatedPerCommand = 1000;
+  static const int _maxTotalBytesWrittenPerCommand = 104857600; // 100MB
+
   final Logger _logger;
   final Cmd _cmd;
+
+  // Resource usage tracking (reset per command execution)
+  int _filesCreatedCount = 0;
+  int _totalBytesWritten = 0;
 
   CustomCommandExecutor({
     Logger? logger,
@@ -39,6 +47,10 @@ class CustomCommandExecutor {
     CustomCommandDefinition definition,
     Map<String, dynamic> arguments,
   ) async {
+    // Reset resource usage tracking for this command execution
+    _filesCreatedCount = 0;
+    _totalBytesWritten = 0;
+
     _logger.info('Executing custom command: ${definition.name}');
 
     for (var i = 0; i < definition.actions.length; i++) {
@@ -53,6 +65,7 @@ class CustomCommandExecutor {
     }
 
     _logger.info('Custom command completed successfully');
+    _logger.fine('Resource usage: $_filesCreatedCount files created, $_totalBytesWritten bytes written');
     return 0;
   }
 
@@ -117,13 +130,24 @@ class CustomCommandExecutor {
     // Substitute variables only in arguments, not in executable
     final args = action.args?.map((arg) => _substituteVariables(arg, arguments)).toList() ?? [];
 
+    // SECURITY: Validate working directory if specified
+    String? validatedWorkingDir;
+    if (action.workingDir != null) {
+      try {
+        validatedWorkingDir = _validateAndResolvePath(action.workingDir!);
+      } catch (e) {
+        _logger.severe('Invalid working directory: $e');
+        return 1;
+      }
+    }
+
     _logger.info('Executing: ${action.executable} ${args.join(" ")}');
 
     try {
       final result = await _cmd.run(
         action.executable,
         arguments: args,
-        workingDir: action.workingDir,
+        workingDir: validatedWorkingDir,
       );
 
       if (result.exitCode != 0) {
@@ -183,7 +207,15 @@ class CustomCommandExecutor {
     ScriptAction action,
     Map<String, dynamic> arguments,
   ) async {
-    final scriptPath = _substituteVariables(action.path, arguments);
+    // SECURITY: Validate script path to prevent path traversal attacks
+    String scriptPath;
+    try {
+      scriptPath = _safelyResolvePath(action.path, arguments);
+    } catch (e) {
+      _logger.severe('Invalid script path: $e');
+      return 1;
+    }
+
     final args = action.args
         .map((arg) => _substituteVariables(arg, arguments))
         .toList();
@@ -258,6 +290,63 @@ class CustomCommandExecutor {
   String _safelyResolvePath(String pathTemplate, Map<String, dynamic> arguments) {
     final pathInput = _substituteVariables(pathTemplate, arguments);
     return _validateAndResolvePath(pathInput);
+  }
+
+  // Check resource limits before creating/writing files.
+  //
+  // Returns true if operation is allowed, false if limits exceeded.
+  bool _checkResourceLimits(int bytesToWrite) {
+    // Check file count limit
+    if (_filesCreatedCount >= _maxFilesCreatedPerCommand) {
+      _logger.severe(
+        'Resource limit exceeded: maximum $_maxFilesCreatedPerCommand files per command',
+      );
+      return false;
+    }
+
+    // Check total bytes written limit
+    if (_totalBytesWritten + bytesToWrite > _maxTotalBytesWrittenPerCommand) {
+      _logger.severe(
+        'Resource limit exceeded: maximum $_maxTotalBytesWrittenPerCommand bytes per command '
+        '(current: $_totalBytesWritten, attempting: $bytesToWrite)',
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  // Track file creation and bytes written.
+  void _trackResourceUsage(int bytesWritten) {
+    _filesCreatedCount++;
+    _totalBytesWritten += bytesWritten;
+  }
+
+  // Validate filename for archive operations.
+  //
+  // Prevents issues with special characters that could confuse archive utilities.
+  bool _validateArchiveFilename(String filename) {
+    // Check for dangerous characters or patterns
+    if (filename.startsWith('-')) {
+      _logger.severe('Invalid filename: cannot start with dash: $filename');
+      return false;
+    }
+
+    if (filename.contains('..')) {
+      _logger.severe('Invalid filename: contains path traversal: $filename');
+      return false;
+    }
+
+    // Check for shell metacharacters that could cause issues
+    final dangerousChars = [';', '&', '|', '`', r'$', '(', ')', '<', '>', '\n', '\r'];
+    for (final char in dangerousChars) {
+      if (filename.contains(char)) {
+        _logger.severe('Invalid filename: contains dangerous character "$char": $filename');
+        return false;
+      }
+    }
+
+    return true;
   }
 
   Future<int> _executeCheckGitBranchAction(
@@ -587,6 +676,12 @@ class CustomCommandExecutor {
     final content = action.content != null
         ? _substituteVariables(action.content!, arguments)
         : '';
+
+    // SECURITY: Check resource limits before creating file
+    if (!_checkResourceLimits(content.length)) {
+      return 1;
+    }
+
     _logger.info('Creating file: $path');
 
     final file = File(path);
@@ -603,6 +698,7 @@ class CustomCommandExecutor {
       }
 
       await file.writeAsString(content);
+      _trackResourceUsage(content.length);
       _logger.info('File created successfully');
       return 0;
     } catch (e, stackTrace) {
@@ -759,18 +855,44 @@ class CustomCommandExecutor {
           final regex = RegExp(find);
 
           // Test regex on multiple sample sizes to detect catastrophic backtracking
-          final testSizes = [100, 500, 1000];
-          for (final size in testSizes) {
-            final testContent = content.length > size ? content.substring(0, size) : content;
+          // Uses progressively larger samples and checks for exponential time growth
+          final testSizes = [100, 1000, 10000];
+          var lastElapsed = 0;
+
+          for (var i = 0; i < testSizes.length; i++) {
+            final size = testSizes[i];
+            // Pad content if needed to ensure consistent testing
+            final testContent = content.length > size
+                ? content.substring(0, size)
+                : content.padRight(size, 'a');
+
             final startTime = DateTime.now();
             regex.allMatches(testContent).toList();
-            final elapsed = DateTime.now().difference(startTime);
+            final elapsed = DateTime.now().difference(startTime).inMilliseconds;
 
-            if (elapsed.inMilliseconds > _regexTimeoutMs) {
-              _logger.severe('Regex pattern appears to have catastrophic backtracking '
-                  '(took ${elapsed.inMilliseconds}ms on $size chars, limit: ${_regexTimeoutMs}ms)');
+            // Check absolute timeout
+            if (elapsed > _regexTimeoutMs) {
+              _logger.severe('Regex timeout on $size characters: ${elapsed}ms');
               return 1;
             }
+
+            // Check for exponential growth (skip first iteration)
+            if (i > 0 && lastElapsed > 0) {
+              final sizeRatio = size / testSizes[i - 1];
+              final timeRatio = elapsed / lastElapsed;
+
+              // If time grows more than 10x relative to size increase, it's suspicious
+              // Example: 10x size increase should not cause 100x time increase
+              if (timeRatio > sizeRatio * 10) {
+                _logger.severe(
+                  'Regex shows exponential time complexity: '
+                  '${sizeRatio.toStringAsFixed(1)}x size → ${timeRatio.toStringAsFixed(1)}x time',
+                );
+                return 1;
+              }
+            }
+
+            lastElapsed = elapsed;
           }
 
           content = content.replaceAll(regex, replace);
@@ -805,6 +927,12 @@ class CustomCommandExecutor {
     }
 
     final content = _substituteVariables(action.content, arguments);
+
+    // SECURITY: Check resource limits before appending
+    if (!_checkResourceLimits(content.length)) {
+      return 1;
+    }
+
     _logger.info('Appending to file: $path');
 
     final file = File(path);
@@ -815,6 +943,7 @@ class CustomCommandExecutor {
 
     try {
       await file.writeAsString(content, mode: FileMode.append);
+      _trackResourceUsage(content.length);
       _logger.info('Content appended successfully');
       return 0;
     } catch (e, stackTrace) {
@@ -836,6 +965,12 @@ class CustomCommandExecutor {
     }
 
     final content = _substituteVariables(action.content, arguments);
+
+    // SECURITY: Check resource limits before prepending
+    if (!_checkResourceLimits(content.length)) {
+      return 1;
+    }
+
     _logger.info('Prepending to file: $path');
 
     final file = File(path);
@@ -860,6 +995,7 @@ class CustomCommandExecutor {
 
     try {
       await file.writeAsString(content + existingContent);
+      _trackResourceUsage(content.length);
       _logger.info('Content prepended successfully');
       return 0;
     } catch (e, stackTrace) {
@@ -944,6 +1080,13 @@ class CustomCommandExecutor {
       return 1;
     }
 
+    // SECURITY: Validate filenames for archive operations
+    final sourceBasename = p.basename(source);
+    final destBasename = p.basename(destination);
+    if (!_validateArchiveFilename(sourceBasename) || !_validateArchiveFilename(destBasename)) {
+      return 1;
+    }
+
     _logger.info('Creating archive: $destination from $source');
 
     try {
@@ -1008,7 +1151,19 @@ class CustomCommandExecutor {
       return 1;
     }
 
+    // SECURITY: Validate filenames for archive operations
+    final sourceBasename = p.basename(source);
+    if (!_validateArchiveFilename(sourceBasename)) {
+      return 1;
+    }
+
     _logger.info('Extracting archive: $source to $destination');
+
+    // SECURITY: Validate archive contents before extraction to prevent zip slip
+    if (!await _validateArchiveContents(source, destination)) {
+      _logger.severe('Archive validation failed: contains path traversal');
+      return 1;
+    }
 
     // Ensure destination directory exists
     final destDir = Directory(destination);
@@ -1072,8 +1227,108 @@ class CustomCommandExecutor {
     }
   }
 
-  /// Find alex executable (bin/alex.dart).
-  /// Returns null if not found (will use global alex instead).
+  // Validate archive contents to prevent zip slip vulnerability.
+  //
+  // This method lists the archive contents before extraction and ensures
+  // that all files would be extracted within the destination directory.
+  //
+  // Returns true if archive is safe to extract, false otherwise.
+  Future<bool> _validateArchiveContents(String archivePath, String destDir) async {
+    final normalizedDest = p.normalize(p.absolute(destDir));
+
+    try {
+      // List archive contents first
+      ProcessResult listResult;
+      if (archivePath.endsWith('.zip')) {
+        listResult = await _cmd.run(
+          'unzip',
+          arguments: ['-l', archivePath],
+          immediatePrintStd: false,
+          immediatePrintErr: false,
+        );
+      } else if (archivePath.endsWith('.tar.gz') || archivePath.endsWith('.tgz')) {
+        listResult = await _cmd.run(
+          'tar',
+          arguments: ['-tzf', archivePath],
+          immediatePrintStd: false,
+          immediatePrintErr: false,
+        );
+      } else {
+        _logger.severe('Unsupported archive format for validation: $archivePath');
+        return false;
+      }
+
+      if (listResult.exitCode != 0) {
+        _logger.severe('Failed to list archive contents');
+        return false;
+      }
+
+      // Parse and validate each entry
+      final entries = listResult.stdout.toString().split('\n');
+      for (final entry in entries) {
+        final filename = _extractFilenameFromListing(entry, archivePath);
+        if (filename.isEmpty) continue;
+
+        // Resolve what the final path would be after extraction
+        final targetPath = p.normalize(p.absolute(p.join(destDir, filename)));
+
+        // Check if path escapes destination directory
+        if (!p.isWithin(normalizedDest, targetPath) && targetPath != normalizedDest) {
+          _logger.severe('Archive contains path traversal: $filename');
+          _logger.severe('Would extract to: $targetPath');
+          _logger.severe('Outside allowed directory: $normalizedDest');
+          return false;
+        }
+      }
+
+      _logger.fine('Archive validation passed: ${entries.length} entries checked');
+      return true;
+    } catch (e, stackTrace) {
+      _logger.severe('Archive validation error: $e');
+      _logger.fine('Stack trace:\n$stackTrace');
+      return false;
+    }
+  }
+
+  // Extract filename from archive listing output.
+  //
+  // Different archive tools produce different output formats:
+  // - unzip -l: columns with size, date, time, and filename
+  // - tar -tzf: just filenames
+  String _extractFilenameFromListing(String line, String archivePath) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) return '';
+
+    // For tar archives, output is just the filename
+    if (archivePath.endsWith('.tar.gz') || archivePath.endsWith('.tgz')) {
+      return trimmed;
+    }
+
+    // For zip archives, parse unzip -l output
+    // Format: "  Length      Date    Time    Name"
+    // Example: "    2000  2024-01-15 10:30   path/to/file.txt"
+    if (archivePath.endsWith('.zip')) {
+      // Skip header lines
+      if (trimmed.startsWith('Archive:') ||
+          trimmed.startsWith('Length') ||
+          trimmed.startsWith('----') ||
+          trimmed.contains('files')) {
+        return '';
+      }
+
+      // Try to extract filename (last part after whitespace)
+      final parts = trimmed.split(RegExp(r'\s{2,}'));
+      if (parts.length >= 4) {
+        // Format: [length] [date] [time] [name...]
+        return parts.sublist(3).join(' ');
+      }
+    }
+
+    return '';
+  }
+
+  // Find alex executable (bin/alex.dart).
+  // Returns null if not found (will use global alex instead).
   String? _findAlexExecutable() {
     // Try to find bin/alex.dart relative to current directory
     var dir = Directory.current;

@@ -397,6 +397,23 @@ Custom commands are configured in `alex_custom_commands.yaml` file in your proje
 $ alex custom <command>
 ```
 
+> **⚠️ SECURITY WARNING**
+>
+> Custom commands can execute arbitrary programs, scripts, and shell commands. **NEVER** use custom command YAML files from untrusted sources!
+>
+> Malicious YAML files can:
+> - Delete or modify your files
+> - Steal sensitive information (credentials, API keys, etc.)
+> - Install malware or backdoors
+> - Compromise your entire system
+>
+> **Only use custom commands that:**
+> - You created yourself, OR
+> - You have thoroughly reviewed and understand, OR
+> - Come from a trusted source you can verify
+>
+> When in doubt, manually inspect the `alex_custom_commands.yaml` file before running any custom commands.
+
 #### Manage custom commands
 
 List all registered custom commands:
