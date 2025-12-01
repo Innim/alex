@@ -1,0 +1,357 @@
+# Alex Custom Commands Configuration
+# This is an example file. Copy it to alex_custom_commands.yaml to use.
+# Define your custom commands here
+
+custom_commands:
+  # Example 1: Build release for a specific platform
+  - name: build-release
+    description: Build release version with all checks and code generation
+    aliases: [br, release]
+    arguments:
+      - name: platform
+        type: option
+        help: Target platform to build for
+        abbr: p
+        allowed: [android, ios, web, windows, macos, linux]
+        required: true
+    actions:
+      # Run code generation
+      - type: alex
+        command: code gen
+      # Extract localization strings
+      - type: alex
+        command: l10n extract
+      # Build for specified platform
+      - type: exec
+        executable: flutter
+        args: [build, '{{platform}}', --release]
+
+  # Example 2: Quick fix for common issues
+  - name: quick-fix
+    description: Quick fix for common Flutter issues
+    aliases: [qf, fix]
+    actions:
+      - type: exec
+        executable: flutter
+        args: [clean]
+      - type: exec
+        executable: flutter
+        args: [pub, get]
+      - type: alex
+        command: code gen
+
+  # Example 3: Run pre-commit checks
+  - name: pre-commit
+    description: Run all checks before committing
+    aliases: [pc, check]
+    actions:
+      - type: exec
+        executable: dart
+        args: [analyze]
+      - type: exec
+        executable: dart
+        args: [format, --set-exit-if-changed, .]
+      - type: exec
+        executable: dart
+        args: [test]
+
+  # Example 4: Create a new feature branch
+  - name: new-feature
+    description: Create and checkout a new feature branch
+    arguments:
+      - name: name
+        type: option
+        help: Name of the feature
+        abbr: n
+        required: true
+    actions:
+      - type: exec
+        executable: git
+        args: [checkout, -b, 'feature/{{name}}']
+
+  # Example 5: Run a custom Dart script
+  - name: custom-script
+    description: Run a custom Dart script with arguments
+    arguments:
+      - name: script-arg
+        type: option
+        help: Argument to pass to the script
+        default: default-value
+    actions:
+      - type: script
+        path: ./scripts/my_custom_script.dart
+        args: [{{script-arg}}]
+
+  # Example 6: Full release workflow
+  - name: full-release
+    description: Complete release workflow with version bump
+    arguments:
+      - name: version-type
+        type: option
+        help: Type of version bump
+        abbr: v
+        allowed: [major, minor, patch]
+        default: patch
+    actions:
+      # Run all checks
+      - type: alex
+        command: code gen
+      - type: exec
+        executable: dart
+        args: [analyze]
+      - type: exec
+        executable: dart
+        args: [test]
+      # Start release
+      - type: alex
+        command: release start
+        args:
+          - '--{{version-type}}'
+
+  # Example 7: Update dependencies and regenerate code
+  - name: update-deps
+    description: Update all dependencies and regenerate code
+    aliases: [ud]
+    actions:
+      - type: exec
+        executable: flutter
+        args: [pub, upgrade]
+      - type: alex
+        command: code gen
+      - type: exec
+        executable: dart
+        args: [analyze]
+
+  # Example 8: Simple command with flag argument
+  - name: build-debug
+    description: Build debug version with optional verbose output
+    arguments:
+      - name: verbose
+        type: flag
+        help: Enable verbose output
+        abbr: v
+    actions:
+      - type: exec
+        executable: flutter
+        args: [build, apk, --debug]
+
+  # Example 9: Build for App Gallery with git checks
+  - name: build-app-gallery
+    description: Build app for App Gallery (with branch and git checks)
+    actions:
+      # Check current branch and switch to pipe/app-gallery/prod
+      - type: check_git_branch
+        branch: pipe/app-gallery/prod
+        auto_switch: true
+        error_message: "Branch pipe/app-gallery/prod does not exist"
+
+      # Check that there are no uncommitted changes
+      - type: check_git_clean
+        error_message: "There are uncommitted changes. Please commit or stash them first"
+
+      # Build the app
+      - type: exec
+        executable: fvm
+        args: [flutter, build, apk, --target, lib/main_app_gallery.dart]
+
+  # Example 10: Update iOS pods
+  - name: update-pods
+    description: Update iOS CocoaPods dependencies
+    actions:
+      # Check platform
+      - type: check_platform
+        platform: macos
+        error_message: 'This command can only run on macOS'
+
+      # Check if ios directory exists
+      - type: check_file_exists
+        path: ios
+        should_exist: true
+        error_message: "iOS directory not found"
+
+      # Change to ios directory
+      - type: change_dir
+        path: ios
+
+      # Delete Podfile.lock if exists
+      - type: delete_file
+        path: Podfile.lock
+        ignore_not_found: true
+
+      # Run pod install
+      - type: exec
+        executable: pod
+        args: [install, --repo-update]
+
+  # Example 11: File operations workflow
+  - name: file-ops-demo
+    description: Demonstration of all file operations
+    actions:
+      # Create a temporary directory
+      - type: create_dir
+        path: temp_workspace
+        recursive: true
+
+      # Create a file with content
+      - type: create_file
+        path: temp_workspace/config.txt
+        content: "Environment: {{env}}\nVersion: 1.0.0"
+        overwrite: true
+
+      # Copy the file
+      - type: copy_file
+        source: temp_workspace/config.txt
+        destination: temp_workspace/config_backup.txt
+        overwrite: false
+
+      # Rename the backup
+      - type: rename_file
+        old_path: temp_workspace/config_backup.txt
+        new_path: temp_workspace/config.bak
+
+      # Create another directory
+      - type: create_dir
+        path: temp_workspace/archive
+
+      # Move file to archive
+      - type: move_file
+        source: temp_workspace/config.bak
+        destination: temp_workspace/archive/config.bak
+
+      # Rename directory
+      - type: rename_dir
+        old_path: temp_workspace/archive
+        new_path: temp_workspace/backup
+
+      # Clean up - delete directory
+      - type: delete_dir
+        path: temp_workspace
+        recursive: true
+        ignore_not_found: true
+    arguments:
+      - name: env
+        type: option
+        help: Environment name
+        default: production
+
+  # Example 12: Version update with file replacement
+  - name: update-version
+    description: Update version in files
+    arguments:
+      - name: version
+        type: option
+        help: New version number
+        abbr: v
+        required: true
+    actions:
+      # Print message
+      - type: print
+        message: 'Updating version to {{version}}...'
+        level: info
+
+      # Replace version in pubspec.yaml
+      - type: replace_in_file
+        path: pubspec.yaml
+        find: 'version: \d+\.\d+\.\d+'
+        replace: 'version: {{version}}'
+        regex: true
+
+      # Append to changelog
+      - type: append_to_file
+        path: CHANGELOG.md
+        content: |
+
+          ## [{{version}}] - {{date}}
+          - Updated version
+
+      # Print completion message
+      - type: print
+        message: 'Version updated successfully!'
+        level: info
+
+  # Example 13: Platform-specific build
+  - name: build-macos
+    description: Build for macOS only
+    actions:
+      # Check platform
+      - type: check_platform
+        platform: macos
+        error_message: 'This command can only run on macOS'
+
+      # Print message
+      - type: print
+        message: 'Building for macOS...'
+
+      # Build
+      - type: exec
+        executable: flutter
+        args: [build, macos, --release]
+
+      # Create archive
+      - type: create_archive
+        source: build/macos/Build/Products/Release/
+        destination: releases/macos-app.zip
+        format: zip
+
+      - type: print
+        message: 'Build completed! Archive: releases/macos-app.zip'
+
+  # Example 14: Deployment with sleep and checks
+  - name: deploy-staging
+    description: Deploy to staging server
+    actions:
+      - type: print
+        message: 'Starting deployment to staging...'
+        level: info
+
+      # Check git is clean
+      - type: check_git_clean
+        error_message: 'Cannot deploy with uncommitted changes'
+
+      # Build
+      - type: exec
+        executable: flutter
+        args: [build, web, --release]
+
+      # Create deployment archive
+      - type: create_archive
+        source: build/web
+        destination: deploy-staging.zip
+
+      - type: print
+        message: 'Upload deploy-staging.zip to server manually'
+        level: warning
+
+      # Wait for manual upload
+      - type: wait
+        milliseconds: 5000
+        message: 'Waiting for upload to complete...'
+
+      # Cleanup
+      - type: delete_file
+        path: deploy-staging.zip
+        ignore_not_found: true
+
+      - type: print
+        message: 'Deployment complete!'
+
+  # Example 15: Add license header to files
+  - name: add-license
+    description: Add license header to Dart files
+    arguments:
+      - name: file
+        type: option
+        help: File path
+        required: true
+    actions:
+      - type: prepend_to_file
+        path: '{{file}}'
+        content: |
+          // Copyright (c) 2025 Your Company
+          // Licensed under the MIT License
+
+        create_if_missing: false
+        error_message: 'File not found: {{file}}'
+
+      - type: print
+        message: 'License header added to {{file}}'

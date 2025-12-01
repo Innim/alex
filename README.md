@@ -387,6 +387,313 @@ For example:
 $ alex settings set open_ai_api_key abc123
 ```
 
+### Custom Commands
+
+Define your own custom commands to automate repetitive workflows, combine multiple operations, or create project-specific shortcuts.
+
+Custom commands are configured in `alex_custom_commands.yaml` file in your project root.
+
+```bash
+$ alex custom <command>
+```
+
+> **⚠️ SECURITY WARNING**
+>
+> Custom commands can execute arbitrary programs, scripts, and shell commands. **NEVER** use custom command YAML files from untrusted sources!
+>
+> Malicious YAML files can:
+> - Delete or modify your files
+> - Steal sensitive information (credentials, API keys, etc.)
+> - Install malware or backdoors
+> - Compromise your entire system
+>
+> **Only use custom commands that:**
+> - You created yourself, OR
+> - You have thoroughly reviewed and understand, OR
+> - Come from a trusted source you can verify
+>
+> When in doubt, manually inspect the `alex_custom_commands.yaml` file before running any custom commands.
+
+#### Manage custom commands
+
+List all registered custom commands:
+
+```bash
+$ alex custom list
+```
+
+Show details of a specific command:
+
+```bash
+$ alex custom show --name build-release
+```
+
+Add a new custom command interactively:
+
+```bash
+$ alex custom add
+```
+
+Edit the configuration file:
+
+```bash
+$ alex custom edit
+```
+
+Remove a custom command:
+
+```bash
+$ alex custom remove --name build-release
+```
+
+#### Configuration
+
+Custom commands are defined in `alex_custom_commands.yaml`:
+
+```yaml
+custom_commands:
+  - name: build-release
+    description: Build release version with all checks
+    aliases: [br, release]
+    arguments:
+      - name: platform
+        type: option
+        help: Target platform to build for
+        abbr: p
+        allowed: [android, ios, web]
+        required: true
+    actions:
+      - type: alex
+        command: code gen
+      - type: exec
+        executable: flutter
+        args: [build, '{{platform}}', --release]
+```
+
+#### Action types
+
+Custom commands support multiple types of actions:
+
+**exec** - Execute shell command or program:
+```yaml
+- type: exec
+  executable: flutter
+  args: [clean]
+  working_dir: /optional/path  # optional
+```
+
+**alex** - Execute existing alex command:
+```yaml
+- type: alex
+  command: l10n extract
+  args: [--locale, en]  # optional
+```
+
+**script** - Execute Dart script:
+```yaml
+- type: script
+  path: ./scripts/my_script.dart
+  args: [arg1, arg2]  # optional
+```
+
+**check_git_branch** - Check current git branch and optionally switch to it:
+```yaml
+- type: check_git_branch
+  branch: pipe/app-gallery/prod
+  auto_switch: true  # Switch if not on branch (default: true)
+  error_message: "Branch does not exist"  # Custom error message
+```
+
+**check_git_clean** - Check that git working directory is clean:
+```yaml
+- type: check_git_clean
+  error_message: "There are uncommitted changes"
+```
+
+**change_dir** - Change working directory:
+```yaml
+- type: change_dir
+  path: ios
+  error_message: "Directory not found"
+```
+
+**delete_file** - Delete file or directory:
+```yaml
+- type: delete_file
+  path: Podfile.lock
+  recursive: false  # For directories (default: false)
+  ignore_not_found: true  # Don't fail if doesn't exist (default: true)
+```
+
+**check_file_exists** - Check if file or directory exists:
+```yaml
+- type: check_file_exists
+  path: ios
+  should_exist: true  # true to check exists, false to check not exists
+  error_message: "iOS directory not found"
+```
+
+**copy_file** - Copy a file:
+```yaml
+- type: copy_file
+  source: config.txt
+  destination: config_backup.txt
+  overwrite: false  # Whether to overwrite if destination exists (default: false)
+```
+
+**rename_file** - Rename a file:
+```yaml
+- type: rename_file
+  old_path: old_name.txt
+  new_path: new_name.txt
+```
+
+**move_file** - Move a file:
+```yaml
+- type: move_file
+  source: file.txt
+  destination: archive/file.txt
+```
+
+**create_file** - Create a file with optional content:
+```yaml
+- type: create_file
+  path: config.txt
+  content: "Environment: production"  # Optional content with variable substitution
+  overwrite: false  # Whether to overwrite if file exists (default: false)
+```
+
+**create_dir** - Create a directory:
+```yaml
+- type: create_dir
+  path: output
+  recursive: true  # Create parent directories (default: true)
+```
+
+**delete_dir** - Delete a directory:
+```yaml
+- type: delete_dir
+  path: temp
+  recursive: true  # Delete recursively (default: true)
+  ignore_not_found: true  # Don't fail if doesn't exist (default: true)
+```
+
+**rename_dir** - Rename a directory:
+```yaml
+- type: rename_dir
+  old_path: old_directory
+  new_path: new_directory
+```
+
+**replace_in_file** - Replace text in file (supports regex):
+```yaml
+- type: replace_in_file
+  path: pubspec.yaml
+  find: 'version: \d+\.\d+\.\d+'
+  replace: 'version: {{new_version}}'
+  regex: true  # Enable regex matching (default: false)
+  error_message: 'Failed to update version'
+```
+
+**append_to_file** - Append content to end of file:
+```yaml
+- type: append_to_file
+  path: CHANGELOG.md
+  content: |
+    ## [{{version}}] - {{date}}
+    - New release
+  create_if_missing: true  # Create file if doesn't exist (default: true)
+```
+
+**prepend_to_file** - Prepend content to beginning of file:
+```yaml
+- type: prepend_to_file
+  path: lib/main.dart
+  content: '// Copyright (c) 2024\n'
+  create_if_missing: false  # Don't create if doesn't exist (default: true)
+```
+
+**print** - Print message to console:
+```yaml
+- type: print
+  message: 'Building for {{platform}}...'
+  level: info  # info, warning, or error (default: info)
+```
+
+**wait** - Wait for specified duration:
+```yaml
+- type: wait
+  milliseconds: 5000
+  message: 'Waiting for services to start...'  # Optional message
+```
+
+**check_platform** - Verify current operating system:
+```yaml
+- type: check_platform
+  platform: macos  # macos, linux, or windows
+  error_message: 'This command only works on macOS'
+```
+
+**create_archive** - Create ZIP or TAR.GZ archive:
+```yaml
+- type: create_archive
+  source: build/app/outputs/bundle/release/
+  destination: releases/app-v{{version}}.zip
+  format: zip  # zip or tar.gz (default: zip)
+```
+
+**extract_archive** - Extract ZIP or TAR.GZ archive:
+```yaml
+- type: extract_archive
+  source: downloads/assets.zip
+  destination: assets/
+```
+
+#### Variable substitution
+
+Actions support variable substitution using `{{variable_name}}` or `${variable_name}` syntax:
+
+```yaml
+arguments:
+  - name: platform
+    type: option
+    required: true
+actions:
+  - type: exec
+    executable: flutter
+    args: [build, '{{platform}}']
+```
+
+#### Using custom commands
+
+Once defined, custom commands work just like built-in alex commands:
+
+```bash
+$ alex build-release --platform android
+```
+
+Or using an alias:
+
+```bash
+$ alex br -p android
+```
+
+#### Verbose mode
+
+Custom commands support the `--verbose` flag to see detailed execution information:
+
+```bash
+$ alex build-release --platform android --verbose
+```
+
+This will show:
+- Each action being executed
+- Detailed progress for file operations
+- Variable substitution values
+- Git operations details
+
+See `alex_custom_commands.yaml.example` in the repository for more examples.
+
 ## Problem solving
 
 ### Command not found
