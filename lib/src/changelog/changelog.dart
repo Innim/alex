@@ -169,17 +169,22 @@ class Changelog {
     String? issueSuffix;
     if (issueId != null) {
       issueSuffix = '(#$issueId)';
-      var clearedStr = str.trimRight();
-      var clearedEnd = clearedStr.length;
-      for (var i = clearedEnd - 1; i >= 0; i--) {
-        if (clearedStr[i] != '.') break;
-        clearedEnd--;
-      }
-      clearedStr = clearedStr.substring(0, clearedEnd);
-      if (clearedStr.endsWith(issueSuffix)) {
-        str = clearedStr
-            .substring(0, clearedStr.length - issueSuffix.length)
-            .trimRight();
+      if (str.contains('[#$issueId](')) {
+        // Line already contains a markdown link to the issue, skip suffix.
+        issueSuffix = null;
+      } else {
+        var clearedStr = str.trimRight();
+        var clearedEnd = clearedStr.length;
+        for (var i = clearedEnd - 1; i >= 0; i--) {
+          if (clearedStr[i] != '.') break;
+          clearedEnd--;
+        }
+        clearedStr = clearedStr.substring(0, clearedEnd);
+        if (clearedStr.endsWith(issueSuffix)) {
+          str = clearedStr
+              .substring(0, clearedStr.length - issueSuffix.length)
+              .trimRight();
+        }
       }
     }
 

@@ -1,3 +1,7 @@
+## Next
+
+* [Feature] `finish`: skip appending issue number suffix if the changelog line already contains a markdown link to the issue (e.g. `[#1234](...)`).
+
 ## 1.10.0
 
 * **New feature**: Custom commands support! Define your own commands in `alex_custom_commands.yaml` to automate workflows.
