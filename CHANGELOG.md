@@ -1,4 +1,4 @@
-## Next
+## 1.10.1
 
 * [Feature] `finish`: skip appending issue number suffix if the changelog line already contains a markdown link to the issue (e.g. `[#1234](...)`).
 
