@@ -95,12 +95,35 @@ class Changelog {
         "$_nextVersionHeader\n\n$_versionHeaderPrefix$version - $dateStr"));
   }
 
-  Future<void> addAddedEntry(String line, [int? issueId]) =>
-      _addEntry(_addedSubheader, line, issueId);
-  Future<void> addFixedEntry(String line, [int? issueId]) =>
-      _addEntry(_fixedSubheader, line, issueId);
-  Future<void> addPreReleaseEntry(String line, [int? issueId]) =>
-      _addEntry(_preReleaseSubheader, line, issueId);
+  /// Replaces plain `(#N)` issue references with markdown links to
+  /// `[issueUrl]/N`. Skips occurrences that are already part of a markdown
+  /// link. Returns the number of replacements.
+  Future<int> linkIssueReferences(String issueUrl) async {
+    final base =
+        issueUrl.endsWith('/') ? issueUrl.substring(0, issueUrl.length - 1) : issueUrl;
+
+    final str = await content;
+    final pattern = RegExp(r'(?<!\])\(#(\d+)\)');
+    var count = 0;
+    final updated = str.replaceAllMapped(pattern, (m) {
+      count++;
+      final id = m.group(1);
+      return '[#$id]($base/$id)';
+    });
+
+    if (count > 0) _update(updated);
+    return count;
+  }
+
+  Future<void> addAddedEntry(String line, [int? issueId, String? issueUrl]) =>
+      _addEntry(_addedSubheader, line, issueId, issueUrl);
+
+  Future<void> addFixedEntry(String line, [int? issueId, String? issueUrl]) =>
+      _addEntry(_fixedSubheader, line, issueId, issueUrl);
+
+  Future<void> addPreReleaseEntry(String line,
+          [int? issueId, String? issueUrl]) =>
+      _addEntry(_preReleaseSubheader, line, issueId, issueUrl);
 
   String get _filepath => _filename;
 

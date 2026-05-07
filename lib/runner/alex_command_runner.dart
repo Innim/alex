@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:alex/commands/changelog/changelog_command.dart';
 import 'package:alex/commands/code/code_command.dart';
 import 'package:alex/commands/custom/custom_command.dart';
 import 'package:alex/commands/custom/user_custom_command.dart';
@@ -38,6 +39,7 @@ class AlexCommandRunner extends CommandRunner<int> {
       CodeCommand(),
       PubspecCommand(),
       FeatureCommand(),
+      ChangelogCommand(),
       SettingsCommand(),
       UpdateCommand(),
       CustomCommand(),
