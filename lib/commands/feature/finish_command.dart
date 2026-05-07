@@ -109,7 +109,8 @@ class FinishCommand extends FeatureCommandBase {
     git.gitflowFeatureFinish(branchName, deleteBranch: false);
 
     printVerbose('Add entry in changelog');
-    final changed = await _updateChangelog(console, fs, issueId, changelog);
+    final changed = await _updateChangelog(
+        console, fs, issueId, changelog, config.issueUrl);
 
     if (changed) {
       printVerbose('Commit changelog');
@@ -187,7 +188,7 @@ class FinishCommand extends FeatureCommandBase {
   }
 
   Future<bool> _updateChangelog(Console console, FileSystem fs, int issueId,
-      String? changelogLine) async {
+      String? changelogLine, String? issueUrl) async {
     final changelog = Changelog(fs);
 
     if (!(await changelog.exists)) {
@@ -243,13 +244,13 @@ Which section to add:
     printVerbose('Write to changelog: $line');
     switch (section) {
       case 1:
-        await changelog.addAddedEntry(line, issueId);
+        await changelog.addAddedEntry(line, issueId, issueUrl);
         break;
       case 2:
-        await changelog.addFixedEntry(line, issueId);
+        await changelog.addFixedEntry(line, issueId, issueUrl);
         break;
       case 3:
-        await changelog.addPreReleaseEntry(line, issueId);
+        await changelog.addPreReleaseEntry(line, issueId, issueUrl);
         break;
     }
     await changelog.save();

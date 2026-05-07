@@ -100,6 +100,17 @@ class AlexConfig {
 
   AlexConfig._(this._path, this._data);
 
+  /// Base URL for issue tracker. If set, changelog entries will reference
+  /// issues with a markdown link instead of a plain `(#N)` suffix.
+  ///
+  /// Example: `https://site/project/issue`.
+  String? get issueUrl {
+    const key = 'issue_url';
+    final value = _data[key];
+    if (value is String && value.isNotEmpty) return value;
+    return null;
+  }
+
   L10nConfig get l10n {
     const key = 'l10n';
     return _l10n ??= _data.containsKey(key)

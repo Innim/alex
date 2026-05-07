@@ -104,7 +104,8 @@ class Changelog {
 
   String get _filepath => _filename;
 
-  Future<void> _addEntry(String subheader, String line, int? issueId) async {
+  Future<void> _addEntry(
+      String subheader, String line, int? issueId, String? issueUrl) async {
     const sep = '\n';
     const entryStart = '- ';
     const entryEnd = '.';
@@ -168,11 +169,20 @@ class Changelog {
     var str = line;
     String? issueSuffix;
     if (issueId != null) {
-      issueSuffix = '(#$issueId)';
       if (str.contains('[#$issueId](')) {
         // Line already contains a markdown link to the issue, skip suffix.
         issueSuffix = null;
       } else {
+        if (issueUrl != null && issueUrl.isNotEmpty) {
+          final base = issueUrl.endsWith('/')
+              ? issueUrl.substring(0, issueUrl.length - 1)
+              : issueUrl;
+          issueSuffix = '[#$issueId]($base/$issueId)';
+        } else {
+          issueSuffix = '(#$issueId)';
+        }
+
+        final plainSuffix = '(#$issueId)';
         var clearedStr = str.trimRight();
         var clearedEnd = clearedStr.length;
         for (var i = clearedEnd - 1; i >= 0; i--) {
@@ -180,9 +190,9 @@ class Changelog {
           clearedEnd--;
         }
         clearedStr = clearedStr.substring(0, clearedEnd);
-        if (clearedStr.endsWith(issueSuffix)) {
+        if (clearedStr.endsWith(plainSuffix)) {
           str = clearedStr
-              .substring(0, clearedStr.length - issueSuffix.length)
+              .substring(0, clearedStr.length - plainSuffix.length)
               .trimRight();
         }
       }
