@@ -1,3 +1,9 @@
+## 1.11.0
+
+* [Feature] `finish`: append issue references as a markdown link (`[#N](url/N)`) when `issue_url` is set in alex config; falls back to the plain `(#N)` suffix otherwise.
+* New command `alex changelog update-issue-links` (alias `cl uil`) — replaces plain `(#N)` issue references in `CHANGELOG.md` with markdown links built from `issue_url`. Reports an error if `issue_url` is not configured.
+* New optional config option `issue_url` (in `alex.yaml` or the `alex:` section of `pubspec.yaml`).
+
 ## 1.10.1
 
 * [Feature] `finish`: skip appending issue number suffix if the changelog line already contains a markdown link to the issue (e.g. `[#1234](...)`).
