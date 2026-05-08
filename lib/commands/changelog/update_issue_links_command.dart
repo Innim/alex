@@ -16,20 +16,26 @@ class UpdateIssueLinksCommand extends AlexCommand {
 
   @override
   Future<int> doRun() async {
-    final issueUrl = config.issueUrl;
-    if (issueUrl == null) {
-      return error(1,
-          message: 'issue_url is not set in alex config. '
-              'Add `issue_url: <base url>` to alex.yaml or to the alex section '
-              'of pubspec.yaml.');
-    }
-
     const fs = IOFileSystem();
 
     final pubspecExists = await Spec.exists(fs);
     if (!pubspecExists) {
       return error(1,
           message: 'You should run command from project root directory.');
+    }
+
+    String? issueUrl;
+    try {
+      issueUrl = findConfigAndSetWorkingDir().issueUrl;
+    } catch (e, st) {
+      printVerbose('Failed to load config: $e\nStackTrace: $st');
+    }
+
+    if (issueUrl == null) {
+      return error(1,
+          message: 'issue_url is not set in alex config. '
+              'Add `issue_url: <base url>` to alex.yaml or to the alex section '
+              'of pubspec.yaml.');
     }
 
     final changelog = Changelog(fs);
