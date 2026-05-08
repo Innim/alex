@@ -37,6 +37,7 @@ To run a single test file: `dart test test/src/changelog/changelog_test.dart`
 **Command hierarchy:**
 - `lib/commands/release/` — gitflow-based releases, changelog updates, optional ChatGPT release notes
 - `lib/commands/feature/` — feature branch finish (merge to develop, delete remote)
+- `lib/commands/changelog/` — utilities for `CHANGELOG.md` (e.g. `update-issue-links`)
 - `lib/commands/l10n/` — 8 subcommands for ARB/XML/iOS strings localization
 - `lib/commands/code/` — runs `build_runner` (supports subprojects)
 - `lib/commands/pubspec/` — `pub get` and dependency updates (supports workspaces)
