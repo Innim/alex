@@ -24,17 +24,7 @@ class UpdateIssueLinksCommand extends AlexCommand {
           message: 'You should run command from project root directory.');
     }
 
-    String? issueUrl;
-    try {
-      issueUrl = findConfigAndSetWorkingDir().issueUrl;
-    } catch (e, st) {
-      printVerbose('Failed to load config: $e\nStackTrace: $st');
-      return error(1,
-          message: 'Failed to load alex config. '
-              'Ensure alex.yaml or pubspec.yaml contains a valid `alex` section '
-              'with `issue_url`.');
-    }
-
+    final issueUrl = config.issueUrl;
     if (issueUrl == null) {
       return error(1,
           message: 'issue_url is not set in alex config. '
