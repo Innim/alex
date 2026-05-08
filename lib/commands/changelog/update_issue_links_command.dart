@@ -29,6 +29,10 @@ class UpdateIssueLinksCommand extends AlexCommand {
       issueUrl = findConfigAndSetWorkingDir().issueUrl;
     } catch (e, st) {
       printVerbose('Failed to load config: $e\nStackTrace: $st');
+      return error(1,
+          message: 'Failed to load alex config. '
+              'Ensure alex.yaml or pubspec.yaml contains a valid `alex` section '
+              'with `issue_url`.');
     }
 
     if (issueUrl == null) {
