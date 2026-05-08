@@ -108,7 +108,7 @@ class Changelog {
     final updated = str.replaceAllMapped(pattern, (m) {
       count++;
       final id = m.group(1);
-      return '[#$id]($base/$id)';
+      return '([#$id]($base/$id))';
     });
 
     if (count > 0) _update(updated);
@@ -200,7 +200,7 @@ class Changelog {
           final base = issueUrl.endsWith('/')
               ? issueUrl.substring(0, issueUrl.length - 1)
               : issueUrl;
-          issueSuffix = '[#$issueId]($base/$issueId)';
+          issueSuffix = '([#$issueId]($base/$issueId))';
         } else {
           issueSuffix = '(#$issueId)';
         }
