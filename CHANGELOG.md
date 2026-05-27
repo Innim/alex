@@ -1,3 +1,7 @@
+## 1.11.1
+
+* [Feature] `finish`: new `--squash` (`-s`) flag to squash all feature commits into a single commit when merging into develop. Useful for tasks like golden tests updates.
+
 ## 1.11.0
 
 * [Feature] `finish`: append issue references as a markdown link (`[#N](url/N)`) when `issue_url` is set in alex config; falls back to the plain `(#N)` suffix otherwise.
