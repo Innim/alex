@@ -13,13 +13,14 @@ class FinishCommand extends FeatureCommandBase {
   static const _argDemo = CmdArg('demo');
   static const _argIssue = CmdArg('issue', abbr: 'i');
   static const _argChangelog = CmdArg('changelog', abbr: 'c');
+  static const _argSquash = CmdArg('squash', abbr: 's');
 
   FinishCommand()
       : super(
-            'finish',
-            'Finish feature by issue id: '
-                'merge and remove branch, and update changelog.',
-            const ['f']) {
+      'finish',
+      'Finish feature by issue id: '
+          'merge and remove branch, and update changelog.',
+      const ['f']) {
     argParser
       ..addFlag(
         _argDemo.name,
@@ -30,13 +31,19 @@ class FinishCommand extends FeatureCommandBase {
         help: 'Issue number, which used for branch name. '
             'Optional, you can provide it in interactive mode.',
         valueHelp: 'NUMBER',
-      )
-      ..addArg(
-        _argChangelog,
-        help: 'Line to add in CHANGELOG.md. '
-            'Optional, you can provide it in interactive mode. '
-            'Example: alex finish feature -${_argChangelog.abbr}"Some new feature"',
-        valueHelp: 'CHANGELOG',
+      )..addArg(
+      _argChangelog,
+      help: 'Line to add in CHANGELOG.md. '
+          'Optional, you can provide it in interactive mode. '
+          'Example: alex finish feature -${_argChangelog
+          .abbr}"Some new feature"',
+      valueHelp: 'CHANGELOG',
+    )
+      ..addFlag(
+        _argSquash.name,
+        abbr: _argSquash.abbr,
+        help: 'Squash all feature commits into a single commit when merging '
+            'into develop. Useful for tasks like golden tests updates.',
       );
   }
 
@@ -47,6 +54,7 @@ class FinishCommand extends FeatureCommandBase {
     final isDemo = args.getBool(_argDemo);
     var issueId = args.getInt(_argIssue);
     final changelog = args.getString(_argChangelog);
+    final squash = args.getBool(_argSquash);
 
     final console = this.console;
     final gitConfig = config.git;
@@ -105,8 +113,15 @@ class FinishCommand extends FeatureCommandBase {
 
     // TODO: Merge develop in remote feature branch if conflict
 
-    printVerbose('Merge feature branch in develop');
-    git.gitflowFeatureFinish(branchName, deleteBranch: false);
+    printVerbose(squash
+        ? 'Squash merge feature branch in develop'
+        : 'Merge feature branch in develop');
+    git.gitflowFeatureFinish(
+      branchName,
+      deleteBranch: false,
+      squash: squash,
+      squashMessage: 'Feature #$issueId: ${branch.name}.\n\nBy alex.',
+    );
 
     printVerbose('Add entry in changelog');
     final changed = await _updateChangelog(
@@ -131,7 +146,8 @@ class FinishCommand extends FeatureCommandBase {
 
       if (localCommit == commonCommit) {
         printVerbose('Remove local feature branch');
-        git.branchDelete(localName);
+        // Squash merge does not mark the branch as merged in git.
+        git.branchDelete(localName, force: squash);
       } else {
         printVerbose('Local branch different from remote. '
             'Do not delete $localName');
@@ -139,7 +155,7 @@ class FinishCommand extends FeatureCommandBase {
     }
 
     printVerbose('Remove feature branch');
-    git.branchDelete(branchName);
+    git.branchDelete(branchName, force: squash);
 
     printVerbose('Merge develop in ${git.branchTest}');
     git.mergeDevelopInTest();
@@ -159,7 +175,7 @@ class FinishCommand extends FeatureCommandBase {
     printVerbose('Branches: $branchesNames');
 
     final branches =
-        branchesNames.map((n) => _Branch(git, n)).where((b) => b.isFeature);
+    branchesNames.map((n) => _Branch(git, n)).where((b) => b.isFeature);
 
     if (branches.isEmpty) return [];
 
@@ -228,7 +244,9 @@ Which section to add:
 ?''');
 
       final sectionInput = console.readLineSync();
-      if (sectionInput == null || sectionInput.trim().isEmpty) {
+      if (sectionInput == null || sectionInput
+          .trim()
+          .isEmpty) {
         printInfo('Use default Added');
         section = 1;
       } else {
@@ -262,6 +280,7 @@ Which section to add:
 class _Branch {
   final GitCommands git;
   final String name;
+
   // TODO: multiple remotes
   final String? remoteName;
   final String? localName;
@@ -291,7 +310,8 @@ class _Branch {
   bool isIssueFeature(int issueId) =>
       name.startsWith('${git.branchFeaturePrefix}$issueId.');
 
-  _Branch merge(_Branch other) => _Branch._(
+  _Branch merge(_Branch other) =>
+      _Branch._(
         git,
         name,
         localName ?? other.localName,
@@ -304,10 +324,7 @@ class _Branch {
   String toString() {
     final sb = StringBuffer(name);
     if (remoteName != null) {
-      sb
-        ..write(' [')
-        ..write(remoteName)
-        ..write(']');
+      sb..write(' [')..write(remoteName)..write(']');
     }
     return sb.toString();
   }

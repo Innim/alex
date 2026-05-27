@@ -89,16 +89,13 @@ class GitCommands {
     bool printChanges = false,
   }) {
     ensure(
-      () => status("check status of current branch", porcelain: true),
-      (r) => r != "",
-      (r) {
+          () => status("check status of current branch", porcelain: true),
+          (r) => r != "",
+          (r) {
         final sb = StringBuffer(
             'There are uncommitted changes. Commit or reset them to proceed.');
         if (printChanges) {
-          sb
-            ..writeln()
-            ..writeln('Changes:')
-            ..writeln(r);
+          sb..writeln()..writeln('Changes:')..writeln(r);
         }
         return sb.toString().trim();
       },
@@ -108,14 +105,14 @@ class GitCommands {
   void ensureRemoteUrl() {
     // TODO: not sure that's correct
     ensure(
-      () => remoteGetUrl("ensure that upstream remote is valid"),
-      (r) {
+          () => remoteGetUrl("ensure that upstream remote is valid"),
+          (r) {
         // print("r: " + r);
         return !(r.startsWith("http") && r.length > 8 ||
             r.startsWith('git@') && r.endsWith('.git'));
       },
-      (r) =>
-          'Current directory has no valid upstream setting. Check remote URL.',
+          (r) =>
+      'Current directory has no valid upstream setting. Check remote URL.',
     );
   }
 
@@ -141,10 +138,20 @@ class GitCommands {
   }
 
   void gitflowFeatureFinish(String branchName,
-      {bool deleteBranch = true, bool failOnMergeConflict = false}) {
+      {bool deleteBranch = true,
+        bool failOnMergeConflict = false,
+        bool squash = false,
+        String? squashMessage}) {
     checkout(branchDevelop);
-    merge(branchName, failOnMergeConflict: failOnMergeConflict);
-    if (deleteBranch) branchDelete(branchName);
+    if (squash) {
+      mergeSquash(branchName, squashMessage ?? "Merge branch '$branchName'",
+          failOnMergeConflict: failOnMergeConflict);
+    } else {
+      merge(branchName, failOnMergeConflict: failOnMergeConflict);
+    }
+    // Squash merge does not mark the branch as merged, so a force delete
+    // is required to remove it.
+    if (deleteBranch) branchDelete(branchName, force: squash);
   }
 
   void mergeDevelopInTest({String? remote, bool failOnMergeConflict = false}) {
@@ -177,10 +184,10 @@ class GitCommands {
       return res
           .split('\n')
           .map((line) {
-            // First two characters = status
-            // From 4th character onwards = file path
-            return line.substring(3);
-          })
+        // First two characters = status
+        // From 4th character onwards = file path
+        return line.substring(3);
+      })
           .where((line) => line.isNotEmpty)
           .toList();
     }
@@ -196,14 +203,14 @@ class GitCommands {
     return git("fetch $remote", "fetch $remote");
   }
 
-  void branchDelete(String branch) {
+  void branchDelete(String branch, {bool force = false}) {
     if (branch.startsWith(_branchRemotePrefix)) {
       final parts = branch.split(_sep);
       final remote = parts[1];
       final remoteBranchName = parts.sublist(2).join(_sep);
       branchDeleteFromRemote(remoteBranchName, remote);
     } else {
-      git("branch -d $branch", "delete $branch");
+      git("branch ${force ? '-D' : '-d'} $branch", "delete $branch");
     }
   }
 
@@ -220,7 +227,7 @@ class GitCommands {
       if (!failOnMergeConflict &&
           e.exitCode == 1 &&
           (e.message?.contains(
-                  'Automatic merge failed; fix conflicts and then commit the result.') ??
+              'Automatic merge failed; fix conflicts and then commit the result.') ??
               false)) {
         print.info('alex will continue after merge would be resolved');
         do {
@@ -239,6 +246,38 @@ class GitCommands {
 
       rethrow;
     }
+  }
+
+  /// Merges [branch] into the current branch squashing all its commits,
+  /// then records the result as a single commit with the given [message].
+  void mergeSquash(String branch, String message,
+      {bool failOnMergeConflict = false}) {
+    try {
+      _git(["merge", "--squash", branch], "squash merge $branch");
+    } on RunException catch (e) {
+      if (!failOnMergeConflict &&
+          e.exitCode == 1 &&
+          (e.message?.contains(
+              'Automatic merge failed; fix conflicts and then commit the result.') ??
+              false)) {
+        print.info('alex will continue after merge would be resolved');
+        do {
+          sleep(const Duration(seconds: 1));
+          // Squash merge does not set MERGE_HEAD, so we wait until there are
+          // no unmerged paths left instead of relying on isInMerge().
+        } while (hasUnmergedPaths());
+      } else {
+        rethrow;
+      }
+    }
+
+    commit(message);
+  }
+
+  bool hasUnmergedPaths() {
+    final res =
+    git('diff --name-only --diff-filter=U', 'check unmerged paths');
+    return res.isNotEmpty;
   }
 
   bool isInMerge() {
@@ -311,11 +350,9 @@ class GitCommands {
     return res.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty);
   }
 
-  void ensure(
-    String Function() action,
-    bool Function(String) isFailed,
-    String Function(String) message,
-  ) {
+  void ensure(String Function() action,
+      bool Function(String) isFailed,
+      String Function(String) message,) {
     final res = action();
     if (isFailed(res)) {
       fail(message(res));
