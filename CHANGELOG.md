@@ -1,6 +1,7 @@
 ## 1.11.1
 
 * [Feature] `finish`: new `--squash` (`-s`) flag to squash all feature commits into a single commit when merging into develop. Useful for tasks like golden tests updates.
+* **Fixed** [L10n] `from_xml`: false-positive "No parameters found" error for `one`/`two` plural variants when the target locale legitimately omits the count parameter (e.g. Arabic "كل يوم" / "كل يومين"). Other plural quantities (`zero`, `few`, `many`, `other`) are still validated as before.
 
 ## 1.11.0
 

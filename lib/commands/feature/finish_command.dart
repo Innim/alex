@@ -17,10 +17,10 @@ class FinishCommand extends FeatureCommandBase {
 
   FinishCommand()
       : super(
-      'finish',
-      'Finish feature by issue id: '
-          'merge and remove branch, and update changelog.',
-      const ['f']) {
+            'finish',
+            'Finish feature by issue id: '
+                'merge and remove branch, and update changelog.',
+            const ['f']) {
     argParser
       ..addFlag(
         _argDemo.name,
@@ -31,14 +31,14 @@ class FinishCommand extends FeatureCommandBase {
         help: 'Issue number, which used for branch name. '
             'Optional, you can provide it in interactive mode.',
         valueHelp: 'NUMBER',
-      )..addArg(
-      _argChangelog,
-      help: 'Line to add in CHANGELOG.md. '
-          'Optional, you can provide it in interactive mode. '
-          'Example: alex finish feature -${_argChangelog
-          .abbr}"Some new feature"',
-      valueHelp: 'CHANGELOG',
-    )
+      )
+      ..addArg(
+        _argChangelog,
+        help: 'Line to add in CHANGELOG.md. '
+            'Optional, you can provide it in interactive mode. '
+            'Example: alex finish feature -${_argChangelog.abbr}"Some new feature"',
+        valueHelp: 'CHANGELOG',
+      )
       ..addFlag(
         _argSquash.name,
         abbr: _argSquash.abbr,
@@ -175,7 +175,7 @@ class FinishCommand extends FeatureCommandBase {
     printVerbose('Branches: $branchesNames');
 
     final branches =
-    branchesNames.map((n) => _Branch(git, n)).where((b) => b.isFeature);
+        branchesNames.map((n) => _Branch(git, n)).where((b) => b.isFeature);
 
     if (branches.isEmpty) return [];
 
@@ -244,9 +244,7 @@ Which section to add:
 ?''');
 
       final sectionInput = console.readLineSync();
-      if (sectionInput == null || sectionInput
-          .trim()
-          .isEmpty) {
+      if (sectionInput == null || sectionInput.trim().isEmpty) {
         printInfo('Use default Added');
         section = 1;
       } else {
@@ -310,8 +308,7 @@ class _Branch {
   bool isIssueFeature(int issueId) =>
       name.startsWith('${git.branchFeaturePrefix}$issueId.');
 
-  _Branch merge(_Branch other) =>
-      _Branch._(
+  _Branch merge(_Branch other) => _Branch._(
         git,
         name,
         localName ?? other.localName,
@@ -324,7 +321,10 @@ class _Branch {
   String toString() {
     final sb = StringBuffer(name);
     if (remoteName != null) {
-      sb..write(' [')..write(remoteName)..write(']');
+      sb
+        ..write(' [')
+        ..write(remoteName)
+        ..write(']');
     }
     return sb.toString();
   }
