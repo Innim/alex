@@ -34,7 +34,7 @@ class ArbExporter extends L10nExporter<ArbLocale> {
           (baseMeta['placeholders'] as Map<String, dynamic>).keys.toSet();
 
       if (value is L10nTextEntry) {
-        map[key] = _processText(key, parameters, value.text);
+        map[key] = _processText(key, parameters, parameters, value.text);
       } else if (value is L10nPluralEntry) {
         // Получаем заголовочную часть
         const pluralPrefix = ',plural,';
@@ -61,7 +61,14 @@ class ArbExporter extends L10nExporter<ArbLocale> {
               : parameters
                   .where((param) => baseVal.contains('{$param}'))
                   .toSet();
-          return _addPlural(val, key, allowed, value, attr);
+          // For "one"/"two" quantities the target locale may legitimately
+          // omit the count parameter (e.g. Arabic "كل يوم" / "كل يومين"),
+          // so we don't require parameters there even if the base variant
+          // uses them. Other quantities are still validated as usual.
+          final required = (attr == '=1' || attr == '=2')
+              ? const <String>{}
+              : allowed;
+          return _addPlural(val, key, allowed, required, value, attr);
         });
         val.write('}');
 
@@ -85,18 +92,19 @@ class ArbExporter extends L10nExporter<ArbLocale> {
   }
 
   void _addPlural(StringBuffer res, String key, Set<String> allowedParams,
-      String? val, String attr) {
+      Set<String> requiredParams, String? val, String attr) {
     if (val != null) {
       res
         ..write(attr)
         ..write('{')
-        ..write(_processText(key, allowedParams, val))
+        ..write(_processText(key, allowedParams, requiredParams, val))
         ..write('}');
     }
   }
 
-  String _processText(String key, Set<String> allowed, String text) {
-    return clearWinLines(_validateParameters(key, allowed, text)
+  String _processText(
+      String key, Set<String> allowed, Set<String> required, String text) {
+    return clearWinLines(_validateParameters(key, allowed, required, text)
         .replaceAll(r'\n', '\n')
         .replaceAll(r'\r', '\r')
         // escape single quotes
@@ -104,7 +112,8 @@ class ArbExporter extends L10nExporter<ArbLocale> {
         .replaceAll("'", "''"));
   }
 
-  String _validateParameters(String key, Set<String> allowed, String text) {
+  String _validateParameters(
+      String key, Set<String> allowed, Set<String> required, String text) {
     final params = _paramRegExp.allMatches(text).map((e) => e.group(1));
 
     if (params.isNotEmpty) {
@@ -115,9 +124,9 @@ class ArbExporter extends L10nExporter<ArbLocale> {
         }
       }
     } else {
-      if (allowed.isNotEmpty) {
+      if (required.isNotEmpty) {
         throw Exception('[$locale] No parameters found for key "$key". '
-            'Expected: ${allowed.join(', ')}.');
+            'Expected: ${required.join(', ')}.');
       }
     }
 
