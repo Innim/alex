@@ -72,10 +72,11 @@ class CheckTranslationsCommand extends L10nCommandBase {
       );
 
       try {
-        git.ensureCleanStatus();
+        git.ensureCleanStatus(printChanges: true);
       } catch (e) {
         printInfo('⚠️ Some files were changed after pub get. '
             'Check if your committed dependencies are correct.');
+        printVerbose('Check failed with: $e');
       }
 
       printInfo('Running extract to arb...');
