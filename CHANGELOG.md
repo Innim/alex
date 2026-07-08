@@ -1,3 +1,7 @@
+## 1.11.2
+
+* [L10n] `check-translation`: in verbose mode, print the list of changed files and the error details when the clean-status check fails after `pub get`, to make diagnosing dependency mismatches easier.
+
 ## 1.11.1
 
 * [Feature] `finish`: new `--squash` (`-s`) flag to squash all feature commits into a single commit when merging into develop. Useful for tasks like golden tests updates.
