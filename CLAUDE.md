@@ -67,7 +67,11 @@ Uses `innim_lint` (configured in `analysis_options.yaml`). Run `dart analyze` to
 
 ## Commit Messages
 
-Keep commit messages short — a single concise subject line is preferred. Add a body only when the reasoning is not obvious from the subject alone.
+Use [Conventional Commits](https://www.conventionalcommits.org/): `type(scope): subject`, e.g. `fix(l10n): improve check-translation diagnostics`.
+
+- Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `build`, `ci`, `perf`.
+- Scope is optional but preferred — use the affected area (e.g. `l10n`, `release`, `changelog`).
+- Keep the subject short and imperative. Add a body only when the reasoning is not obvious from the subject alone.
 
 ## Changelog
 
