@@ -1,4 +1,4 @@
-## Next
+## 1.12.0
 
 * [Code] `gen`: in a pub workspace, run code generation once from the workspace root with the `--workspace` flag when the resolved `build_runner` version supports it (>= 2.11.0). Can be disabled via the new `code.use_workspace` config option (`alex.yaml` or the `alex:` section of `pubspec.yaml`).
 
