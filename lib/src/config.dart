@@ -97,6 +97,7 @@ class AlexConfig {
   AlexCIConfig? _ci;
   AlexGitConfig? _git;
   AlexScriptsConfig? _scripts;
+  CodeConfig? _code;
 
   AlexConfig._(this._path, this._data);
 
@@ -139,7 +140,42 @@ class AlexConfig {
         : const AlexScriptsConfig();
   }
 
+  CodeConfig get code {
+    const key = 'code';
+    return _code ??= _data.containsKey(key)
+        ? CodeConfig.fromYaml(_data[key] as YamlMap)
+        : const CodeConfig();
+  }
+
   String get rootPath => p.dirname(_path);
+}
+
+/// Configuration for code generation (`alex code gen`).
+class CodeConfig {
+  static const defaultUseWorkspace = true;
+
+  /// Defines if the `--workspace` flag should be used for code generation
+  /// in a pub workspace.
+  ///
+  /// When enabled and the resolved `build_runner` version supports it
+  /// (>= 2.11.0), code generation for a workspace is run once from the
+  /// workspace root with the `--workspace` flag instead of per-package.
+  final bool useWorkspace;
+
+  const CodeConfig({
+    this.useWorkspace = defaultUseWorkspace,
+  });
+
+  factory CodeConfig.fromYaml(YamlMap data) {
+    return CodeConfig(
+      useWorkspace: data['use_workspace'] as bool? ?? defaultUseWorkspace,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'CodeConfig{useWorkspace: $useWorkspace}';
+  }
 }
 
 /// Configuration for manage localization.

@@ -1,3 +1,7 @@
+## Next
+
+* [Code] `gen`: in a pub workspace, run code generation once from the workspace root with the `--workspace` flag when the resolved `build_runner` version supports it (>= 2.11.0). Can be disabled via the new `code.use_workspace` config option (`alex.yaml` or the `alex:` section of `pubspec.yaml`).
+
 ## 1.11.2
 
 * [L10n] `check-translation`: in verbose mode, print the list of changed files and the error details when the clean-status check fails after `pub get`, to make diagnosing dependency mismatches easier.
