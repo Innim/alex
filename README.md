@@ -245,8 +245,8 @@ If you want to check translations for a specific locale, you can use the `--loca
 $ alex l10n check --locale=en
 ```
 
-Before checks the command runs `pub get` and verifies that it didn't change any
-committed files. By default it just prints a warning in such case. Two optional
+Before running checks, the command runs `pub get` and verifies that it didn't introduce any
+uncommitted changes in the repository. By default it just prints a warning in such a case. Two optional
 flags are useful on CI:
 
 ```bash
