@@ -245,6 +245,18 @@ If you want to check translations for a specific locale, you can use the `--loca
 $ alex l10n check --locale=en
 ```
 
+Before running checks, the command runs `pub get` and verifies that it didn't introduce any
+uncommitted changes in the repository. By default it just prints a warning in such a case. Two optional
+flags are useful on CI:
+
+```bash
+$ alex l10n check --print-changed-files --fail-on-changed-files
+```
+
+* `--print-changed-files` — print the list of changed files (only paths, not their content);
+* `--fail-on-changed-files` — exit with code `11` instead of printing a warning,
+  so CI can rely on the exit code instead of parsing the output.
+
 #### Import translations from XML
 
 It's for working with translations from Google Play.
