@@ -89,10 +89,9 @@ class CheckTranslationsCommand extends L10nCommandBase {
         immediatePrint: printFlutterOut,
       );
 
-      final changedAfterPubGet =
-          git.status('check status after pub get', porcelain: true).trim();
+      final changedAfterPubGet = git.getModifiedFiles();
       if (changedAfterPubGet.isNotEmpty) {
-        // Only file paths are listed here (git status --porcelain),
+        // Only file paths are listed here, without a diff,
         // so the log is not flooded with the content of the changes.
         final printFiles = printChangedFiles || isVerbose;
         final sb = StringBuffer('Some files were changed after pub get. '
@@ -101,7 +100,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
           sb
             ..writeln()
             ..writeln('Changed files:')
-            ..write(changedAfterPubGet);
+            ..write(changedAfterPubGet.join('\n'));
         }
         final message = sb.toString();
 
