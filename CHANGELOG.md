@@ -1,3 +1,8 @@
+## 1.13.0
+
+* [L10n] `check_translations`: new `--print-changed-files` flag to print the list of files changed after `pub get` (only paths, not their content). Off by default, so local runs are not flooded.
+* [L10n] `check_translations`: new `--fail-on-changed-files` flag to fail with exit code `11` instead of printing a warning when some files were changed after `pub get`. Off by default; lets CI rely on the exit code instead of parsing the output.
+
 ## 1.12.0
 
 * [Code] `gen`: in a pub workspace, run code generation once from the workspace root with the `--workspace` flag when the resolved `build_runner` version supports it (>= 2.11.0). Can be disabled via the new `code.use_workspace` config option (`alex.yaml` or the `alex:` section of `pubspec.yaml`).
