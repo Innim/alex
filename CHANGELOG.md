@@ -1,6 +1,83 @@
+## 1.13.0
+
+* [L10n] `check_translations`: new `--print-changed-files` flag to print the list of files changed after `pub get` (only paths, not their content). Off by default, so local runs are not flooded.
+* [L10n] `check_translations`: new `--fail-on-changed-files` flag to fail with exit code `11` instead of printing a warning when some files were changed after `pub get`. Off by default; lets CI rely on the exit code instead of parsing the output.
+
+## 1.12.0
+
+* [Code] `gen`: in a pub workspace, run code generation once from the workspace root with the `--workspace` flag when the resolved `build_runner` version supports it (>= 2.11.0). Can be disabled via the new `code.use_workspace` config option (`alex.yaml` or the `alex:` section of `pubspec.yaml`).
+
+## 1.11.2
+
+* [L10n] `check-translation`: in verbose mode, print the list of changed files and the error details when the clean-status check fails after `pub get`, to make diagnosing dependency mismatches easier.
+
+## 1.11.1
+
+* [Feature] `finish`: new `--squash` (`-s`) flag to squash all feature commits into a single commit when merging into develop. Useful for tasks like golden tests updates.
+* **Fixed** [L10n] `from_xml`: false-positive "No parameters found" error for `one`/`two` plural variants when the target locale legitimately omits the count parameter (e.g. Arabic "كل يوم" / "كل يومين"). Other plural quantities (`zero`, `few`, `many`, `other`) are still validated as before.
+
+## 1.11.0
+
+* [Feature] `finish`: append issue references as a markdown link (`[#N](url/N)`) when `issue_url` is set in alex config; falls back to the plain `(#N)` suffix otherwise.
+* New command `alex changelog update-issue-links` (alias `cl uil`) — replaces plain `(#N)` issue references in `CHANGELOG.md` with markdown links built from `issue_url`. Reports an error if `issue_url` is not configured.
+* New optional config option `issue_url` (in `alex.yaml` or the `alex:` section of `pubspec.yaml`).
+
+## 1.10.1
+
+* [Feature] `finish`: skip appending issue number suffix if the changelog line already contains a markdown link to the issue (e.g. `[#1234](...)`).
+
+## 1.10.0
+
+* **New feature**: Custom commands support! Define your own commands in `alex_custom_commands.yaml` to automate workflows.
+  - Execute shell commands, alex commands, or Dart scripts
+  - Support for command arguments (options and flags)
+  - Variable substitution in actions using `{{var}}` or `${var}` syntax
+  - Commands management: `alex custom list`, `add`, `show`, `edit`, `remove`, `check`
+  - **Advanced actions** for conditional logic and file operations:
+    - `check_git_branch` - Check/switch git branch
+    - `check_git_clean` - Verify no uncommitted changes
+    - `check_platform` - Verify current OS (macos/linux/windows)
+    - `change_dir` - Change working directory
+    - `check_file_exists` - Verify file existence
+    - `copy_file` - Copy files
+    - `rename_file` - Rename files
+    - `move_file` - Move files
+    - `create_file` - Create files with content
+    - `create_dir` - Create directories
+    - `delete_file` - Delete files
+    - `delete_dir` - Delete directories
+    - `rename_dir` - Rename directories
+    - `replace_in_file` - Replace text in files (with regex support)
+    - `append_to_file` - Append content to files
+    - `prepend_to_file` - Prepend content to files
+    - `print` - Print messages to console
+    - `wait` - Wait for specified duration (in milliseconds)
+    - `create_archive` - Create ZIP/TAR.GZ archives
+    - `extract_archive` - Extract archives
+  - **Verbose mode** support with `--verbose` flag for detailed execution logs
+  - See `alex_custom_commands.yaml.example` for examples
+
+## 1.9.4
+
+* [Code] `code gen` command supports run generation for subproject from root folder.
+
+## 1.9.3
+
+* **Fixed**: `alex update` command not working.
+* Command `alex update check` replaced with `alex update --check`.
+
+## 1.9.2
+
+* [pubspec] `get`: Skip not valid pubspec files. Different result output when pubspec files are not found.
+* README: added "Release" and "Update" sections. Improvements and fixes.
+
+## 1.9.1
+
+* New command `alex update check` to check if there are updates available for **alex**.
+
 ## 1.9.0
 
-* New command `l10n update` to update **alex** to the latest version.
+* New command `alex update` to update **alex** to the latest version.
 
 ## 1.8.7
 

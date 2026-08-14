@@ -12,12 +12,15 @@ import 'package:path/path.dart' as path;
 import 'src/l10n_command_base.dart';
 
 const _kExitCodeCheckFailed = 10;
+const _kExitCodeChangedAfterPubGet = 11;
 
 /// Command to check if translations exist for all strings.
 ///
 /// By default it checks for all locales, but you can specify a locale.
 class CheckTranslationsCommand extends L10nCommandBase {
   static const _argLocale = 'locale';
+  static const _argPrintChangedFiles = 'print-changed-files';
+  static const _argFailOnChangedFiles = 'fail-on-changed-files';
 
   CheckTranslationsCommand()
       : super(
@@ -32,7 +35,9 @@ class CheckTranslationsCommand extends L10nCommandBase {
               '- if the XML for the language has not redundant strings that are not in the localization file (alex.l10n.source_file); \n'
               '- if all code is generated for the language.\n\n'
               'By default it checks for all locales, but you can specify locale with --$_argLocale option. \n\n'
-              'Exit code is 0 if all checks passed, $_kExitCodeCheckFailed if some checks failed.\n'
+              'Exit code is 0 if all checks passed, $_kExitCodeCheckFailed if some checks failed, \n'
+              '$_kExitCodeChangedAfterPubGet if some files were changed after pub get '
+              'and --$_argFailOnChangedFiles is passed.\n'
               'Other exit codes are used for errors.',
           const [
             'check',
@@ -48,6 +53,17 @@ class CheckTranslationsCommand extends L10nCommandBase {
             'If not specified then it will check all locales.',
         valueHelp: 'LOCALE',
       )
+      ..addFlag(
+        _argPrintChangedFiles,
+        help: 'Print the list of files that were changed after pub get. '
+            'Only file paths are printed, not their content.',
+      )
+      ..addFlag(
+        _argFailOnChangedFiles,
+        help: 'Fail with exit code $_kExitCodeChangedAfterPubGet '
+            'if some files were changed after pub get. '
+            'By default only a warning is printed.',
+      )
       ..addVerboseFlutterCmdFlag();
   }
 
@@ -57,6 +73,8 @@ class CheckTranslationsCommand extends L10nCommandBase {
     final l10nConfig = config.l10n;
     final args = argResults!;
     final locale = args.getLocale(_argLocale);
+    final printChangedFiles = args[_argPrintChangedFiles] as bool;
+    final failOnChangedFiles = args[_argFailOnChangedFiles] as bool;
     final printFlutterOut = isVerbose || isVerboseFlutterCmd;
 
     final git = getGit(config);
@@ -71,11 +89,26 @@ class CheckTranslationsCommand extends L10nCommandBase {
         immediatePrint: printFlutterOut,
       );
 
-      try {
-        git.ensureCleanStatus();
-      } catch (e) {
-        printInfo('⚠️ Some files were changed after pub get. '
+      final changedAfterPubGet = git.getModifiedFiles();
+      if (changedAfterPubGet.isNotEmpty) {
+        // Only file paths are listed here, without a diff,
+        // so the log is not flooded with the content of the changes.
+        final printFiles = printChangedFiles || isVerbose;
+        final sb = StringBuffer('Some files were changed after pub get. '
             'Check if your committed dependencies are correct.');
+        if (printFiles) {
+          sb
+            ..writeln()
+            ..writeln('Changed files:')
+            ..write(changedAfterPubGet.join('\n'));
+        }
+        final message = sb.toString();
+
+        if (failOnChangedFiles) {
+          return error(_kExitCodeChangedAfterPubGet, message: '🚨 $message');
+        }
+
+        printInfo('⚠️ $message');
       }
 
       printInfo('Running extract to arb...');

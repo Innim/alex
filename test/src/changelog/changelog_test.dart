@@ -186,6 +186,44 @@ void main() {
       );
     });
   });
+
+  group('linkIssueReferences()', () {
+    test('should convert plain (#N) to markdown links', () async {
+      final changelog = Changelog(_FileSystemMock(changelogWithPlainIssueReferences));
+
+      final count = await changelog.linkIssueReferences('https://example.com/issue');
+
+      expect(count, 6);
+      expect(await changelog.content, linkIssueReferencesResult);
+    });
+
+    test('should handle trailing slash in issueUrl', () async {
+      final changelog = Changelog(_FileSystemMock(changelogWithPlainIssueReferences));
+
+      final count = await changelog.linkIssueReferences('https://example.com/issue/');
+
+      expect(count, 6);
+      expect(await changelog.content, linkIssueReferencesResultWithTrailingSlash);
+    });
+
+    test('should not modify already-linked issues', () async {
+      final changelog = Changelog(_FileSystemMock(changelogWithMixedIssueReferences));
+
+      final count = await changelog.linkIssueReferences('https://example.com/issue');
+
+      expect(count, 3);
+      expect(await changelog.content, linkIssueReferencesMixedResult);
+    });
+
+    test('should return 0 when no plain issue references exist', () async {
+      final changelog = Changelog(_FileSystemMock(changelogWithNoIssueReferences));
+
+      final count = await changelog.linkIssueReferences('https://example.com/issue');
+
+      expect(count, 0);
+      expect(await changelog.content, changelogWithNoIssueReferences);
+    });
+  });
 }
 
 class _FileSystemMock extends Mock implements FileSystem {

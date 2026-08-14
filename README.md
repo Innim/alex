@@ -10,56 +10,52 @@
 
 ### Installing
 
-It's recommended to install the package globally and use as an executable.
+It is recommended to install the package globally and use it as an executable.
 
 You can install the package from the command line with Flutter:
 
-```
+```bash
 $ flutter pub global activate alex
 ```
 
-And follow the instructions (you should add PATH variable on unix systems).
+And follow the instructions after installation (on Unix systems, you may need to modify your PATH variable).
 
-Now you can execute commands with
+Once installed, you can run commands with:
 
-```
+```bash
 $ alex
 ```
 
-Check the version with:
+Check the installed version with:
 
-```
+```bash
 $ alex --version
 ```
 
-⚠️ **Attention!** If when you try to run `alex` you will see something like:
-
-```
-~/Development/flutter/.pub-cache/bin/alex: line 17: pub: command not found
-```
-
-In such case you can edit specified file (`~/Development/flutter/.pub-cache/bin/alex` in this example). All you need to change in it - it's use `flutter pub` instead of `pub` or `dart pub`, so replace `pub global run alex:alex "$@"` with `flutter pub global run alex:alex "$@"`, save the file, and you are all set.
+If you encounter issues during installation or while running alex, see the [Problem Solving](#problem-solving) section.
 
 #### Updating
 
 To update alex you can use the command:
 
-```
+```bash
 $ alex update
 ```
 
 Or, if you want, you can update alex by executing the same command as for installing:
 
-```
+```bash
 $ flutter pub global activate alex
 ```
 
-#### Fix problems with cyrillic encoding on Windows
+To check for updates, you can use the command:
 
-When entering Cyrillic characters (while saving changelog) they may not be displayed correctly or may not be displayed at all.
-To avoid this, it is recommended to use the external git bash terminal (C:\Program Files\Git), in the settings of which you must specify encoding (Options -> Text -> Character set -> UTF-8).
+```bash
+$ alex update --check
+```
 
-![](https://raw.githubusercontent.com/Innim/alex/master/readme_images/bash.png)
+See [Commands > Update](#update).
+
 
 ### Usage
 
@@ -78,20 +74,84 @@ More about specified configuration parameters - in modules descriptions in the [
 ## Commands
 
 ### Release
-// TODO @chessmax: `release` command description
+
+Manage app releases with automated version control, changelog updates, and build processes.
+
+```bash
+$ alex release <command>
+```
+
+#### Start release
+
+Start a new release process using gitflow:
+- checkout and create release branch from `develop`
+- increment version number
+- update CHANGELOG.md
+- validate translations (optional)
+- run pre-release scripts (if configured)
+- generate release notes for CI/CD (with ChatGPT if API key is configured, see [Global settings](#global-settings))
+- create local builds (optional)
+- finish release and merge to `master`
+
+```bash
+$ alex release start
+```
+
+_Note: You can change GIT branches, localization parameters, CI/CD and other settings in your project's [configuration](#configuration)._
+
+**Options:**
+
+- `--check_locale=<LOCALE>` (`-l`) - Locale to check before release if translations exist for all strings. If not specified, "en" locale will be checked.
+- `--skip_l10n` (`-s`) - Skip translations check during release.
+- `--local` (`-b`) - Run local release build for Android and iOS platforms.
+- `--entry-point=<path>` (`-e`) - Entry point of the app (e.g., lib/main_test.dart). Only for local release builds.
+- `--platforms=<PLATFORMS>` (`-p`) - Target build platforms: ios, android. You can pass multiple platforms separated by commas. Defaults to "android,ios". Only for local release builds.
+
+**Pre-release scripts:**
+
+You can define pre-release scripts in your project's [configuration](#configuration):
+
+```yaml
+scripts:
+    pre_release_scripts_paths: [ 'tools/generate_rates_cache.dart' ]
+```
+
+These scripts will be executed before the release process starts.
+
+**Examples:**
+
+Basic release (default mode):
+```bash
+$ alex release start
+```
+
+Local build for manual upload to store or any other distribution:
+```bash
+$ alex release start --local
+```
+
+Release with custom entry point and specific platform:
+```bash
+$ alex release start --local --entry-point=lib/main_dev.dart --platforms=android
+```
+
+Skip translations check:
+```bash
+$ alex release start --skip_l10n
+```
 
 ### Feature
 
 Work with feature branches and issues.
 
-```
-alex feature <command>
+```bash
+$ alex feature <command>
 ```
 
-or 
+or
 
-```
-alex f <command>
+```bash
+$ alex f <command>
 ```
 
 #### Finish feature 
@@ -102,20 +162,20 @@ Finish feature by issue id:
 - delete feature branch from remote;
 - merge `develop` in `pipe/test`.
 
-```
-alex feature finish --issue={issueId}
+```bash
+$ alex feature finish --issue={issueId}
 ```
 
 or
 
-```
-alex f f -i{issueId}
+```bash
+$ alex f f -i{issueId}
 ```
 
 Also you can run command without issue id:
 
-```
-alex f f
+```bash
+$ alex f f
 ```
 
 Then alex will print all current feature branches and ask for issue id in interactive mode.
@@ -123,8 +183,8 @@ Then alex will print all current feature branches and ask for issue id in intera
 If you have a problem with interactive mode (for example encoding issues on Window),
 you can provide changelog line as an argument:
 
-```
-alex f f -i{issueId} -c"Some new feature"
+```bash
+$ alex f f -i{issueId} -c"Some new feature"
 ```
 
 It's important to use double quote (`"`) on Windows, but on macOS or Linux you can also use a single quote (`'`).
@@ -135,54 +195,67 @@ Work with localization files.
 
 #### Extract string to ARB
 
-```
-alex l10n extract
+```bash
+$ alex l10n extract
 ```
 
 #### Generate Dart code by ARB
 
-```
-alex l10n generate
+```bash
+$ alex l10n generate
 ```
 
 #### Generate XML for translation
 
+```bash
+$ alex l10n to_xml
 ```
-alex l10n to_xml
-```
+
 Also you can export json localization to xml.
 Json localization can be used for a backend localization.
 
-```
-alex l10n to_xml --from=json --source=/path/to/json/localization/dir
+```bash
+$ alex l10n to_xml --from=json --source=/path/to/json/localization/dir
 ```
 
 Also you can export only difference (new and changed strings) to xml.
 You should specify the path to the directory for files with changes.
 
-```
-alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
+```bash
+$ alex l10n to_xml --diff-path=/path/to/files/with/changes/diffs/
 ```
 
 #### Check translations for all strings
 
 To check all translations for all locales, you can use the command:
 
-```
-alex l10n check_translations
+```bash
+$ alex l10n check_translations
 ```
 
 or just:
 
-```
-alex l10n check
+```bash
+$ alex l10n check
 ```
 
 If you want to check translations for a specific locale, you can use the `--locale` option:
 
+```bash
+$ alex l10n check --locale=en
 ```
-alex l10n check --locale=en
+
+Before running checks, the command runs `pub get` and verifies that it didn't introduce any
+uncommitted changes in the repository. By default it just prints a warning in such a case. Two optional
+flags are useful on CI:
+
+```bash
+$ alex l10n check --print-changed-files --fail-on-changed-files
 ```
+
+* `--print-changed-files` — print the list of changed files (only paths, not their content);
+* `--fail-on-changed-files` — exit with code `11` instead of printing a warning,
+  so CI can rely on the exit code instead of parsing the output.
 
 #### Import translations from XML
 
@@ -190,20 +263,20 @@ It's for working with translations from Google Play.
 
 You can export xml translations to the project arb translations:
 
-```
-alex l10n from_xml
+```bash
+$ alex l10n from_xml
 ```
 
 Also you can export to the Android localization:
 
-```
-alex l10n from_xml --to=android
+```bash
+$ alex l10n from_xml --to=android
 ```
 
 And to the iOS localization:
 
-```
-alex l10n from_xml --to=ios
+```bash
+$ alex l10n from_xml --to=ios
 ```
 
 Localization xml files for iOS should start with `ios_` prefix.
@@ -215,8 +288,8 @@ you need to import them in project's xml files. You can
 copy it all manually, but it's very inconvenient.
 So you can use the command `import_xml` to do it.
 
-```
-alex l10n import_xml --path=path/to/dir/with/translations
+```bash
+$ alex l10n import_xml --path=path/to/dir/with/translations
 ```
 
 If the files have the suffix `_diffs` then they will be imported as a list of changes.
@@ -227,8 +300,8 @@ If the files have the suffix `_diffs` then they will be imported as a list of ch
 Remove unused strings from XML files. Check ARB files for all keys and remove
 unused strings from XML files for all locales.
 
-```
-alex l10n cleanup_xml
+```bash
+$ alex l10n cleanup_xml
 ```
 
 ### Code 
@@ -239,22 +312,22 @@ Work with code.
 
 Generate `JsonSerializable` and other.
 
-```
-alex code gen
+```bash
+$ alex code gen
 ```
 
 ### Pubspec
 
 Work with pubspec and dependencies.
 
-```
-alex pubspec <command>
+```bash
+$ alex pubspec <command>
 ```
 
 or 
 
-```
-alex pub <command>
+```bash
+$ alex pub <command>
 ```
 
 #### Update dependency
@@ -262,14 +335,14 @@ alex pub <command>
 Update specified dependency. It's useful when you want to update
 dependency for git. 
 
-```
-alex pubspec update
+```bash
+$ alex pubspec update
 ```
 
 and input package name. Or define it right in a command:
 
-```
-alex pubspec update -dPACKAGE_NAME
+```bash
+$ alex pubspec update -dPACKAGE_NAME
 ```
 
 #### Get dependencies
@@ -277,14 +350,31 @@ alex pubspec update -dPACKAGE_NAME
 Run `pub get` for all projects/packages in folder (recursively). It's useful
 when you have multiple packages or project and package in single repository.
 
-```
-alex pubspec get
+```bash
+$ alex pubspec get
 ```
 
 or 
 
+```bash
+$ alex pub get
 ```
-alex pub get
+
+### Update
+
+Manage updates for `alex`.
+
+To update `alex` to the latest version:
+
+```bash
+$ alex update
+```
+
+
+To check if a new version is available:
+
+```bash
+$ alex update --check
 ```
 
 ### Global settings
@@ -299,26 +389,359 @@ Currently supported settings:
 
 Allow to set setting's value.
 
-```
-alex settings set <name> <value>
+```bash
+$ alex settings set <name> <value>
 ```
 
 For example:
 
+```bash
+$ alex settings set open_ai_api_key abc123
 ```
-alex settings set open_ai_api_key abc123
+
+### Custom Commands
+
+Define your own custom commands to automate repetitive workflows, combine multiple operations, or create project-specific shortcuts.
+
+Custom commands are configured in `alex_custom_commands.yaml` file in your project root.
+
+```bash
+$ alex custom <command>
 ```
+
+> **⚠️ SECURITY WARNING**
+>
+> Custom commands can execute arbitrary programs, scripts, and shell commands. **NEVER** use custom command YAML files from untrusted sources!
+>
+> Malicious YAML files can:
+> - Delete or modify your files
+> - Steal sensitive information (credentials, API keys, etc.)
+> - Install malware or backdoors
+> - Compromise your entire system
+>
+> **Only use custom commands that:**
+> - You created yourself, OR
+> - You have thoroughly reviewed and understand, OR
+> - Come from a trusted source you can verify
+>
+> When in doubt, manually inspect the `alex_custom_commands.yaml` file before running any custom commands.
+
+#### Manage custom commands
+
+List all registered custom commands:
+
+```bash
+$ alex custom list
+```
+
+Show details of a specific command:
+
+```bash
+$ alex custom show --name build-release
+```
+
+Add a new custom command interactively:
+
+```bash
+$ alex custom add
+```
+
+Edit the configuration file:
+
+```bash
+$ alex custom edit
+```
+
+Remove a custom command:
+
+```bash
+$ alex custom remove --name build-release
+```
+
+#### Configuration
+
+Custom commands are defined in `alex_custom_commands.yaml`:
+
+```yaml
+custom_commands:
+  - name: build-release
+    description: Build release version with all checks
+    aliases: [br, release]
+    arguments:
+      - name: platform
+        type: option
+        help: Target platform to build for
+        abbr: p
+        allowed: [android, ios, web]
+        required: true
+    actions:
+      - type: alex
+        command: code gen
+      - type: exec
+        executable: flutter
+        args: [build, '{{platform}}', --release]
+```
+
+#### Action types
+
+Custom commands support multiple types of actions:
+
+**exec** - Execute shell command or program:
+```yaml
+- type: exec
+  executable: flutter
+  args: [clean]
+  working_dir: /optional/path  # optional
+```
+
+**alex** - Execute existing alex command:
+```yaml
+- type: alex
+  command: l10n extract
+  args: [--locale, en]  # optional
+```
+
+**script** - Execute Dart script:
+```yaml
+- type: script
+  path: ./scripts/my_script.dart
+  args: [arg1, arg2]  # optional
+```
+
+**check_git_branch** - Check current git branch and optionally switch to it:
+```yaml
+- type: check_git_branch
+  branch: pipe/app-gallery/prod
+  auto_switch: true  # Switch if not on branch (default: true)
+  error_message: "Branch does not exist"  # Custom error message
+```
+
+**check_git_clean** - Check that git working directory is clean:
+```yaml
+- type: check_git_clean
+  error_message: "There are uncommitted changes"
+```
+
+**change_dir** - Change working directory:
+```yaml
+- type: change_dir
+  path: ios
+  error_message: "Directory not found"
+```
+
+**delete_file** - Delete file or directory:
+```yaml
+- type: delete_file
+  path: Podfile.lock
+  recursive: false  # For directories (default: false)
+  ignore_not_found: true  # Don't fail if doesn't exist (default: true)
+```
+
+**check_file_exists** - Check if file or directory exists:
+```yaml
+- type: check_file_exists
+  path: ios
+  should_exist: true  # true to check exists, false to check not exists
+  error_message: "iOS directory not found"
+```
+
+**copy_file** - Copy a file:
+```yaml
+- type: copy_file
+  source: config.txt
+  destination: config_backup.txt
+  overwrite: false  # Whether to overwrite if destination exists (default: false)
+```
+
+**rename_file** - Rename a file:
+```yaml
+- type: rename_file
+  old_path: old_name.txt
+  new_path: new_name.txt
+```
+
+**move_file** - Move a file:
+```yaml
+- type: move_file
+  source: file.txt
+  destination: archive/file.txt
+```
+
+**create_file** - Create a file with optional content:
+```yaml
+- type: create_file
+  path: config.txt
+  content: "Environment: production"  # Optional content with variable substitution
+  overwrite: false  # Whether to overwrite if file exists (default: false)
+```
+
+**create_dir** - Create a directory:
+```yaml
+- type: create_dir
+  path: output
+  recursive: true  # Create parent directories (default: true)
+```
+
+**delete_dir** - Delete a directory:
+```yaml
+- type: delete_dir
+  path: temp
+  recursive: true  # Delete recursively (default: true)
+  ignore_not_found: true  # Don't fail if doesn't exist (default: true)
+```
+
+**rename_dir** - Rename a directory:
+```yaml
+- type: rename_dir
+  old_path: old_directory
+  new_path: new_directory
+```
+
+**replace_in_file** - Replace text in file (supports regex):
+```yaml
+- type: replace_in_file
+  path: pubspec.yaml
+  find: 'version: \d+\.\d+\.\d+'
+  replace: 'version: {{new_version}}'
+  regex: true  # Enable regex matching (default: false)
+  error_message: 'Failed to update version'
+```
+
+**append_to_file** - Append content to end of file:
+```yaml
+- type: append_to_file
+  path: CHANGELOG.md
+  content: |
+    ## [{{version}}] - {{date}}
+    - New release
+  create_if_missing: true  # Create file if doesn't exist (default: true)
+```
+
+**prepend_to_file** - Prepend content to beginning of file:
+```yaml
+- type: prepend_to_file
+  path: lib/main.dart
+  content: '// Copyright (c) 2024\n'
+  create_if_missing: false  # Don't create if doesn't exist (default: true)
+```
+
+**print** - Print message to console:
+```yaml
+- type: print
+  message: 'Building for {{platform}}...'
+  level: info  # info, warning, or error (default: info)
+```
+
+**wait** - Wait for specified duration:
+```yaml
+- type: wait
+  milliseconds: 5000
+  message: 'Waiting for services to start...'  # Optional message
+```
+
+**check_platform** - Verify current operating system:
+```yaml
+- type: check_platform
+  platform: macos  # macos, linux, or windows
+  error_message: 'This command only works on macOS'
+```
+
+**create_archive** - Create ZIP or TAR.GZ archive:
+```yaml
+- type: create_archive
+  source: build/app/outputs/bundle/release/
+  destination: releases/app-v{{version}}.zip
+  format: zip  # zip or tar.gz (default: zip)
+```
+
+**extract_archive** - Extract ZIP or TAR.GZ archive:
+```yaml
+- type: extract_archive
+  source: downloads/assets.zip
+  destination: assets/
+```
+
+#### Variable substitution
+
+Actions support variable substitution using `{{variable_name}}` or `${variable_name}` syntax:
+
+```yaml
+arguments:
+  - name: platform
+    type: option
+    required: true
+actions:
+  - type: exec
+    executable: flutter
+    args: [build, '{{platform}}']
+```
+
+#### Using custom commands
+
+Once defined, custom commands work just like built-in alex commands:
+
+```bash
+$ alex build-release --platform android
+```
+
+Or using an alias:
+
+```bash
+$ alex br -p android
+```
+
+#### Verbose mode
+
+Custom commands support the `--verbose` flag to see detailed execution information:
+
+```bash
+$ alex build-release --platform android --verbose
+```
+
+This will show:
+- Each action being executed
+- Detailed progress for file operations
+- Variable substitution values
+- Git operations details
+
+See `alex_custom_commands.yaml.example` in the repository for more examples.
+
+## Problem solving
+
+### Command not found
+
+If, when trying to run `alex`, you see an error like this:
+
+```
+~/Development/flutter/.pub-cache/bin/alex: line 17: pub: command not found
+```
+
+You can fix it by editing the file mentioned in the error (in this example: `~/Development/flutter/.pub-cache/bin/alex`).
+You need to se `dart pub` or `flutter pub` instead of `pub`. So replace the line `pub global run alex:alex "$@"` with `dart pub global run alex:alex "$@"` 
+(or `flutter pub global run alex:alex "$@"`, depending on your setup).
+
+Save the file, and you’re good to go.
+
+### Cyrillic Encoding Issues on Windows
+
+
+When entering Cyrillic characters (e.g., while saving a changelog), they may be displayed incorrectly or not at all.
+
+To fix this, it is recommended to use the external Git Bash terminal (C:\Program Files\Git). In its settings, set the character encoding to UTF-8:
+Options -> Text -> Character set -> UTF-8.
+
+![](https://raw.githubusercontent.com/Innim/alex/master/readme_images/bash.png)
 
 ## Development
 
 Do not forget regenerate code when updating the version:
 
-```
-alex code gen
+```bash
+$ alex code gen
 ```
 
 or 
 
-```
-dart pub run build_runner build --delete-conflicting-outputs
+```bash
+$ dart pub run build_runner build --delete-conflicting-outputs
 ```

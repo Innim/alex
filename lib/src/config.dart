@@ -97,8 +97,20 @@ class AlexConfig {
   AlexCIConfig? _ci;
   AlexGitConfig? _git;
   AlexScriptsConfig? _scripts;
+  CodeConfig? _code;
 
   AlexConfig._(this._path, this._data);
+
+  /// Base URL for issue tracker. If set, changelog entries will reference
+  /// issues with a markdown link instead of a plain `(#N)` suffix.
+  ///
+  /// Example: `https://site/project/issue`.
+  String? get issueUrl {
+    const key = 'issue_url';
+    final value = _data[key];
+    if (value is String && value.isNotEmpty) return value;
+    return null;
+  }
 
   L10nConfig get l10n {
     const key = 'l10n';
@@ -128,7 +140,42 @@ class AlexConfig {
         : const AlexScriptsConfig();
   }
 
+  CodeConfig get code {
+    const key = 'code';
+    return _code ??= _data.containsKey(key)
+        ? CodeConfig.fromYaml(_data[key] as YamlMap)
+        : const CodeConfig();
+  }
+
   String get rootPath => p.dirname(_path);
+}
+
+/// Configuration for code generation (`alex code gen`).
+class CodeConfig {
+  static const defaultUseWorkspace = true;
+
+  /// Defines if the `--workspace` flag should be used for code generation
+  /// in a pub workspace.
+  ///
+  /// When enabled and the resolved `build_runner` version supports it
+  /// (>= 2.11.0), code generation for a workspace is run once from the
+  /// workspace root with the `--workspace` flag instead of per-package.
+  final bool useWorkspace;
+
+  const CodeConfig({
+    this.useWorkspace = defaultUseWorkspace,
+  });
+
+  factory CodeConfig.fromYaml(YamlMap data) {
+    return CodeConfig(
+      useWorkspace: data['use_workspace'] as bool? ?? defaultUseWorkspace,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'CodeConfig{useWorkspace: $useWorkspace}';
+  }
 }
 
 /// Configuration for manage localization.

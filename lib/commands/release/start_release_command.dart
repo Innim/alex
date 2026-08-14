@@ -50,7 +50,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       ..addFlag(
         _argSkipL10n,
         abbr: 's',
-        help: 'Skip process localization',
+        help: 'Skip translations check during release.',
       )
       ..addFlag(
         _argLocal,
@@ -580,6 +580,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       // Run flutter build ipa to produce an Xcode build archive (.xcarchive file)
       // in your project’s build/ios/archive/ directory and
       // an App Store app bundle (.ipa file) in build/ios/ipa.
+      // TODO: parse output to get path to .ipa file
+      // ✓ Built IPA to build/ios/ipa (20.0MB)
 
       printInfo('Local build succeed.');
       final message = res.stdout?.toString();

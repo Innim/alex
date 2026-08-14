@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:alex/commands/release/demo.dart';
 import 'package:alex/src/config.dart';
 import 'package:alex/src/console/console.dart';
+import 'package:alex/src/const.dart';
 import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/internal/print.dart' as print;
 import 'package:alex/src/git/git.dart';
@@ -32,7 +33,7 @@ abstract class AlexCommand extends Command<int> {
 
   final ArgParser _argParser = ArgParser(
     allowTrailingOptions: true,
-  )..addFlag('verbose', help: 'Show additional diagnostic info');
+  )..addVerboseFlag();
 
   AlexCommand(this._name, this._description, [this._aliases = const []]);
 
@@ -62,7 +63,7 @@ abstract class AlexCommand extends Command<int> {
   set console(Console value) => _console = value;
 
   @protected
-  bool get isVerbose => argResults!['verbose'] as bool;
+  bool get isVerbose => argResults!.isVerbose();
 
   @protected
   bool get isVerboseFlutterCmd =>
@@ -114,6 +115,9 @@ abstract class AlexCommand extends Command<int> {
       Directory.current = path;
     }
   }
+
+  @protected
+  Logger get out => _logger;
 
   /// Prints message if verbose flag is on.
   @protected
@@ -241,6 +245,9 @@ extension CmdArgArgParserExtension on ArgParser {
         hide: hide,
       );
 
+  void addVerboseFlag() =>
+      addFlag(kVerbose, help: 'Show additional diagnostic info');
+
   void addVerboseFlutterCmdFlag() => addFlagArg(
         _kArgVerboseFlutterCmd,
         help: 'All flutter commands will be run with verbose flag',
@@ -250,6 +257,8 @@ extension CmdArgArgParserExtension on ArgParser {
 
 extension CmdArgArgResultsExtension on ArgResults {
   bool getBool(CmdArg arg) => this[arg.name] as bool;
+
+  bool isVerbose() => this[kVerbose] as bool;
 
   int? getInt(CmdArg arg) {
     final val = this[arg.name] as String?;

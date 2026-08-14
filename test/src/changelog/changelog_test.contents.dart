@@ -191,3 +191,67 @@ const nextReleaseWithNoReleasedVersion = '''
 - New bug fix.
 
 ''';
+
+const changelogWithPlainIssueReferences = '''
+## Next release
+
+### Added 
+
+- Some new feature (#123).
+- Another feature (#456).
+
+### Fixed
+
+- Bug fix (#789).
+
+## v0.8.0+4064 - 2021-09-24
+
+### Added
+
+- Feature 1 (#100).
+- Feature 2 (#200).
+
+### Fixed
+
+- Bug fix (#300).
+''';
+
+const changelogWithMixedIssueReferences = '''
+## Next release
+
+### Added 
+
+- Some new feature (#123).
+- Already linked [#456](https://example.com/456).
+
+### Fixed
+
+- Bug fix (#789).
+- Another fix [#999](https://example.com/999).
+
+## v0.8.0+4064 - 2021-09-24
+
+### Added
+
+- Feature 1 (#100).
+''';
+
+const changelogWithNoIssueReferences = '''
+## Next release
+
+### Added 
+
+- Some new feature.
+- Another feature.
+
+### Fixed
+
+- Bug fix.
+
+## v0.8.0+4064 - 2021-09-24
+
+### Added
+
+- Feature 1.
+- Feature 2.
+''';

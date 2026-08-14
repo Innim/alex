@@ -13,6 +13,7 @@ class FinishCommand extends FeatureCommandBase {
   static const _argDemo = CmdArg('demo');
   static const _argIssue = CmdArg('issue', abbr: 'i');
   static const _argChangelog = CmdArg('changelog', abbr: 'c');
+  static const _argSquash = CmdArg('squash', abbr: 's');
 
   FinishCommand()
       : super(
@@ -37,6 +38,12 @@ class FinishCommand extends FeatureCommandBase {
             'Optional, you can provide it in interactive mode. '
             'Example: alex finish feature -${_argChangelog.abbr}"Some new feature"',
         valueHelp: 'CHANGELOG',
+      )
+      ..addFlag(
+        _argSquash.name,
+        abbr: _argSquash.abbr,
+        help: 'Squash all feature commits into a single commit when merging '
+            'into develop. Useful for tasks like golden tests updates.',
       );
   }
 
@@ -47,6 +54,7 @@ class FinishCommand extends FeatureCommandBase {
     final isDemo = args.getBool(_argDemo);
     var issueId = args.getInt(_argIssue);
     final changelog = args.getString(_argChangelog);
+    final squash = args.getBool(_argSquash);
 
     final console = this.console;
     final gitConfig = config.git;
@@ -105,11 +113,19 @@ class FinishCommand extends FeatureCommandBase {
 
     // TODO: Merge develop in remote feature branch if conflict
 
-    printVerbose('Merge feature branch in develop');
-    git.gitflowFeatureFinish(branchName, deleteBranch: false);
+    printVerbose(squash
+        ? 'Squash merge feature branch in develop'
+        : 'Merge feature branch in develop');
+    git.gitflowFeatureFinish(
+      branchName,
+      deleteBranch: false,
+      squash: squash,
+      squashMessage: 'Feature #$issueId: ${branch.name}.\n\nBy alex.',
+    );
 
     printVerbose('Add entry in changelog');
-    final changed = await _updateChangelog(console, fs, issueId, changelog);
+    final changed = await _updateChangelog(
+        console, fs, issueId, changelog, config.issueUrl);
 
     if (changed) {
       printVerbose('Commit changelog');
@@ -130,7 +146,8 @@ class FinishCommand extends FeatureCommandBase {
 
       if (localCommit == commonCommit) {
         printVerbose('Remove local feature branch');
-        git.branchDelete(localName);
+        // Squash merge does not mark the branch as merged in git.
+        git.branchDelete(localName, force: squash);
       } else {
         printVerbose('Local branch different from remote. '
             'Do not delete $localName');
@@ -138,7 +155,7 @@ class FinishCommand extends FeatureCommandBase {
     }
 
     printVerbose('Remove feature branch');
-    git.branchDelete(branchName);
+    git.branchDelete(branchName, force: squash);
 
     printVerbose('Merge develop in ${git.branchTest}');
     git.mergeDevelopInTest();
@@ -187,7 +204,7 @@ class FinishCommand extends FeatureCommandBase {
   }
 
   Future<bool> _updateChangelog(Console console, FileSystem fs, int issueId,
-      String? changelogLine) async {
+      String? changelogLine, String? issueUrl) async {
     final changelog = Changelog(fs);
 
     if (!(await changelog.exists)) {
@@ -243,13 +260,13 @@ Which section to add:
     printVerbose('Write to changelog: $line');
     switch (section) {
       case 1:
-        await changelog.addAddedEntry(line, issueId);
+        await changelog.addAddedEntry(line, issueId, issueUrl);
         break;
       case 2:
-        await changelog.addFixedEntry(line, issueId);
+        await changelog.addFixedEntry(line, issueId, issueUrl);
         break;
       case 3:
-        await changelog.addPreReleaseEntry(line, issueId);
+        await changelog.addPreReleaseEntry(line, issueId, issueUrl);
         break;
     }
     await changelog.save();
@@ -261,6 +278,7 @@ Which section to add:
 class _Branch {
   final GitCommands git;
   final String name;
+
   // TODO: multiple remotes
   final String? remoteName;
   final String? localName;
