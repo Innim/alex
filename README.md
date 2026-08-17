@@ -106,6 +106,34 @@ _Note: You can change GIT branches, localization parameters, CI/CD and other set
 - `--local` (`-b`) - Run local release build for Android and iOS platforms.
 - `--entry-point=<path>` (`-e`) - Entry point of the app (e.g., lib/main_test.dart). Only for local release builds.
 - `--platforms=<PLATFORMS>` (`-p`) - Target build platforms: ios, android. You can pass multiple platforms separated by commas. Defaults to "android,ios". Only for local release builds.
+- `--target-path=<DIR_PATH>` (`-t`) - Target directory to copy build artifacts to. Only for local release builds.
+
+**Local builds:**
+
+Before every local build `alex` cleans the output directory of the target platform
+(`build/app/outputs/bundle` for Android and `build/ios/ipa` for iOS),
+and after the build it checks that exactly one artifact was created there.
+So the release fails with an explanation if the build has finished successfully,
+but no distribution file was produced — for example, when an Xcode archive was created,
+but the export of an `.ipa` failed.
+
+If `--target-path` is defined, the artifact is copied to that directory and renamed
+by the pattern `<name>_v<major>.<minor>.<patch>_<build>.<aab|ipa>`,
+for example `sundry_v0.1.2_3.ipa`.
+By default `<name>` is a project name from `pubspec.yaml`,
+but you can define another one in your project's [configuration](#configuration):
+
+```yaml
+build:
+    name: sundry
+```
+
+Characters which are not allowed in a file name are replaced with `_`.
+
+The target directory must be outside of the repository or must be ignored by git,
+otherwise the artifacts would be added in the release commit by `git add -A`.
+This is checked before the release is started, along with the write access to the directory,
+so the release will not be published if an artifact can't be copied.
 
 **Pre-release scripts:**
 
@@ -133,6 +161,11 @@ $ alex release start --local
 Release with custom entry point and specific platform:
 ```bash
 $ alex release start --local --entry-point=lib/main_dev.dart --platforms=android
+```
+
+Local build with copying artifacts to a specific directory:
+```bash
+$ alex release start --local --target-path=../builds/sundry
 ```
 
 Skip translations check:

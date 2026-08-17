@@ -98,6 +98,7 @@ class AlexConfig {
   AlexGitConfig? _git;
   AlexScriptsConfig? _scripts;
   CodeConfig? _code;
+  AlexBuildConfig? _build;
 
   AlexConfig._(this._path, this._data);
 
@@ -147,7 +148,39 @@ class AlexConfig {
         : const CodeConfig();
   }
 
+  AlexBuildConfig get build {
+    const key = 'build';
+    final data = _data[key] as YamlMap?;
+    return _build ??=
+        data != null ? AlexBuildConfig.fromYaml(data) : const AlexBuildConfig();
+  }
+
   String get rootPath => p.dirname(_path);
+}
+
+/// Configuration for application builds (`alex release start --local`).
+class AlexBuildConfig {
+  /// Name to use for built artifact files.
+  ///
+  /// If not defined - the project name from `pubspec.yaml` will be used.
+  ///
+  /// Resulting file name is
+  /// `<name>_v<major>.<minor>.<patch>_<build>.<aab|ipa>`.
+  final String? name;
+
+  const AlexBuildConfig({this.name});
+
+  factory AlexBuildConfig.fromYaml(YamlMap data) {
+    final name = data['name'] as String?;
+    return AlexBuildConfig(
+      name: name != null && name.isNotEmpty ? name : null,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AlexBuildConfig{name: $name}';
+  }
 }
 
 /// Configuration for code generation (`alex code gen`).
