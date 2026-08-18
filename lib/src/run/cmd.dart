@@ -72,6 +72,7 @@ class Cmd extends CmdBase {
     final stderr = StringBuffer();
     final process = await Process.start(executable, arguments,
         workingDirectory: workingDir);
+    await process.stdin.close();
 
     systemEncoding.decoder.bind(process.stdout).listen((event) {
       stdout.write(event);
