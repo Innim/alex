@@ -1,3 +1,8 @@
+## Next
+
+* [Release] `start`: new `--target-path` (`-t`) option to copy artifacts of a local release build (`--local`) to the specified directory. Artifacts are renamed by the pattern `<name>_v<major>.<minor>.<patch>_<build>.<aab|ipa>` (for example `sundry_v0.1.2_3.ipa`), where `<name>` is a project name from `pubspec.yaml` or the new `build.name` config option. The target directory should be outside of the repository or should be ignored by git, so artifacts can't get in the release commit; it's checked, as well as the write access, before the release is started.
+* [Release] `start`: output directory of a local build is cleaned before the build, and after the build alex checks that exactly one artifact was created there. Now the release fails with an explanation instead of finishing successfully when the build produced no distribution file — for example, when an Xcode archive was created, but the export of an `.ipa` failed.
+
 ## 1.13.0
 
 * [L10n] `check_translations`: new `--print-changed-files` flag to print the list of files changed after `pub get` (only paths, not their content). Off by default, so local runs are not flooded.

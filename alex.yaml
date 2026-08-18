@@ -27,6 +27,14 @@ code:
   # `--workspace` flag instead of per-package. Set to false to disable.
   use_workspace: true
 
+# Application build settings (alex release start --local)
+build:
+  # Name for build artifact files.
+  # If not defined - project name from pubspec.yaml will be used.
+  # Result file name: <name>_v<major>.<minor>.<patch>_<build>.<aab|ipa>,
+  # for example: sundry_v0.1.2_3.ipa
+  name:
+
 # Custom scripts
 scripts:
   pre_release_scripts_paths: []

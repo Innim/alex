@@ -318,6 +318,28 @@ class GitCommands {
     git("add -A", "adding all changes");
   }
 
+  /// Returns `true` if files in the [path] can't get in a commit
+  /// after [addAll]: the path is ignored by git
+  /// or it's outside the repository.
+  bool isPathOutOfIndex(String path) {
+    try {
+      _git(['check-ignore', '-q', path], 'check if <$path> is ignored',
+          printIfError: false);
+      return true;
+    } on RunException catch (e) {
+      switch (e.exitCode) {
+        // The path is not ignored.
+        case 1:
+          return false;
+        // The path is outside the repository.
+        case 128:
+          return true;
+        default:
+          rethrow;
+      }
+    }
+  }
+
   void commit(String message) {
     _git(["commit", "-m", message], "committing changes");
   }

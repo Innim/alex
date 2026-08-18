@@ -10,6 +10,7 @@ import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 import 'package:alex/src/l10n/locale/locales.dart';
+import 'package:alex/src/release/build_artifact_name.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
@@ -30,6 +31,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _argLocal = 'local';
   static const _argEntryPoint = 'entry-point';
   static const _argBuildPlatforms = 'platforms';
+  static const _argTargetPath = 'target-path';
   static const _argSkipL10n = 'skip_l10n';
   static const _argDemo = 'demo';
 
@@ -74,6 +76,17 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         defaultsTo: [_BuildPlatform.android, _BuildPlatform.ios].asArgs(),
         valueHelp: 'PLATFORMS',
       )
+      ..addOption(
+        _argTargetPath,
+        abbr: 't',
+        help: 'Target directory path to copy build artifacts to. '
+            'Artifacts are renamed by the pattern '
+            '<name>_v<major>.<minor>.<patch>_<build>.<aab|ipa>, '
+            'where <name> is a project name from pubspec.yaml '
+            'or the build.name value from the alex config. '
+            'Only for local release builds.',
+        valueHelp: 'DIR_PATH',
+      )
       ..addFlag(
         _argDemo,
         help: "Runs command in demonstration mode",
@@ -104,6 +117,23 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
               'See --$_argLocal and section ci in alex config section.');
     }
 
+    final targetPath = (args[_argTargetPath] as String?)?.trim();
+    if (targetPath != null) {
+      if (!isLocalRelease) {
+        return error(1,
+            message: 'Option --$_argTargetPath can be used '
+                'only for local release builds. See --$_argLocal.');
+      }
+
+      if (targetPath.isEmpty) {
+        return error(1, message: "Option --$_argTargetPath can't be empty.");
+      }
+
+      // Fail before the release is started if the target can't be used.
+      final targetDir = await _ensureTargetDir(targetPath);
+      _checkTargetDirIsNotInRepo(targetDir);
+    }
+
     git.ensureCleanAndCheckoutDevelop();
 
     final spec = await Spec.pub(fs);
@@ -114,6 +144,26 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       return error(1,
           message: 'Invalid version "$vs": '
               'you should define build number (after +).');
+    }
+
+    // Prepare parameters of a local build before the release is started,
+    // so an invalid value will not break the process in the middle.
+    final _LocalBuildOptions? localBuildOptions;
+    final List<_BuildPlatform> buildPlatforms;
+    if (isLocalRelease) {
+      localBuildOptions = _LocalBuildOptions(
+        entryPoint: args[_argEntryPoint] as String?,
+        targetPath: targetPath,
+        artifactName:
+            BuildArtifactName.sanitizeName(config.build.name ?? spec.name),
+        version: version,
+      );
+      buildPlatforms =
+          _BuildPlatform.parseArgs(args[_argBuildPlatforms] as String);
+      printVerbose('Platforms: ${buildPlatforms.asDesc()}');
+    } else {
+      localBuildOptions = null;
+      buildPlatforms = const [];
     }
 
     if (skipL10n) {
@@ -193,16 +243,9 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       ..writeln()
       ..writeln(changeLog);
 
-    if (isLocalRelease) {
-      final entryPoint = args[_argEntryPoint] as String?;
-      final platforms =
-          _BuildPlatform.parseArgs(args[_argBuildPlatforms] as String);
-
-      printVerbose('Platforms: ${platforms.asDesc()}');
-
-      for (final platform in platforms) {
-        final localBuildResult = await _localBuild(entryPoint, platform);
-        if (localBuildResult != 0) return localBuildResult;
+    if (localBuildOptions != null) {
+      for (final platform in buildPlatforms) {
+        await _localBuild(platform, localBuildOptions);
       }
     }
 
@@ -539,57 +582,241 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return 0;
   }
 
-  Future<int> _localBuild(String? entryPoint, _BuildPlatform platform) async {
+  /// Runs a local release build for the [platform].
+  Future<void> _localBuild(
+      _BuildPlatform platform, _LocalBuildOptions options) async {
     printInfo('Run local build for ${platform.name}');
 
-    final String subcommand;
+    // Output directory is cleaned before the build,
+    // so an artifact of some previous build can't be treated
+    // as a result of the current one.
+    final outputDir = Directory(platform.outputDirPath);
+    await _cleanBuildOutputDir(outputDir);
 
-    switch (platform) {
-      case _BuildPlatform.ios:
-        subcommand = 'ipa';
-        break;
-      case _BuildPlatform.android:
-        subcommand = 'appbundle';
-        break;
-    }
-
+    // Fails with a RunException if the build failed.
     final res = await flutter.runCmdOrFail(
       'build',
       arguments: [
-        subcommand,
-        if (entryPoint != null) entryPoint,
+        platform.buildSubcommand,
+        if (options.entryPoint != null) options.entryPoint!,
       ],
       printStdOut: false,
       immediatePrint: false,
     );
 
-    if (res.exitCode == 0) {
-      // TODO: copy release file to someplace and save for finale summary
-      // Android: we have string in the output
-      // ✓ Built build/app/outputs/bundle/release/app-release.aab (27.1MB).
-      // iOS:
-      // Run flutter build ipa to produce an Xcode build archive (.xcarchive file)
-      // in your project’s build/ios/archive/ directory and
-      // an App Store app bundle (.ipa file) in build/ios/ipa.
-      // TODO: parse output to get path to .ipa file
-      // ✓ Built IPA to build/ios/ipa (20.0MB)
+    printInfo('Local build succeed.');
 
-      printInfo('Local build succeed.');
-      final message = res.stdout?.toString();
-      final buildLine = message
-          ?.split('\n')
-          .firstWhere((line) => line.contains('✓ Built '), orElse: () => '');
-      if (buildLine != null && buildLine.isNotEmpty) printInfo(buildLine);
-      return 0;
-    } else {
-      return error(
-        res.exitCode,
-        message: res.stderr?.toString() ??
-            res.stdout?.toString() ??
-            'Local build failed',
-      );
+    // Android: ✓ Built build/app/outputs/bundle/release/app-release.aab (27.1MB).
+    // iOS: ✓ Built IPA to build/ios/ipa (20.0MB).
+    final buildLine = res.stdout
+        ?.toString()
+        .split('\n')
+        .firstWhereOrNull((line) => line.contains('✓ Built '))
+        ?.trim();
+    if (buildLine != null && buildLine.isNotEmpty) printInfo(buildLine);
+
+    _checkReportedPathInOutputDir(buildLine, outputDir, platform);
+
+    final artifact = await _getBuildArtifact(outputDir, platform);
+    printInfo('Build artifact: ${artifact.path}');
+
+    // Artifact is copied before any commit is made,
+    // so the release will not be published if the copy failed.
+    // The target directory is checked to be out of the git index,
+    // so the artifact can't get in the release commit.
+    if (options.targetPath != null) {
+      await _copyBuildArtifact(artifact, platform, options);
     }
   }
+
+  Future<void> _cleanBuildOutputDir(Directory dir) async {
+    if (!await dir.exists()) return;
+
+    printVerbose('Clean build output directory <${dir.path}>');
+    try {
+      await dir.delete(recursive: true);
+    } catch (e) {
+      throw RunException.err(
+          "Can't clean build output directory <${dir.path}>: $e. "
+          'Remove it manually and run the command again.');
+    }
+  }
+
+  /// Checks that the build has placed the artifact in the directory
+  /// which was cleaned before the build.
+  ///
+  /// Otherwise there is no guarantee that a found artifact
+  /// is a result of the current build.
+  void _checkReportedPathInOutputDir(
+      String? buildLine, Directory outputDir, _BuildPlatform platform) {
+    if (buildLine == null || buildLine.isEmpty) {
+      printVerbose("Build output doesn't contain a line with an artifact path");
+      return;
+    }
+
+    // `✓ Built <path> (<size>)` for Android
+    // and `✓ Built IPA to <path> (<size>)` for iOS.
+    final match = RegExp(r'✓ Built (?:.*? to )?(.+?) \(').firstMatch(buildLine);
+    if (match == null) {
+      printVerbose("Can't parse an artifact path from the line <$buildLine>");
+      return;
+    }
+
+    final reportedPath = p.absolute(match.group(1)!.trim());
+    final expectedPath = p.absolute(outputDir.path);
+    if (!p.equals(reportedPath, expectedPath) &&
+        !p.isWithin(expectedPath, reportedPath)) {
+      throw RunException.err(
+          'Build for ${platform.name} has placed the artifact in '
+          '<$reportedPath>, but <$expectedPath> was expected. '
+          "Alex cleans the expected directory before the build, so it can't "
+          'guarantee that the artifact in <$reportedPath> is a result of '
+          'this build. Copy the artifact manually '
+          'or report the issue to the alex repository.');
+    }
+  }
+
+  /// Returns a build artifact from the [outputDir].
+  ///
+  /// Fails if there is no artifact or if there is more than one,
+  /// because the build can succeed even if the distribution file
+  /// was not created (for example, if only an Xcode archive was built).
+  Future<File> _getBuildArtifact(
+      Directory outputDir, _BuildPlatform platform) async {
+    final extension = '.${platform.artifactExtension}';
+    final artifacts = <File>[];
+
+    if (await outputDir.exists()) {
+      await for (final entity
+          in outputDir.list(recursive: true, followLinks: false)) {
+        if (entity is File &&
+            p.extension(entity.path).toLowerCase() == extension) {
+          artifacts.add(entity);
+        }
+      }
+    }
+
+    if (artifacts.isEmpty) {
+      throw RunException.err(
+          'Build for ${platform.name} finished successfully, but no '
+          '*$extension file was found in <${outputDir.path}>.\n'
+          '${platform.noArtifactHint}');
+    }
+
+    if (artifacts.length > 1) {
+      artifacts.sort((a, b) => a.path.compareTo(b.path));
+      throw RunException.err(
+          'Build for ${platform.name} has produced more than one '
+          '*$extension file in <${outputDir.path}>:\n'
+          '${artifacts.map((e) => ' - ${e.path}').join('\n')}\n'
+          "Alex can't detect which one should be used, "
+          'so copy the required artifact manually.');
+    }
+
+    return artifacts.first;
+  }
+
+  Future<void> _copyBuildArtifact(File artifact, _BuildPlatform platform,
+      _LocalBuildOptions options) async {
+    final targetDir = await _ensureTargetDir(options.targetPath!);
+    final fileName = BuildArtifactName.forVersion(
+        options.artifactName, options.version, platform.artifactExtension);
+    final targetFile = File(p.join(targetDir.path, fileName));
+
+    if (await targetFile.exists()) {
+      printWarning('File <${targetFile.path}> already exists '
+          'and will be overwritten.');
+    }
+
+    try {
+      await artifact.copy(targetFile.path);
+    } catch (e) {
+      throw RunException.err("Can't copy build artifact <${artifact.path}> "
+          'to <${targetFile.path}>: $e.');
+    }
+
+    printInfo('Copied ${platform.name} build artifact '
+        'to <${targetFile.path}>.');
+  }
+
+  /// Returns a directory to copy build artifacts to.
+  ///
+  /// Creates the directory if it doesn't exist and checks
+  /// that artifacts can be written in it.
+  Future<Directory> _ensureTargetDir(String targetPath) async {
+    final dir = Directory(targetPath);
+    final type = await FileSystemEntity.type(targetPath);
+
+    if (type == FileSystemEntityType.notFound) {
+      try {
+        await dir.create(recursive: true);
+      } catch (e) {
+        throw RunException.err(
+            "Can't create target directory <$targetPath>: $e.");
+      }
+      printInfo('Created target directory <$targetPath>.');
+    } else if (type != FileSystemEntityType.directory) {
+      throw RunException.err('Target path <$targetPath> is not a directory. '
+          'Pass a path to a directory in --$_argTargetPath.');
+    }
+
+    await _checkDirIsWritable(dir);
+
+    return dir;
+  }
+
+  /// Checks that build artifacts copied in the [dir]
+  /// will not be added in a release commit by `git add -A`.
+  void _checkTargetDirIsNotInRepo(Directory dir) {
+    final path = dir.absolute.path;
+    if (git.isPathOutOfIndex(path)) return;
+
+    throw RunException.err('Target directory <$path> is inside the repository '
+        'and is not ignored by git, so build artifacts would be added '
+        'in the release commit. Pass a path outside of the repository '
+        'in --$_argTargetPath or add the directory in .gitignore.');
+  }
+
+  Future<void> _checkDirIsWritable(Directory dir) async {
+    // There is no API to check permissions,
+    // so just try to write a file in the directory.
+    final probe = File(p.join(dir.path, '.alex_write_check_$pid'));
+
+    try {
+      await probe.writeAsString('');
+    } catch (e) {
+      throw RunException.err("Can't write in the target directory "
+          '<${dir.path}>: $e. Check the access permissions.');
+    } finally {
+      try {
+        if (await probe.exists()) await probe.delete();
+      } catch (e) {
+        printVerbose("Can't remove temporary file <${probe.path}>: $e");
+      }
+    }
+  }
+}
+
+/// Parameters of a local release build.
+class _LocalBuildOptions {
+  /// Entry point of the app, e.g. `lib/main_test.dart`.
+  final String? entryPoint;
+
+  /// Directory to copy build artifacts to.
+  final String? targetPath;
+
+  /// Application name to use in artifact file names.
+  final String artifactName;
+
+  /// Version of the release.
+  final Version version;
+
+  const _LocalBuildOptions({
+    required this.entryPoint,
+    required this.targetPath,
+    required this.artifactName,
+    required this.version,
+  });
 }
 
 class Entry {
@@ -711,7 +938,38 @@ enum _BuildPlatform {
   ios,
   android;
 
-  static Iterable<_BuildPlatform> parseArgs(String str) {
+  /// Subcommand of the `flutter build` for the platform.
+  String get buildSubcommand => switch (this) {
+        _BuildPlatform.ios => 'ipa',
+        _BuildPlatform.android => 'appbundle',
+      };
+
+  /// Extension of a distribution file for the platform.
+  String get artifactExtension => switch (this) {
+        _BuildPlatform.ios => 'ipa',
+        _BuildPlatform.android => 'aab',
+      };
+
+  /// Directory where the `flutter build` places artifacts for the platform.
+  String get outputDirPath => switch (this) {
+        _BuildPlatform.ios => p.join('build', 'ios', 'ipa'),
+        _BuildPlatform.android => p.join('build', 'app', 'outputs', 'bundle'),
+      };
+
+  /// Hint to show if the build succeed, but no artifact was found.
+  String get noArtifactHint => switch (this) {
+        _BuildPlatform.ios =>
+          'Most likely only an Xcode archive was created, but the export of '
+              'an .ipa failed (usually because of signing or export options). '
+              'Check the build output above and the '
+              '<build/ios/archive> directory, then run `flutter build ipa` '
+              'manually or export the archive with Xcode Organizer.',
+        _BuildPlatform.android =>
+          'Check the Gradle output above and run `flutter build appbundle` '
+              'manually to see the reason.',
+      };
+
+  static List<_BuildPlatform> parseArgs(String str) {
     if (str.trim().isEmpty) {
       throw const RunException.err('Empty platforms argument');
     }
@@ -722,7 +980,7 @@ enum _BuildPlatform {
           _BuildPlatform.values.firstWhereOrNull((p) => p.name == needle);
       if (val == null) throw RunException.err('Unknown platform <$needle>');
       return val;
-    });
+    }).toList(growable: false);
   }
 }
 

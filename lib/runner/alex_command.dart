@@ -129,6 +129,10 @@ abstract class AlexCommand extends Command<int> {
   @protected
   void printInfo(String message) => _logger.info(message);
 
+  /// Prints warning message in output.
+  @protected
+  void printWarning(String message) => _logger.warning(message);
+
   /// Prints error message in error output.
   @protected
   void printError(String message) => _logger.severe(message);
