@@ -1,3 +1,7 @@
+## Next
+
+* [Release] `start`: if the release failed, then all the changes made in the repository are rolled back automatically: uncommitted and untracked changes are discarded, release branch and tag are removed (only if they didn't exist before the release), and `develop` and `master` are restored to the state before the release. Every step is printed, and if the rollback itself fails, then instructions for a manual cleanup are shown. Nothing is rolled back as soon as the push is started — a push can update the remote even if it failed as a whole, and a published release should not be rewritten — in that case alex only reports that the release should be finished or reverted manually.
+
 ## 1.14.0
 
 * [Release] `start`: new `--target-path` (`-t`) option to copy artifacts of a local release build (`--local`) to the specified directory. Artifacts are renamed by the pattern `<name>_v<major>.<minor>.<patch>_<build>.<aab|ipa>` (for example `sundry_v0.1.2_3.ipa`), where `<name>` is a project name from `pubspec.yaml` or the new `build.name` config option. The target directory should be outside of the repository or should be ignored by git, so artifacts can't get in the release commit; it's checked, as well as the write access, before the release is started.
