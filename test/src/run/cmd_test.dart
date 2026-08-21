@@ -1,42 +1,30 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:alex/src/run/cmd.dart';
-import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
   group('Cmd.run()', () {
-    test('should close stdin for non-interactive commands', () async {
-      final tempDir = await Directory.systemTemp.createTemp('alex_cmd_test_');
-      addTearDown(() => tempDir.delete(recursive: true));
+    test(
+      'should close stdin for non-interactive commands',
+      () async {
+        // Waits for a line from the input and fails if it will never come.
+        // If the input is not closed, then it waits forever.
+        const script = 'if read line; '
+            r'then echo "got: $line"; '
+            'else echo "stdin closed" >&2; exit 3; fi';
 
-      final script = File(p.join(tempDir.path, 'wait_for_stdin.dart'))
-        ..writeAsStringSync('''
-import 'dart:io';
+        final result = await Cmd()
+            .run('sh', arguments: ['-c', script])
+            .timeout(const Duration(seconds: 30),
+                onTimeout: () =>
+                    throw TimeoutException('Command is waiting for an input'));
 
-void main() {
-  stdout.write('prompt> ');
-  final input = stdin.readLineSync();
-  if (input == null) {
-    stderr.write('stdin closed');
-    exit(3);
-  }
-}
-''');
-
-      final result = await Cmd()
-          .run(
-            Platform.resolvedExecutable,
-            arguments: [script.path],
-          )
-          .timeout(
-            const Duration(seconds: 5),
-            onTimeout: () => throw TimeoutException('Command timed out'),
-          );
-
-      expect(result.exitCode, 3);
-      expect(result.stderr, contains('stdin closed'));
-    });
+        expect(result.exitCode, 3);
+        expect(result.stderr, contains('stdin closed'));
+      },
+      // Uses `sh`, and there is nothing platform specific in the tested code.
+      testOn: 'posix',
+    );
   });
 }
