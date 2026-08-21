@@ -45,7 +45,11 @@
 
         function updateMaxCharsDisplay(textArea) {
             let span = document.getElementById('maxCharsDisplay_' + textArea.name);
-            let length = textArea.value.length;
+            let value = textArea.value;
+            // Browsers count newlines as CRLF (2 chars) for maxlength purposes,
+            // but value.length counts them as LF (1 char). Adjust accordingly.
+            let newlines = (value.match(/\n/g) || []).length;
+            let length = value.length + newlines;
             let maxLength = parseInt(textArea.getAttribute('maxlength'));
             span.innerText = length.toString() + "/" + maxLength.toString();
         }
