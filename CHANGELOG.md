@@ -1,7 +1,7 @@
 ## Next
 
 * [Release] `start`: if the release failed, then all the changes made in the repository are rolled back automatically: uncommitted and untracked changes are discarded, release branch and tag are removed (only if they didn't exist before the release), and `develop` and `master` are restored to the state before the release. Every step is printed, and if the rollback itself fails, then instructions for a manual cleanup are shown. Nothing is rolled back as soon as the push is started — a push can update the remote even if it failed as a whole, and a published release should not be rewritten — in that case alex only reports that the release should be finished or reverted manually.
-* [Release] `start`: fix release notes character counter to correctly reflect the number of characters that count against `maxlength` — browsers count newlines as CRLF (2 chars) but `value.length` counts them as LF (1 char), causing the counter to show a lower value than the browser's actual limit.
+* [Release] `start`: fix the length limit of the release notes in the form. The limit is enforced by alex now, instead of the `maxlength` attribute: a browser counts a newline as CRLF (2 characters), so a note with N newlines was cut N characters earlier than the store allows, and it was impossible to type anything while the counter still showed a value below the limit. The counter shows the number of characters as the store counts them, and it's highlighted if the value is longer than the limit.
 
 ## 1.14.0
 

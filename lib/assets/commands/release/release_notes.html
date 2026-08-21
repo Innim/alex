@@ -33,9 +33,10 @@
             let textAreas = document.getElementsByTagName('textarea')
             for (const textArea of textAreas) {
                 let onChange = function () {
+                    enforceMaxChars(textArea);
                     updateMaxCharsDisplay(textArea);
                 };
-                textArea.onkeyup = onChange;
+                textArea.oninput = onChange;
                 textArea.onchange = onChange;
                 updateMaxCharsDisplay(textArea);
             }
@@ -43,15 +44,36 @@
             updateState(true);
         });
 
+        function getMaxChars(textArea) {
+            return parseInt(textArea.getAttribute('data-maxlength'));
+        }
+
+        // The limit is not set as the `maxlength` attribute, because browsers
+        // count a newline as CRLF (2 chars) when they enforce it, while stores
+        // count it as a single char. With the native attribute a text with N
+        // newlines would be cut N chars earlier than the store allows.
+        function enforceMaxChars(textArea) {
+            let maxChars = getMaxChars(textArea);
+            let value = textArea.value;
+            let excess = value.length - maxChars;
+            if (isNaN(maxChars) || excess <= 0) return;
+
+            // Drop the part of the just entered text that doesn't fit
+            // (the same way as the browser does for `maxlength`)
+            // and keep the caret right after the remaining part.
+            let caret = Math.max(textArea.selectionStart - excess, 0);
+            textArea.value = value.substring(0, caret) + value.substring(caret + excess);
+            textArea.selectionStart = textArea.selectionEnd = caret;
+        }
+
         function updateMaxCharsDisplay(textArea) {
             let span = document.getElementById('maxCharsDisplay_' + textArea.name);
-            let value = textArea.value;
-            // Browsers count newlines as CRLF (2 chars) for maxlength purposes,
-            // but value.length counts them as LF (1 char). Adjust accordingly.
-            let newlines = (value.match(/\n/g) || []).length;
-            let length = value.length + newlines;
-            let maxLength = parseInt(textArea.getAttribute('maxlength'));
-            span.innerText = length.toString() + "/" + maxLength.toString();
+            let length = textArea.value.length;
+            let maxChars = getMaxChars(textArea);
+            span.innerText = length.toString() + "/" + maxChars.toString();
+            // A value can be longer than the limit only if it came that way
+            // from the previous step, so it should be visible.
+            span.style.color = length > maxChars ? "red" : "";
         }
 
         function updateState(isDefault) {
