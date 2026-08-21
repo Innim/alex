@@ -11,6 +11,7 @@ import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:alex/src/release/build_artifact_name.dart';
+import 'package:alex/src/release/release_rollback.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
@@ -136,6 +137,50 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     git.ensureCleanAndCheckoutDevelop();
 
+    final rollback = ReleaseRollback(
+      git,
+      info: printInfo,
+      warning: printWarning,
+      error: printError,
+      verbose: printVerbose,
+    );
+    // The working tree is clean at this point,
+    // so this state can be safely restored.
+    rollback.start();
+
+    try {
+      final res = await _release(
+        rollback: rollback,
+        skipL10n: skipL10n,
+        isLocalRelease: isLocalRelease,
+        targetPath: targetPath,
+      );
+
+      if (res != 0) {
+        rollback.run(reason: 'Release failed with exit code $res.');
+      }
+
+      return res;
+      // ignore: avoid_catches_without_on_clauses
+    } catch (e) {
+      rollback.run(reason: '$e');
+      rethrow;
+    }
+  }
+
+  /// Runs the release itself.
+  ///
+  /// All the changes made here are reverted by the [rollback]
+  /// if the release fails.
+  Future<int> _release({
+    required ReleaseRollback rollback,
+    required bool skipL10n,
+    required bool isLocalRelease,
+    required String? targetPath,
+  }) async {
+    final args = argResults!;
+    final ciConfig = config.ci;
+
     final spec = await Spec.pub(fs);
     final version = spec.version;
     final vs = version.short;
@@ -198,7 +243,6 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         if (res.exitCode == 0) {
           printInfo('Pre release script $path run - OK');
         } else {
-          // TODO: Clean current changes for git.
           return error(res.exitCode, message: '${res.stderr}');
         }
         _commit('Pre release scripts run.');
@@ -209,6 +253,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     printInfo('Start new release <v$vs>');
 
+    rollback.setReleaseBranch(git.getReleaseBranch(vs));
     git.gitflowReleaseStart(vs);
 
     printInfo('Upgrading CHANGELOG.md...');
@@ -255,6 +300,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     _commit("Changelog and release notes");
 
     // finishing release
+    rollback.setTag(vs);
     git.gitflowReleaseFinish(vs);
 
     final branchDevelop = git.branchDevelop;
@@ -267,8 +313,14 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     _commit("Version increment");
 
+    // Push can update the remote even if it failed as a whole,
+    // so the rollback is disabled before the first push, not after it.
+    rollback.onPushStarted(branchDevelop);
     git.push(branchDevelop);
-    git.push(git.branchMaster);
+
+    final branchMaster = git.branchMaster;
+    rollback.onPushStarted(branchMaster);
+    git.push(branchMaster);
 
     printInfo('Release successfully completed');
     printInfo('');

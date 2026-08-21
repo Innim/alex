@@ -119,10 +119,13 @@ class GitCommands {
     );
   }
 
+  /// Returns a name of the release branch for the release [name].
+  String getReleaseBranch(String name) => "release/$name";
+
   void gitflowReleaseStart(String name, [String? desc]) {
     // gitflowRelease(
     //     "start '$name' $branchDevelop", desc ?? "git flow release $name");
-    final branch = "release/$name";
+    final branch = getReleaseBranch(name);
 
     git("checkout -b $branch $branchDevelop", desc ?? "git flow release $name");
   }
@@ -131,7 +134,7 @@ class GitCommands {
       {String? desc, bool failOnMergeConflict = false}) {
     // TODO: unused desc
     // gitflowRelease("finish -m \"merge\" '$name'", desc ?? "git flow finish $name");
-    final branch = "release/$name";
+    final branch = getReleaseBranch(name);
     checkout(branchMaster);
     merge(branch, failOnMergeConflict: failOnMergeConflict);
     tag(name);
@@ -168,6 +171,21 @@ class GitCommands {
 
   void tag(String tag) {
     git('tag -m "$tag" -a $tag', "set tag $tag");
+  }
+
+  /// Removes a local tag.
+  void tagDelete(String tag) {
+    git('tag -d $tag', "delete tag $tag");
+  }
+
+  /// Returns `true` if a local tag with the given name exists.
+  bool hasTag(String tag) {
+    return git('tag -l $tag', "check tag $tag").isNotEmpty;
+  }
+
+  /// Returns `true` if a local branch with the given name exists.
+  bool hasLocalBranch(String branch) {
+    return git('branch --list $branch', "check branch $branch").isNotEmpty;
   }
 
   String getCurrentCommit(String branch) {
@@ -364,6 +382,23 @@ class GitCommands {
     } on RunException catch (_) {
       return false;
     }
+  }
+
+  /// Resets the current branch to the [commit], discarding all changes.
+  void resetHardTo(String commit) {
+    git("reset --hard $commit", "reset hard to $commit");
+  }
+
+  /// Aborts a merge in progress.
+  void mergeAbort() {
+    _git(["merge", "--abort"], "abort merge");
+  }
+
+  /// Removes untracked files and directories.
+  ///
+  /// Files ignored by git are not affected.
+  void clean() {
+    git("clean -fd", "remove untracked files");
   }
 
   Iterable<String> getBranches({bool all = false, bool merged = false}) {
