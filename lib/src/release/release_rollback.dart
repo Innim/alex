@@ -261,39 +261,41 @@ class ReleaseRollback {
     }
   }
 
+  /// Returns commands to revert the release manually,
+  /// in the order in which they should be run.
   String _manualCleanupHint() {
     final sb = StringBuffer('Check the state of the repository '
         'and clean it up manually:');
 
-    final branch = _releaseBranch;
-    if (branch != null) {
+    void addCommand(String command) {
       sb
         ..writeln()
-        ..write('  git branch -D $branch');
+        ..write('  $command');
     }
 
     final tag = _tag;
-    if (tag != null) {
-      sb
-        ..writeln()
-        ..write('  git tag -d $tag');
-    }
+    if (tag != null) addCommand('git tag -d $tag');
 
     final master = _baseMasterCommit;
     if (master != null) {
-      sb
-        ..writeln()
-        ..write('  git checkout ${_git.branchMaster} '
-            '&& git reset --hard $master');
+      addCommand(
+          'git checkout ${_git.branchMaster} && git reset --hard $master');
     }
 
+    final branch = _releaseBranch;
     final develop = _baseDevelopCommit;
     if (develop != null) {
-      sb
-        ..writeln()
-        ..write('  git checkout ${_git.branchDevelop} '
-            '&& git reset --hard $develop');
+      addCommand(
+          'git checkout ${_git.branchDevelop} && git reset --hard $develop');
+    } else if (branch != null) {
+      // A branch can't be deleted while it's checked out,
+      // and the release branch can be the current one.
+      addCommand('git checkout ${_git.branchDevelop}');
     }
+
+    // Deletion goes last, when the current branch is definitely not
+    // the release branch.
+    if (branch != null) addCommand('git branch -D $branch');
 
     return sb.toString();
   }

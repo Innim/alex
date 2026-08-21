@@ -338,6 +338,26 @@ void main() {
       expect(errors, contains('git tag -d $_version'));
       expect(errors, contains('git reset --hard dev_base'));
       expect(errors, contains('git reset --hard master_base'));
+      // A branch can't be deleted while it's checked out.
+      expect(errors.indexOf('git branch -D $_releaseBranch'),
+          greaterThan(errors.indexOf('git checkout $_develop')));
+    });
+
+    test('instructions checkout develop even if its state is unknown', () {
+      client
+        ..setFailure('rev-parse $_develop', const RunException.err('failed'))
+        ..setResult('rev-parse $_master', 'master_base')
+        ..setFailure('reset --hard', const RunException.err('index.lock'));
+
+      createRollback()
+        ..start()
+        ..setReleaseBranch(_releaseBranch)
+        ..run();
+
+      final errors = logs.error.join('\n');
+      expect(errors, contains('git checkout $_develop'));
+      expect(errors.indexOf('git branch -D $_releaseBranch'),
+          greaterThan(errors.indexOf('git checkout $_develop')));
     });
   });
 }
