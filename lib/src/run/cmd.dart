@@ -74,16 +74,22 @@ class Cmd extends CmdBase {
         workingDirectory: workingDir);
     await process.stdin.close();
 
-    systemEncoding.decoder.bind(process.stdout).listen((event) {
+    final stdoutDone =
+        systemEncoding.decoder.bind(process.stdout).listen((event) {
       stdout.write(event);
       if (onOut != null) onOut(event);
-    });
-    systemEncoding.decoder.bind(process.stderr).listen((event) {
+    }).asFuture<void>();
+    final stderrDone =
+        systemEncoding.decoder.bind(process.stderr).listen((event) {
       stderr.write(event);
       if (onErr != null) onErr(event);
-    });
+    }).asFuture<void>();
 
     final exitCode = await process.exitCode;
+    // The output can be delivered after the exit code is set,
+    // so we should wait for the streams to be closed -
+    // otherwise a part of the output can be lost in the result.
+    await Future.wait([stdoutDone, stderrDone]);
 
     return ProcessResult(
         process.pid, exitCode, stdout.toString(), stderr.toString());
