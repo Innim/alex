@@ -1,5 +1,6 @@
 ## Next
 
+* [Release] `start`: fixed a failure of a local iOS build (`--local`), when alex reported that the artifact was placed in an unexpected directory, though the `.ipa` was built correctly. `flutter build ipa` prints two `✓ Built` lines — for the Xcode archive and for the IPA itself — and alex checked the first one. Now the line with a path in the build output directory is used.
 * [Release] `start`: if the release failed, then all the changes made in the repository are rolled back automatically: uncommitted and untracked changes are discarded, release branch and tag are removed (only if they didn't exist before the release), and `develop` and `master` are restored to the state before the release. Every step is printed, and if the rollback itself fails, then instructions for a manual cleanup are shown. Nothing is rolled back as soon as the push is started — a push can update the remote even if it failed as a whole, and a published release should not be rewritten — in that case alex only reports that the release should be finished or reverted manually.
 
 ## 1.14.0
