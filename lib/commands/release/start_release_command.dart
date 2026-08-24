@@ -11,6 +11,7 @@ import 'package:alex/src/fs/path_utils.dart';
 import 'package:alex/src/l10n/comparers/arb_comparer.dart';
 import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:alex/src/release/build_artifact_name.dart';
+import 'package:alex/src/release/build_output.dart';
 import 'package:alex/src/release/release_rollback.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:list_ext/list_ext.dart';
@@ -660,11 +661,8 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
 
     // Android: ✓ Built build/app/outputs/bundle/release/app-release.aab (27.1MB).
     // iOS: ✓ Built IPA to build/ios/ipa (20.0MB).
-    final buildLine = res.stdout
-        ?.toString()
-        .split('\n')
-        .firstWhereOrNull((line) => line.contains('✓ Built '))
-        ?.trim();
+    final buildLine =
+        BuildOutput.getArtifactLine(res.stdout?.toString(), outputDir.path);
     if (buildLine != null && buildLine.isNotEmpty) printInfo(buildLine);
 
     _checkReportedPathInOutputDir(buildLine, outputDir, platform);
@@ -706,18 +704,14 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       return;
     }
 
-    // `✓ Built <path> (<size>)` for Android
-    // and `✓ Built IPA to <path> (<size>)` for iOS.
-    final match = RegExp(r'✓ Built (?:.*? to )?(.+?) \(').firstMatch(buildLine);
-    if (match == null) {
+    final reportedPath = BuildOutput.parseArtifactPath(buildLine);
+    if (reportedPath == null) {
       printVerbose("Can't parse an artifact path from the line <$buildLine>");
       return;
     }
 
-    final reportedPath = p.absolute(match.group(1)!.trim());
     final expectedPath = p.absolute(outputDir.path);
-    if (!p.equals(reportedPath, expectedPath) &&
-        !p.isWithin(expectedPath, reportedPath)) {
+    if (!BuildOutput.isInDir(reportedPath, expectedPath)) {
       throw RunException.err(
           'Build for ${platform.name} has placed the artifact in '
           '<$reportedPath>, but <$expectedPath> was expected. '
