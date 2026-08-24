@@ -160,36 +160,6 @@ abstract class AlexCommand extends Command<int> {
     return error(exception.exitCode, message: sb.toString());
   }
 
-  /// Run command and add listeners `onOut`/`onErr` on
-  /// std and err output.
-  @protected
-  Future<ProcessResult> runAndListenOutput(
-    String executable,
-    List<String> arguments, {
-    void Function(String out)? onOut,
-    void Function(String err)? onErr,
-    String? workingDir,
-  }) async {
-    final stdout = StringBuffer();
-    final stderr = StringBuffer();
-    final process = await Process.start(executable, arguments,
-        workingDirectory: workingDir);
-
-    systemEncoding.decoder.bind(process.stdout).listen((event) {
-      stdout.write(event);
-      if (onOut != null) onOut(event);
-    });
-    systemEncoding.decoder.bind(process.stderr).listen((event) {
-      stderr.write(event);
-      if (onErr != null) onErr(event);
-    });
-
-    final exitCode = await process.exitCode;
-
-    return ProcessResult(
-        process.pid, exitCode, stdout.toString(), stderr.toString());
-  }
-
   GitCommands getGit(AlexConfig config, {bool isDemo = false}) {
     final gitConfig = config.git;
     final Git gitClient;
