@@ -14,11 +14,10 @@ void main() {
             r'then echo "got: $line"; '
             'else echo "stdin closed" >&2; exit 3; fi';
 
-        final result = await Cmd()
-            .run('sh', arguments: ['-c', script])
-            .timeout(const Duration(seconds: 30),
-                onTimeout: () =>
-                    throw TimeoutException('Command is waiting for an input'));
+        final result = await Cmd().run('sh', arguments: ['-c', script]).timeout(
+            const Duration(seconds: 30),
+            onTimeout: () =>
+                throw TimeoutException('Command is waiting for an input'));
 
         expect(result.exitCode, 3);
         expect(result.stderr, contains('stdin closed'));

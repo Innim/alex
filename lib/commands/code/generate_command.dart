@@ -80,8 +80,8 @@ class GenerateCommand extends CodeCommandBase {
 
       if (pubspec.isWorkspaceRoot()) {
         printVerbose('Workspace root found');
-        final info =
-            workspaces.putIfAbsent(file.parent.path, () => _WorkspaceInfo(file));
+        final info = workspaces.putIfAbsent(
+            file.parent.path, () => _WorkspaceInfo(file));
         if (hasBuildRunner) info.rootHasBuildRunner = true;
         continue;
       }
@@ -248,7 +248,8 @@ class _GenTarget {
   /// workspace generation, so the build step can skip its own pub get.
   final bool depsResolved;
 
-  _GenTarget(this.pubspec, {this.useWorkspace = false, this.depsResolved = false});
+  _GenTarget(this.pubspec,
+      {this.useWorkspace = false, this.depsResolved = false});
 }
 
 /// Aggregated info about a single pub workspace discovered during the scan.

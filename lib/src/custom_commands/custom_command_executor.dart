@@ -55,7 +55,8 @@ class CustomCommandExecutor {
 
     for (var i = 0; i < definition.actions.length; i++) {
       final action = definition.actions[i];
-      _logger.fine('Executing action ${i + 1}/${definition.actions.length}: ${action.type.value}');
+      _logger.fine(
+          'Executing action ${i + 1}/${definition.actions.length}: ${action.type.value}');
 
       final exitCode = await _executeAction(action, arguments);
       if (exitCode != 0) {
@@ -65,7 +66,8 @@ class CustomCommandExecutor {
     }
 
     _logger.info('Custom command completed successfully');
-    _logger.fine('Resource usage: $_filesCreatedCount files created, $_totalBytesWritten bytes written');
+    _logger.fine(
+        'Resource usage: $_filesCreatedCount files created, $_totalBytesWritten bytes written');
     return 0;
   }
 
@@ -81,15 +83,18 @@ class CustomCommandExecutor {
       case CustomCommandActionType.script:
         return _executeScriptAction(action as ScriptAction, arguments);
       case CustomCommandActionType.checkGitBranch:
-        return _executeCheckGitBranchAction(action as CheckGitBranchAction, arguments);
+        return _executeCheckGitBranchAction(
+            action as CheckGitBranchAction, arguments);
       case CustomCommandActionType.checkGitClean:
-        return _executeCheckGitCleanAction(action as CheckGitCleanAction, arguments);
+        return _executeCheckGitCleanAction(
+            action as CheckGitCleanAction, arguments);
       case CustomCommandActionType.changeDir:
         return _executeChangeDirAction(action as ChangeDirAction, arguments);
       case CustomCommandActionType.deleteFile:
         return _executeDeleteFileAction(action as DeleteFileAction, arguments);
       case CustomCommandActionType.checkFileExists:
-        return _executeCheckFileExistsAction(action as CheckFileExistsAction, arguments);
+        return _executeCheckFileExistsAction(
+            action as CheckFileExistsAction, arguments);
       case CustomCommandActionType.copyFile:
         return _executeCopyFileAction(action as CopyFileAction, arguments);
       case CustomCommandActionType.renameFile:
@@ -105,21 +110,27 @@ class CustomCommandExecutor {
       case CustomCommandActionType.renameDir:
         return _executeRenameDirAction(action as RenameDirAction, arguments);
       case CustomCommandActionType.replaceInFile:
-        return _executeReplaceInFileAction(action as ReplaceInFileAction, arguments);
+        return _executeReplaceInFileAction(
+            action as ReplaceInFileAction, arguments);
       case CustomCommandActionType.appendToFile:
-        return _executeAppendToFileAction(action as AppendToFileAction, arguments);
+        return _executeAppendToFileAction(
+            action as AppendToFileAction, arguments);
       case CustomCommandActionType.prependToFile:
-        return _executePrependToFileAction(action as PrependToFileAction, arguments);
+        return _executePrependToFileAction(
+            action as PrependToFileAction, arguments);
       case CustomCommandActionType.print:
         return _executePrintAction(action as PrintAction, arguments);
       case CustomCommandActionType.wait:
         return _executeWaitAction(action as WaitAction, arguments);
       case CustomCommandActionType.checkPlatform:
-        return _executeCheckPlatformAction(action as CheckPlatformAction, arguments);
+        return _executeCheckPlatformAction(
+            action as CheckPlatformAction, arguments);
       case CustomCommandActionType.createArchive:
-        return _executeCreateArchiveAction(action as CreateArchiveAction, arguments);
+        return _executeCreateArchiveAction(
+            action as CreateArchiveAction, arguments);
       case CustomCommandActionType.extractArchive:
-        return _executeExtractArchiveAction(action as ExtractArchiveAction, arguments);
+        return _executeExtractArchiveAction(
+            action as ExtractArchiveAction, arguments);
     }
   }
 
@@ -128,7 +139,10 @@ class CustomCommandExecutor {
     Map<String, dynamic> arguments,
   ) async {
     // Substitute variables only in arguments, not in executable
-    final args = action.args?.map((arg) => _substituteVariables(arg, arguments)).toList() ?? [];
+    final args = action.args
+            ?.map((arg) => _substituteVariables(arg, arguments))
+            .toList() ??
+        [];
 
     // SECURITY: Validate working directory if specified
     String? validatedWorkingDir;
@@ -169,9 +183,8 @@ class CustomCommandExecutor {
     Map<String, dynamic> arguments,
   ) async {
     final command = _substituteVariables(action.command, arguments);
-    final args = action.args
-        .map((arg) => _substituteVariables(arg, arguments))
-        .toList();
+    final args =
+        action.args.map((arg) => _substituteVariables(arg, arguments)).toList();
 
     _logger.info('Executing alex command: $command ${args.join(' ')}');
 
@@ -216,9 +229,8 @@ class CustomCommandExecutor {
       return 1;
     }
 
-    final args = action.args
-        .map((arg) => _substituteVariables(arg, arguments))
-        .toList();
+    final args =
+        action.args.map((arg) => _substituteVariables(arg, arguments)).toList();
 
     _logger.info('Executing script: $scriptPath ${args.join(' ')}');
 
@@ -276,18 +288,19 @@ class CustomCommandExecutor {
     final normalizedBase = p.normalize(base);
 
     // Check if path is within allowed directory
-    if (!p.isWithin(normalizedBase, normalizedPath) && normalizedPath != normalizedBase) {
+    if (!p.isWithin(normalizedBase, normalizedPath) &&
+        normalizedPath != normalizedBase) {
       throw ArgumentError(
-        'Path traversal detected: "$path" resolves to "$normalizedPath" '
-        'which is outside allowed directory "$normalizedBase"'
-      );
+          'Path traversal detected: "$path" resolves to "$normalizedPath" '
+          'which is outside allowed directory "$normalizedBase"');
     }
 
     return normalizedPath;
   }
 
   /// Safely substitute variables in path and validate it.
-  String _safelyResolvePath(String pathTemplate, Map<String, dynamic> arguments) {
+  String _safelyResolvePath(
+      String pathTemplate, Map<String, dynamic> arguments) {
     final pathInput = _substituteVariables(pathTemplate, arguments);
     return _validateAndResolvePath(pathInput);
   }
@@ -338,10 +351,23 @@ class CustomCommandExecutor {
     }
 
     // Check for shell metacharacters that could cause issues
-    final dangerousChars = [';', '&', '|', '`', r'$', '(', ')', '<', '>', '\n', '\r'];
+    final dangerousChars = [
+      ';',
+      '&',
+      '|',
+      '`',
+      r'$',
+      '(',
+      ')',
+      '<',
+      '>',
+      '\n',
+      '\r'
+    ];
     for (final char in dangerousChars) {
       if (filename.contains(char)) {
-        _logger.severe('Invalid filename: contains dangerous character "$char": $filename');
+        _logger.severe(
+            'Invalid filename: contains dangerous character "$char": $filename');
         return false;
       }
     }
@@ -378,7 +404,8 @@ class CustomCommandExecutor {
       }
 
       if (!action.autoSwitch) {
-        final message = action.errorMessage ?? 'Not on branch: $branch (current: $currentBranch)';
+        final message = action.errorMessage ??
+            'Not on branch: $branch (current: $currentBranch)';
         _logger.severe(message);
         return 1;
       }
@@ -436,7 +463,8 @@ class CustomCommandExecutor {
 
       final output = result.stdout.toString().trim();
       if (output.isNotEmpty) {
-        final message = action.errorMessage ?? 'Git working directory is not clean';
+        final message =
+            action.errorMessage ?? 'Git working directory is not clean';
         _logger.severe(message);
         _logger.info('Uncommitted changes:\n$output');
         return 1;
@@ -550,7 +578,8 @@ class CustomCommandExecutor {
       _logger.severe(message);
       return 1;
     } else if (!action.shouldExist && exists) {
-      final message = action.errorMessage ?? 'File exists but should not: $path';
+      final message =
+          action.errorMessage ?? 'File exists but should not: $path';
       _logger.severe(message);
       return 1;
     }
@@ -828,10 +857,12 @@ class CustomCommandExecutor {
     // Check file size to prevent memory issues
     final stat = await file.stat();
     if (stat.size > _largeFileWarningSize) {
-      _logger.warning('File is very large (${stat.size} bytes), this may take a while');
+      _logger.warning(
+          'File is very large (${stat.size} bytes), this may take a while');
     }
     if (stat.size > _maxFileSizeForProcessing) {
-      _logger.severe('File too large for in-memory processing: ${stat.size} bytes');
+      _logger.severe(
+          'File too large for in-memory processing: ${stat.size} bytes');
       return 1;
     }
 
@@ -841,13 +872,15 @@ class CustomCommandExecutor {
       if (action.regex) {
         // Validate regex pattern length to prevent injection
         if (find.length > _maxRegexPatternLength) {
-          _logger.severe('Regex pattern too complex (length > $_maxRegexPatternLength)');
+          _logger.severe(
+              'Regex pattern too complex (length > $_maxRegexPatternLength)');
           return 1;
         }
 
         // Validate replacement string length
         if (replace.length > _maxReplacementLength) {
-          _logger.severe('Replacement string too long (length > $_maxReplacementLength)');
+          _logger.severe(
+              'Replacement string too long (length > $_maxReplacementLength)');
           return 1;
         }
 
@@ -980,10 +1013,12 @@ class CustomCommandExecutor {
       // Check file size before reading to prevent memory exhaustion
       final stat = await file.stat();
       if (stat.size > _largeFileWarningSize) {
-        _logger.warning('File is very large (${stat.size} bytes), this may take a while');
+        _logger.warning(
+            'File is very large (${stat.size} bytes), this may take a while');
       }
       if (stat.size > _maxFileSizeForProcessing) {
-        _logger.severe('File too large for in-memory processing: ${stat.size} bytes');
+        _logger.severe(
+            'File too large for in-memory processing: ${stat.size} bytes');
         return 1;
       }
 
@@ -1046,7 +1081,8 @@ class CustomCommandExecutor {
     final expectedPlatform = action.platform.toLowerCase();
     final currentPlatform = _getCurrentPlatform();
 
-    _logger.info('Checking platform: expected=$expectedPlatform, current=$currentPlatform');
+    _logger.info(
+        'Checking platform: expected=$expectedPlatform, current=$currentPlatform');
 
     if (currentPlatform != expectedPlatform) {
       final errorMsg = action.errorMessage ??
@@ -1083,7 +1119,8 @@ class CustomCommandExecutor {
     // SECURITY: Validate filenames for archive operations
     final sourceBasename = p.basename(source);
     final destBasename = p.basename(destination);
-    if (!_validateArchiveFilename(sourceBasename) || !_validateArchiveFilename(destBasename)) {
+    if (!_validateArchiveFilename(sourceBasename) ||
+        !_validateArchiveFilename(destBasename)) {
       return 1;
     }
 
@@ -1128,7 +1165,8 @@ class CustomCommandExecutor {
       if (archiveFile.existsSync()) {
         try {
           archiveFile.deleteSync();
-          _logger.info('Cleaned up partially created archive after error: $destination');
+          _logger.info(
+              'Cleaned up partially created archive after error: $destination');
         } catch (cleanupError) {
           _logger.warning('Failed to cleanup partial archive: $cleanupError');
         }
@@ -1198,10 +1236,12 @@ class CustomCommandExecutor {
             destDir.deleteSync();
             _logger.info('Cleaned up empty extraction directory: $destination');
           } else {
-            _logger.warning('Extraction failed but directory contains files, not cleaning up: $destination');
+            _logger.warning(
+                'Extraction failed but directory contains files, not cleaning up: $destination');
           }
         } catch (cleanupError) {
-          _logger.warning('Failed to cleanup extraction directory: $cleanupError');
+          _logger
+              .warning('Failed to cleanup extraction directory: $cleanupError');
         }
       }
 
@@ -1214,13 +1254,16 @@ class CustomCommandExecutor {
             final isEmpty = destDir.listSync().isEmpty;
             if (isEmpty) {
               destDir.deleteSync();
-              _logger.info('Cleaned up empty extraction directory after error: $destination');
+              _logger.info(
+                  'Cleaned up empty extraction directory after error: $destination');
             } else {
-              _logger.warning('Extraction failed but directory contains files, not cleaning up: $destination');
+              _logger.warning(
+                  'Extraction failed but directory contains files, not cleaning up: $destination');
             }
           }
         } catch (cleanupError) {
-          _logger.warning('Failed to cleanup extraction directory: $cleanupError');
+          _logger
+              .warning('Failed to cleanup extraction directory: $cleanupError');
         }
       }
       return _logError('Failed to extract archive', e, stackTrace);
@@ -1233,7 +1276,8 @@ class CustomCommandExecutor {
   // that all files would be extracted within the destination directory.
   //
   // Returns true if archive is safe to extract, false otherwise.
-  Future<bool> _validateArchiveContents(String archivePath, String destDir) async {
+  Future<bool> _validateArchiveContents(
+      String archivePath, String destDir) async {
     final normalizedDest = p.normalize(p.absolute(destDir));
 
     try {
@@ -1246,7 +1290,8 @@ class CustomCommandExecutor {
           immediatePrintStd: false,
           immediatePrintErr: false,
         );
-      } else if (archivePath.endsWith('.tar.gz') || archivePath.endsWith('.tgz')) {
+      } else if (archivePath.endsWith('.tar.gz') ||
+          archivePath.endsWith('.tgz')) {
         listResult = await _cmd.run(
           'tar',
           arguments: ['-tzf', archivePath],
@@ -1254,7 +1299,8 @@ class CustomCommandExecutor {
           immediatePrintErr: false,
         );
       } else {
-        _logger.severe('Unsupported archive format for validation: $archivePath');
+        _logger
+            .severe('Unsupported archive format for validation: $archivePath');
         return false;
       }
 
@@ -1273,7 +1319,8 @@ class CustomCommandExecutor {
         final targetPath = p.normalize(p.absolute(p.join(destDir, filename)));
 
         // Check if path escapes destination directory
-        if (!p.isWithin(normalizedDest, targetPath) && targetPath != normalizedDest) {
+        if (!p.isWithin(normalizedDest, targetPath) &&
+            targetPath != normalizedDest) {
           _logger.severe('Archive contains path traversal: $filename');
           _logger.severe('Would extract to: $targetPath');
           _logger.severe('Outside allowed directory: $normalizedDest');
@@ -1281,7 +1328,8 @@ class CustomCommandExecutor {
         }
       }
 
-      _logger.fine('Archive validation passed: ${entries.length} entries checked');
+      _logger
+          .fine('Archive validation passed: ${entries.length} entries checked');
       return true;
     } catch (e, stackTrace) {
       _logger.severe('Archive validation error: $e');

@@ -56,7 +56,8 @@ class AddCustomCommand extends AlexCommand {
     // Get actions
     final actions = <CustomCommandAction>[];
     while (true) {
-      final addAction = _prompt('Add action? (y/n)', defaultValue: actions.isEmpty ? 'y' : 'n');
+      final addAction = _prompt('Add action? (y/n)',
+          defaultValue: actions.isEmpty ? 'y' : 'n');
       if (addAction.toLowerCase() != 'y') {
         if (actions.isEmpty) {
           printError('At least one action is required');
@@ -111,7 +112,8 @@ class AddCustomCommand extends AlexCommand {
     if (name.isEmpty) return null;
 
     printInfo('  Type:');
-    final typeStr = _promptChoice('Select type', ['option', 'flag'], defaultValue: 'option');
+    final typeStr = _promptChoice('Select type', ['option', 'flag'],
+        defaultValue: 'option');
     final type = typeStr.toLowerCase() == 'flag'
         ? CustomCommandArgumentType.flag
         : CustomCommandArgumentType.option;
@@ -160,11 +162,13 @@ class AddCustomCommand extends AlexCommand {
     // Prompt with validation loop
     CustomCommandActionType? actionType;
     while (actionType == null) {
-      final input = _prompt('  Enter action type number (1-${allTypes.length})', defaultValue: '1');
+      final input = _prompt('  Enter action type number (1-${allTypes.length})',
+          defaultValue: '1');
       final number = int.tryParse(input);
 
       if (number == null || number < 1 || number > allTypes.length) {
-        printError('Invalid number. Please enter a number between 1 and ${allTypes.length}.');
+        printError(
+            'Invalid number. Please enter a number between 1 and ${allTypes.length}.');
         continue;
       }
 
@@ -235,7 +239,11 @@ class AddCustomCommand extends AlexCommand {
     final workingDir = _prompt('  Working directory (optional)');
 
     final args = argsStr.isNotEmpty
-        ? argsStr.split(' ').map((e) => e.trim()).where((e) => e.isNotEmpty).toList()
+        ? argsStr
+            .split(' ')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList()
         : <String>[];
 
     return ExecAction(
@@ -271,7 +279,8 @@ class AddCustomCommand extends AlexCommand {
 
   CheckGitBranchAction _promptCheckGitBranchAction() {
     final branch = _prompt('  Branch name');
-    final autoSwitchStr = _prompt('  Auto switch to branch if not on it? (y/n)', defaultValue: 'y');
+    final autoSwitchStr = _prompt('  Auto switch to branch if not on it? (y/n)',
+        defaultValue: 'y');
     final autoSwitch = autoSwitchStr.toLowerCase() == 'y';
 
     return CheckGitBranchAction(
@@ -292,9 +301,12 @@ class AddCustomCommand extends AlexCommand {
 
   DeleteFileAction _promptDeleteFileAction() {
     final path = _prompt('  File path to delete');
-    final recursiveStr = _prompt('  Delete recursively (for directories)? (y/n)', defaultValue: 'n');
+    final recursiveStr = _prompt(
+        '  Delete recursively (for directories)? (y/n)',
+        defaultValue: 'n');
     final recursive = recursiveStr.toLowerCase() == 'y';
-    final ignoreNotFoundStr = _prompt('  Ignore if not found? (y/n)', defaultValue: 'y');
+    final ignoreNotFoundStr =
+        _prompt('  Ignore if not found? (y/n)', defaultValue: 'y');
     final ignoreNotFound = ignoreNotFoundStr.toLowerCase() == 'y';
 
     return DeleteFileAction(
@@ -306,7 +318,9 @@ class AddCustomCommand extends AlexCommand {
 
   CheckFileExistsAction _promptCheckFileExistsAction() {
     final path = _prompt('  File/directory path to check');
-    final shouldExistStr = _prompt('  Should exist? (y=must exist, n=must not exist)', defaultValue: 'y');
+    final shouldExistStr = _prompt(
+        '  Should exist? (y=must exist, n=must not exist)',
+        defaultValue: 'y');
     final shouldExist = shouldExistStr.toLowerCase() == 'y';
 
     return CheckFileExistsAction(
@@ -318,7 +332,8 @@ class AddCustomCommand extends AlexCommand {
   CopyFileAction _promptCopyFileAction() {
     final source = _prompt('  Source file path');
     final destination = _prompt('  Destination file path');
-    final overwriteStr = _prompt('  Overwrite if exists? (y/n)', defaultValue: 'n');
+    final overwriteStr =
+        _prompt('  Overwrite if exists? (y/n)', defaultValue: 'n');
     final overwrite = overwriteStr.toLowerCase() == 'y';
 
     return CopyFileAction(
@@ -351,7 +366,8 @@ class AddCustomCommand extends AlexCommand {
   CreateFileAction _promptCreateFileAction() {
     final path = _prompt('  File path to create');
     final content = _prompt('  File content (optional, supports variables)');
-    final overwriteStr = _prompt('  Overwrite if exists? (y/n)', defaultValue: 'n');
+    final overwriteStr =
+        _prompt('  Overwrite if exists? (y/n)', defaultValue: 'n');
     final overwrite = overwriteStr.toLowerCase() == 'y';
 
     return CreateFileAction(
@@ -363,7 +379,8 @@ class AddCustomCommand extends AlexCommand {
 
   CreateDirAction _promptCreateDirAction() {
     final path = _prompt('  Directory path to create');
-    final recursiveStr = _prompt('  Create parent directories? (y/n)', defaultValue: 'y');
+    final recursiveStr =
+        _prompt('  Create parent directories? (y/n)', defaultValue: 'y');
     final recursive = recursiveStr.toLowerCase() == 'y';
 
     return CreateDirAction(
@@ -374,9 +391,11 @@ class AddCustomCommand extends AlexCommand {
 
   DeleteDirAction _promptDeleteDirAction() {
     final path = _prompt('  Directory path to delete');
-    final recursiveStr = _prompt('  Delete recursively? (y/n)', defaultValue: 'y');
+    final recursiveStr =
+        _prompt('  Delete recursively? (y/n)', defaultValue: 'y');
     final recursive = recursiveStr.toLowerCase() == 'y';
-    final ignoreNotFoundStr = _prompt('  Ignore if not found? (y/n)', defaultValue: 'y');
+    final ignoreNotFoundStr =
+        _prompt('  Ignore if not found? (y/n)', defaultValue: 'y');
     final ignoreNotFound = ignoreNotFoundStr.toLowerCase() == 'y';
 
     return DeleteDirAction(
@@ -414,7 +433,8 @@ class AddCustomCommand extends AlexCommand {
   AppendToFileAction _promptAppendToFileAction() {
     final path = _prompt('  File path');
     final content = _prompt('  Content to append');
-    final createIfMissingStr = _prompt('  Create file if missing? (y/n)', defaultValue: 'y');
+    final createIfMissingStr =
+        _prompt('  Create file if missing? (y/n)', defaultValue: 'y');
     final createIfMissing = createIfMissingStr.toLowerCase() == 'y';
 
     return AppendToFileAction(
@@ -427,7 +447,8 @@ class AddCustomCommand extends AlexCommand {
   PrependToFileAction _promptPrependToFileAction() {
     final path = _prompt('  File path');
     final content = _prompt('  Content to prepend');
-    final createIfMissingStr = _prompt('  Create file if missing? (y/n)', defaultValue: 'y');
+    final createIfMissingStr =
+        _prompt('  Create file if missing? (y/n)', defaultValue: 'y');
     final createIfMissing = createIfMissingStr.toLowerCase() == 'y';
 
     return PrependToFileAction(
@@ -441,7 +462,8 @@ class AddCustomCommand extends AlexCommand {
     final message = _prompt('  Message to print');
 
     printInfo('  Level:');
-    final level = _promptChoice('Select level', ['info', 'warning', 'error'], defaultValue: 'info');
+    final level = _promptChoice('Select level', ['info', 'warning', 'error'],
+        defaultValue: 'info');
 
     return PrintAction(
       message: message,
@@ -462,7 +484,9 @@ class AddCustomCommand extends AlexCommand {
 
   CheckPlatformAction _promptCheckPlatformAction() {
     printInfo('  Expected platform:');
-    final platform = _promptChoice('Select platform', ['macos', 'linux', 'windows'], defaultValue: 'macos');
+    final platform = _promptChoice(
+        'Select platform', ['macos', 'linux', 'windows'],
+        defaultValue: 'macos');
 
     return CheckPlatformAction(platform: platform);
   }
@@ -472,7 +496,8 @@ class AddCustomCommand extends AlexCommand {
     final destination = _prompt('  Destination archive path');
 
     printInfo('  Archive format:');
-    final format = _promptChoice('Select format', ['zip', 'tar.gz'], defaultValue: 'zip');
+    final format =
+        _promptChoice('Select format', ['zip', 'tar.gz'], defaultValue: 'zip');
 
     return CreateArchiveAction(
       source: source,
@@ -540,7 +565,8 @@ class AddCustomCommand extends AlexCommand {
         }
       }
 
-      printError('Invalid choice. Please enter a number (1-${choices.length}) or one of: ${choices.join(", ")}');
+      printError(
+          'Invalid choice. Please enter a number (1-${choices.length}) or one of: ${choices.join(", ")}');
     }
   }
 

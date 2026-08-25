@@ -5,8 +5,7 @@ import 'package:alex/src/custom_commands/custom_command_config.dart';
 
 /// Show details of a custom command.
 class ShowCustomCommand extends AlexCommand {
-  ShowCustomCommand()
-      : super('show', 'Show details of a custom command.') {
+  ShowCustomCommand() : super('show', 'Show details of a custom command.') {
     argParser.addOption(
       'name',
       abbr: 'n',

@@ -63,16 +63,19 @@ class AlexCommandRunner extends CommandRunner<int> {
       _out.fine('Loading custom commands...');
       CustomCommandsConfig.load();
       final config = CustomCommandsConfig.instance;
-      _out.fine('Custom commands config loaded, found ${config.commands.length} command(s)');
+      _out.fine(
+          'Custom commands config loaded, found ${config.commands.length} command(s)');
 
       for (final definition in config.commands) {
         try {
           _out.fine('Registering custom command: ${definition.name}');
           final command = UserCustomCommand(definition);
           addCommand(command);
-          _out.info('Successfully registered custom command: ${definition.name}');
+          _out.info(
+              'Successfully registered custom command: ${definition.name}');
         } catch (e, stackTrace) {
-          _out.severe('Failed to register custom command ${definition.name}: $e');
+          _out.severe(
+              'Failed to register custom command ${definition.name}: $e');
           _out.fine('Stack trace: $stackTrace');
         }
       }

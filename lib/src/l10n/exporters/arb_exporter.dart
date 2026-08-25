@@ -65,9 +65,8 @@ class ArbExporter extends L10nExporter<ArbLocale> {
           // omit the count parameter (e.g. Arabic "كل يوم" / "كل يومين"),
           // so we don't require parameters there even if the base variant
           // uses them. Other quantities are still validated as usual.
-          final required = (attr == '=1' || attr == '=2')
-              ? const <String>{}
-              : allowed;
+          final required =
+              (attr == '=1' || attr == '=2') ? const <String>{} : allowed;
           return _addPlural(val, key, allowed, required, value, attr);
         });
         val.write('}');
