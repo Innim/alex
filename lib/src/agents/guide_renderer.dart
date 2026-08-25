@@ -49,8 +49,9 @@ class GuideRenderer {
     }
 
     if (command.isInteractive) {
-      sb.writeln('Asks questions in stdin: pass all the options below '
-          'or do not call it from a script.');
+      sb.writeln('Asks questions in stdin: pass the options that answer them, '
+          'and add `--non-interactive` to fail with an explanation '
+          'instead of waiting for an answer.');
     }
 
     sb
@@ -115,8 +116,10 @@ class GuideRenderer {
       'parse the human readable output.';
 
   static const _ruleInteractive =
-      'Commands marked `[INTERACTIVE]` can ask a question in stdin. Pass the '
-      'options that answer the questions, otherwise the command will hang.';
+      'Commands marked `[INTERACTIVE]` can ask a question in stdin. Always run '
+      'them with `--non-interactive` and the options that answer the '
+      'questions: with the flag such a command fails with an explanation of '
+      'what to pass instead of waiting for an answer that never comes.';
 
   static const _ruleGuide =
       'This guide is generated from the commands tree of the installed '

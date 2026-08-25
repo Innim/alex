@@ -255,6 +255,24 @@ $ alex f f -i{issueId} -c"Some new feature"
 
 It's important to use double quote (`"`) on Windows, but on macOS or Linux you can also use a single quote (`'`).
 
+The section of `CHANGELOG.md` can be passed with `--section` (`added` by default,
+also `fixed` and `pre-release`), so nothing has to be answered interactively:
+
+```bash
+$ alex f f -i{issueId} -c"Some new feature" --section=fixed
+```
+
+For scripts and CI add `--non-interactive`: the command checks that everything it would
+ask about is provided and fails with an explanation **before** it changes anything,
+instead of waiting for an answer that will never come.
+
+```bash
+$ alex f f --non-interactive -i{issueId} -c"Some new feature"
+```
+
+The flag is supported by every command that can ask a question - they are marked
+`[INTERACTIVE]` in `alex agents guide`.
+
 ### l10n
 
 Work with localization files.

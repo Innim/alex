@@ -34,15 +34,20 @@ class UpdateCommand extends PubspecCommandBase {
     var dependency = _getDepName(args[_argDependency] as String?);
 
     if (dependency == null) {
+      const optionHint = '--$_argDependency=PACKAGE_NAME or '
+          '-${_argDependencyAbbr}PACKAGE_NAME';
+
+      if (isNonInteractive) {
+        return errorNoAnswer('package name to update', optionHint);
+      }
+
       printInfo('Enter package name to update:');
       dependency = _getDepName(console.readLineSync());
 
       if (dependency == null) {
         return error(1,
             message: 'Nothing to update - dependency name is not provider. '
-                'You can pass package name as '
-                '--$_argDependency=PACKAGE_NAME or '
-                '-${_argDependencyAbbr}PACKAGE_NAME');
+                'You can pass package name as $optionHint');
       }
     }
 

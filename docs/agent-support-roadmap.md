@@ -82,16 +82,21 @@ Rules configured in `alex.yaml` (enable/disable, severity, path excludes). JSON 
 + non-zero exit on blockers. This is the item that turns half of code review from
 probabilistic into deterministic — and shrinks the reviewer's prompt.
 
-#### 4. `[ ] Non-interactive mode`
+#### 4. `[x] Non-interactive mode`
 
-Every `readLineSync` gets a corresponding flag:
+`--non-interactive` is added automatically to every command whose `isInteractive` is
+`true`, so a new interactive command can't forget it. With the flag a command fails with
+the name of the option that answers the question instead of blocking on stdin.
 
-- `feature finish --issue=N --changelog-section=… --entry="…"`;
-- `pubspec update <dependency>`;
-- `custom add` (full definition from flags or a file).
+- `feature finish` — gained `--section` (`added`/`fixed`/`pre-release`); with the flag it
+  validates `--issue` and `--changelog` **before** any git operation, so it fails before
+  the merge, not after it. Also fixed a real hang: the issue id prompt looped forever
+  when stdin was closed.
+- `pubspec update` — fails naming `--dependency`.
+- `custom add` — an interactive wizard by nature, so it points to the config file to
+  edit directly.
 
-Plus a global `--non-interactive` that fails with an explicit message instead of
-blocking on stdin. Without this agents cannot use `feature` / `release` at all.
+The guide (`agents guide`) prints the flag for every `[INTERACTIVE]` command.
 
 #### 5. `[x] Agent onboarding: how an agent learns that alex exists`
 

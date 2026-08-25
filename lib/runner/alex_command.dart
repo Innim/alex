@@ -39,7 +39,11 @@ abstract class AlexCommand extends Command<int> {
     allowTrailingOptions: true,
   )..addVerboseFlag();
 
-  AlexCommand(this._name, this._description, [this._aliases = const []]);
+  AlexCommand(this._name, this._description, [this._aliases = const []]) {
+    // A command that can ask a question should be able to run
+    // in a script too, so it always has a way to forbid the questions.
+    if (isInteractive) _argParser.addNonInteractiveFlag();
+  }
 
   @override
   String get name => _name;
@@ -98,6 +102,25 @@ abstract class AlexCommand extends Command<int> {
 
   @protected
   bool get isVerbose => argResults!.isVerbose();
+
+  /// Whether the command is forbidden to ask questions
+  /// in the standard input (`--non-interactive`).
+  ///
+  /// Instead of waiting for an answer that will never come, the command
+  /// should fail with a message about the option that provides it.
+  @protected
+  bool get isNonInteractive =>
+      argResults?.options.contains(kNonInteractive) == true &&
+      argResults![kNonInteractive] == true;
+
+  /// Returns an error code and prints a message about the [option]
+  /// that should be passed instead of the answer to a question.
+  @protected
+  int errorNoAnswer(String question, String option) => error(
+        1,
+        message: 'Can not ask "$question" in the non-interactive mode. '
+            'Pass $option or run without --$kNonInteractive.',
+      );
 
   /// Whether a machine readable result is requested (`--format=json`).
   @protected
@@ -311,6 +334,18 @@ extension CmdArgArgParserExtension on ArgParser {
 
   void addVerboseFlag() =>
       addFlag(kVerbose, help: 'Show additional diagnostic info');
+
+  /// Adds the `--non-interactive` flag.
+  ///
+  /// Added automatically for a command that can ask a question,
+  /// see [AlexCommand.isInteractive].
+  void addNonInteractiveFlag() => addFlag(
+        kNonInteractive,
+        help: 'Do not ask anything in the standard input: '
+            'fail with an explanation instead of waiting for an answer. '
+            'For scripts and CI.',
+        negatable: false,
+      );
 
   /// Adds the `--format` option.
   ///
