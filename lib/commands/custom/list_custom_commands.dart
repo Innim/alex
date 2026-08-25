@@ -39,7 +39,8 @@ class ListCustomCommandsCommand extends AlexCommand {
       printInfo('');
     }
 
-    printInfo('Config file: ${config.configPath ?? config.getOrCreateConfigPath()}');
+    printInfo(
+        'Config file: ${config.configPath ?? config.getOrCreateConfigPath()}');
 
     return 0;
   }

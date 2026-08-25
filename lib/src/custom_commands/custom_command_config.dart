@@ -54,7 +54,8 @@ class CustomCommandDefinition {
           var location = 'argument ${i + 1} in command "$cmdName"';
           try {
             final span = argData.span;
-            location = 'line ${span.start.line + 1}:${span.start.column + 1} (argument ${i + 1} in command "$cmdName")';
+            location =
+                'line ${span.start.line + 1}:${span.start.column + 1} (argument ${i + 1} in command "$cmdName")';
           } catch (_) {
             // Span not available
           }
@@ -72,10 +73,12 @@ class CustomCommandDefinition {
       } catch (e) {
         final actionData = actionsList[i] as YamlMap;
         final actionType = actionData['type'] as String? ?? '<unknown>';
-        var location = 'action ${i + 1} (type: $actionType) in command "$cmdName"';
+        var location =
+            'action ${i + 1} (type: $actionType) in command "$cmdName"';
         try {
           final span = actionData.span;
-          location = 'line ${span.start.line + 1}:${span.start.column + 1} (action ${i + 1}, type: $actionType, command: "$cmdName")';
+          location =
+              'line ${span.start.line + 1}:${span.start.column + 1} (action ${i + 1}, type: $actionType, command: "$cmdName")';
         } catch (_) {
           // Span not available
         }
@@ -148,7 +151,8 @@ class CustomCommandsConfig {
     _logger.info('Found custom commands config at: $configPath');
     try {
       _instance = _loadFromFile(configPath);
-      _logger.info('Successfully loaded custom commands config from: $configPath');
+      _logger
+          .info('Successfully loaded custom commands config from: $configPath');
     } catch (e, stackTrace) {
       _logger.severe('Failed to load custom commands config: $e');
       _logger.fine('Stack trace: $stackTrace');
@@ -199,7 +203,8 @@ class CustomCommandsConfig {
     }
 
     if (yamlData is! YamlMap) {
-      throw Exception('Invalid config file format: expected YamlMap, got ${yamlData.runtimeType}');
+      throw Exception(
+          'Invalid config file format: expected YamlMap, got ${yamlData.runtimeType}');
     }
 
     final commandsList = yamlData['custom_commands'] as YamlList?;
@@ -231,7 +236,8 @@ class CustomCommandsConfig {
         var locationInfo = 'command ${i + 1} ($cmdName)';
         try {
           final span = cmdData.span;
-          locationInfo = '$path:${span.start.line + 1}:${span.start.column + 1}';
+          locationInfo =
+              '$path:${span.start.line + 1}:${span.start.column + 1}';
         } catch (_) {
           // If span is not available, use simple format
         }
@@ -309,7 +315,8 @@ class CustomCommandsConfig {
         buffer.writeln('    arguments:');
         for (final arg in cmd.arguments) {
           buffer.writeln('      - name: ${arg.name}');
-          buffer.writeln('        type: ${arg.type == CustomCommandArgumentType.option ? 'option' : 'flag'}');
+          buffer.writeln(
+              '        type: ${arg.type == CustomCommandArgumentType.option ? 'option' : 'flag'}');
           if (arg.help != null) {
             buffer.writeln('        help: ${arg.help}');
           }
@@ -343,7 +350,8 @@ class CustomCommandsConfig {
           } else if (value is Map) {
             buffer.writeln('        ${entry.key}:');
             for (final subEntry in (value as Map<String, dynamic>).entries) {
-              buffer.writeln('          ${subEntry.key}: ${_escapeYamlString(subEntry.value.toString())}');
+              buffer.writeln(
+                  '          ${subEntry.key}: ${_escapeYamlString(subEntry.value.toString())}');
             }
           } else if (value is String) {
             // Escape multiline strings
@@ -353,7 +361,8 @@ class CustomCommandsConfig {
                 buffer.writeln('          $line');
               }
             } else {
-              buffer.writeln('        ${entry.key}: ${_escapeYamlString(value)}');
+              buffer
+                  .writeln('        ${entry.key}: ${_escapeYamlString(value)}');
             }
           } else {
             buffer.writeln('        ${entry.key}: $value');

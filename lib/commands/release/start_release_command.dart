@@ -13,6 +13,7 @@ import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:alex/src/release/build_artifact_name.dart';
 import 'package:alex/src/release/build_output.dart';
 import 'package:alex/src/release/release_rollback.dart';
+import 'package:alex/src/version_increment.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:list_ext/list_ext.dart';
 import 'package:open_url/open_url.dart';
@@ -35,6 +36,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
   static const _argBuildPlatforms = 'platforms';
   static const _argTargetPath = 'target-path';
   static const _argSkipL10n = 'skip_l10n';
+  static const _argVersionIncrement = 'increment';
   static const _argDemo = 'demo';
 
   late FileSystem fs;
@@ -54,6 +56,24 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
         _argSkipL10n,
         abbr: 's',
         help: 'Skip translations check during release.',
+      )
+      ..addOption(
+        _argVersionIncrement,
+        abbr: 'i',
+        help: 'Increment a part of the version of this release '
+            'before the release is started. '
+            'A build number is kept as is. '
+            'If not specified - the current version is released as is. '
+            'After the release a patch and a build number are incremented '
+            'in develop, as always.',
+        allowed: VersionIncrement.values.map((e) => e.name),
+        allowedHelp: {
+          VersionIncrement.patch.name:
+              'Release 1.2.4+4 instead of 1.2.3+4 (rarely needed).',
+          VersionIncrement.minor.name: 'Release 1.3.0+4 instead of 1.2.3+4.',
+          VersionIncrement.major.name: 'Release 2.0.0+4 instead of 1.2.3+4.',
+        },
+        valueHelp: 'PART',
       )
       ..addFlag(
         _argLocal,
@@ -183,14 +203,31 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     final ciConfig = config.ci;
 
     final spec = await Spec.pub(fs);
-    final version = spec.version;
-    final vs = version.short;
+    final currentVersion = spec.version;
 
-    if (int.tryParse(version.build) == null) {
+    if (int.tryParse(currentVersion.build) == null) {
       return error(1,
-          message: 'Invalid version "$vs": '
+          message: 'Invalid version "${currentVersion.short}": '
               'you should define build number (after +).');
     }
+
+    // Parsed before the release is started,
+    // so an invalid value will not break the process in the middle.
+    final VersionIncrement? versionIncrement;
+    try {
+      final incrementArg = args[_argVersionIncrement] as String?;
+      versionIncrement =
+          incrementArg == null ? null : VersionIncrement.byName(incrementArg);
+    } on RunException catch (e) {
+      return errorBy(e);
+    }
+
+    // The version of this release. It's incremented before the release,
+    // if it was requested, so the release itself
+    // (branch, changelog, tag, build artifacts) uses the new value.
+    // A build number is kept as is: it's already prepared for this build.
+    final version = versionIncrement?.apply(currentVersion) ?? currentVersion;
+    final vs = version.short;
 
     // Prepare parameters of a local build before the release is started,
     // so an invalid value will not break the process in the middle.
@@ -212,13 +249,24 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
       buildPlatforms = const [];
     }
 
-    if (skipL10n) {
-      if (args.wasParsed(_argLocale)) {
-        return error(1,
-            message:
-                "You can't pass --$_argSkipL10n and --$_argLocale at the same time");
-      }
-    } else {
+    if (skipL10n && args.wasParsed(_argLocale)) {
+      return error(1,
+          message:
+              "You can't pass --$_argSkipL10n and --$_argLocale at the same time");
+    }
+
+    // All the arguments are checked at this point,
+    // so the repository can be changed.
+    if (versionIncrement != null) {
+      printInfo('Increment ${versionIncrement.name} version of the release: '
+          '$currentVersion -> $version');
+      await _saveVersion(version);
+      // The message differs from the increment after the release,
+      // so both commits can be distinguished in the history.
+      _commit('Version increment to $vs');
+    }
+
+    if (!skipL10n) {
       final baseLocale =
           args.getLocale(_argLocale) ?? _defaultLocale.asXmlLocale();
 
@@ -310,7 +358,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     }
 
     // increment version
-    incrementVersion(spec, version);
+    final nextVersion = await incrementVersion(version);
 
     _commit("Version increment");
 
@@ -324,6 +372,7 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     git.push(branchMaster);
 
     printInfo('Release successfully completed');
+    printInfo('Version in $branchDevelop is incremented to <$nextVersion>');
     printInfo('');
     printInfo(
         'Release summary, copypaste it in the comment for release issue:');
@@ -580,14 +629,24 @@ class StartReleaseCommand extends AlexCommand with IntlMixin {
     return File(await PathUtils.getAssetsPath(assetPath)).readAsString();
   }
 
-  void incrementVersion(Spec spec, Version value) {
+  /// Increments the version [value] for the next release
+  /// and returns a new one.
+  ///
+  /// A patch and a build number are incremented,
+  /// no matter which part was incremented for the release itself.
+  Future<Version> incrementVersion(Version value) async {
     printVerbose('Increment version');
 
-    final version = value.incrementPatchAndBuild();
-    final content = spec.getContent();
-    final updated =
-        content.replaceFirst("version: $value", "version: $version");
-    spec.saveContent(updated);
+    final version = VersionIncrement.patch.apply(value, incrementBuild: true);
+    await _saveVersion(version);
+
+    return version;
+  }
+
+  /// Writes the [version] in the pubspec.yaml.
+  Future<void> _saveVersion(Version version) async {
+    final content = await fs.readString(Spec.fileName);
+    await fs.writeString(Spec.fileName, Spec.replaceVersion(content, version));
   }
 
   void _commit(String commitMessage) {
@@ -948,12 +1007,6 @@ class ItemType {
 extension VersionExtension on Version {
   String get short {
     return "$major.$minor.$patch";
-  }
-
-  Version incrementPatchAndBuild() {
-    final build = int.parse(this.build) + 1;
-    return Version(major, minor, patch + 1,
-        preRelease: preRelease, build: "$build");
   }
 }
 

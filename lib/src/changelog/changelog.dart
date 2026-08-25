@@ -99,8 +99,9 @@ class Changelog {
   /// `[issueUrl]/N`. Skips occurrences that are already part of a markdown
   /// link. Returns the number of replacements.
   Future<int> linkIssueReferences(String issueUrl) async {
-    final base =
-        issueUrl.endsWith('/') ? issueUrl.substring(0, issueUrl.length - 1) : issueUrl;
+    final base = issueUrl.endsWith('/')
+        ? issueUrl.substring(0, issueUrl.length - 1)
+        : issueUrl;
 
     final str = await content;
     final pattern = RegExp(r'(?<!\])\(#(\d+)\)');

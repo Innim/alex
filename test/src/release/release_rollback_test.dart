@@ -73,7 +73,8 @@ void main() {
     test('discards uncommitted changes and untracked files', () {
       startRollback().run();
 
-      expect(client.commands, containsAllInOrder(['reset --hard', 'clean -fd']));
+      expect(
+          client.commands, containsAllInOrder(['reset --hard', 'clean -fd']));
     });
 
     test("doesn't touch branches if there are no new commits", () {
@@ -101,8 +102,10 @@ void main() {
 
       rollback.run();
 
-      expect(client.commands,
-          containsAllInOrder(['checkout $_master', 'reset --hard master_base']));
+      expect(
+          client.commands,
+          containsAllInOrder(
+              ['checkout $_master', 'reset --hard master_base']));
     });
 
     test("doesn't restore a branch if its state was not saved", () {
@@ -120,8 +123,8 @@ void main() {
       rollback.run();
 
       expect(client.commands, isNot(contains('checkout $_master')));
-      expect(client.commands.where((e) => e.startsWith('reset --hard ')),
-          isEmpty);
+      expect(
+          client.commands.where((e) => e.startsWith('reset --hard ')), isEmpty);
     });
 
     test('deletes created release branch', () {

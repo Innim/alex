@@ -23,7 +23,8 @@ class CheckCustomCommandsCommand extends AlexCommand {
       printInfo('Custom commands config file not found.');
       printInfo('');
       printInfo('Expected location: alex_custom_commands.yaml');
-      printInfo('Searched in current directory and parent directories (up to 10 levels)');
+      printInfo(
+          'Searched in current directory and parent directories (up to 10 levels)');
       printInfo('');
       printInfo('To create a config file, use:');
       printInfo('  alex custom add');
@@ -54,7 +55,8 @@ class CheckCustomCommandsCommand extends AlexCommand {
       }
 
       if (yamlData is! YamlMap) {
-        printError('Invalid config file format: expected YAML map, got ${yamlData.runtimeType}');
+        printError(
+            'Invalid config file format: expected YAML map, got ${yamlData.runtimeType}');
         return 1;
       }
 
@@ -95,7 +97,9 @@ class CheckCustomCommandsCommand extends AlexCommand {
           printInfo('    Arguments: ${cmd.arguments.length}');
           for (final arg in cmd.arguments) {
             final required = arg.required ? ' (required)' : '';
-            final defaultVal = arg.defaultValue != null ? ' [default: ${arg.defaultValue}]' : '';
+            final defaultVal = arg.defaultValue != null
+                ? ' [default: ${arg.defaultValue}]'
+                : '';
             printInfo('      --${arg.name}$required$defaultVal');
           }
         }

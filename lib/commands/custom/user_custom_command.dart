@@ -62,9 +62,8 @@ class UserCustomCommand extends AlexCommand {
 
     try {
       // Create executor with verbose logger if needed
-      final executor = isVerbose
-          ? CustomCommandExecutor(logger: out)
-          : _executor;
+      final executor =
+          isVerbose ? CustomCommandExecutor(logger: out) : _executor;
 
       final exitCode = await executor.execute(_definition, arguments);
       return exitCode;
