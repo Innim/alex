@@ -14,6 +14,9 @@ class AddCustomCommand extends AlexCommand {
   AddCustomCommand() : super('add', 'Add a new custom command.');
 
   @override
+  bool get isInteractive => true;
+
+  @override
   Future<int> doRun() async {
     final config = CustomCommandsConfig.instance;
 

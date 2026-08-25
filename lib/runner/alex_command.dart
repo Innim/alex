@@ -49,6 +49,22 @@ abstract class AlexCommand extends Command<int> {
   @override
   List<String> get aliases => _aliases;
 
+  /// Exit codes of the command with their meaning,
+  /// except the common ones (`0` - success, `2` - error).
+  ///
+  /// Used in a machine readable index of the commands
+  /// (see `alex agents guide`).
+  Map<int, String> get exitCodes => const {};
+
+  /// Whether the command can ask a question in the standard input.
+  ///
+  /// Such a command can't be used by a script or an agent
+  /// without the options that provide all the answers.
+  ///
+  /// Used in a machine readable index of the commands
+  /// (see `alex agents guide`).
+  bool get isInteractive => false;
+
   @protected
   Console get console => _console ??= const StdConsole();
 

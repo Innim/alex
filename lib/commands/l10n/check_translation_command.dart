@@ -68,6 +68,13 @@ class CheckTranslationsCommand extends L10nCommandBase {
   }
 
   @override
+  Map<int, String> get exitCodes => const {
+        _kExitCodeCheckFailed: 'some checks failed',
+        _kExitCodeChangedAfterPubGet: 'some files were changed after pub get '
+            '(with --fail-on-changed-files)',
+      };
+
+  @override
   Future<int> doRun() async {
     final config = findConfigAndSetWorkingDir();
     final l10nConfig = config.l10n;

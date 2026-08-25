@@ -89,17 +89,39 @@ Every `readLineSync` gets a corresponding flag:
 Plus a global `--non-interactive` that fails with an explicit message instead of
 blocking on stdin. Without this agents cannot use `feature` / `release` at all.
 
+#### 5. `[~] Agent onboarding: how an agent learns that alex exists`
+
+The blocker before every other item: an agent working in a consumer project has no
+reason to call a CLI it doesn't know about. A static `llms.txt` in this repository does
+not solve it — the canonical `llms.txt` lives at the root of a documentation site (ours
+is pub.dev, which we don't control), and a local agent doesn't browse the web anyway:
+it has the installed binary and the project's files.
+
+The real risk is drift: hand-written prose about a CLI goes stale on the first new flag,
+and an agent follows it literally. So the source of truth must be the `ArgParser` tree
+plus the exit-code table, with everything else generated from it.
+
+One generator, three outputs:
+
+- `[x] alex agents guide` — a compact digest built from the command tree: what alex is,
+  the rules (config discovery, `--format=json` contract, exit codes, which commands are
+  still interactive), then per command: invocation, one-line summary, options, exit
+  codes. `--format=json` for a structured index; a command path argument
+  (`alex agents guide l10n`) narrows it. Must stay short — an agent's context is a
+  resource.
+- `[ ] llms.txt` in the repository — the same digest written to a file, for web-capable
+  agents and for humans copying it into their project. Generated (like
+  `lib/src/version.dart`), with a CI check that it's up to date.
+- `[ ] alex agents init` — writes the alex section into the consumer project's
+  `CLAUDE.md` / `AGENTS.md` and the project facts into `.claude/profile/shared.md`
+  (locales, l10n paths, gate command, branches) from `alex.yaml` instead of the guesses
+  `agent-profile-init` makes today. This is the strongest channel: role agents read
+  those files FIRST, before anything else.
+- `[ ] alex info --format=json` — project facts in one call instead of reading five
+  files: locales, l10n paths (ARB/XML/source), current version, branch names, fvm
+  version, workspace packages, whether generated code is out of sync.
+
 ### Tier 2 — meaningful simplification
-
-#### 5. `[ ] alex info --format=json`
-
-One call instead of reading five files at the start of every agent run: locales, l10n
-paths (ARB/XML/source), current version, branch names, fvm version, workspace package
-list, whether generated code is out of sync.
-
-Companion: `alex agents profile` — generate/validate `.claude/profile/shared.md` from
-`alex.yaml` so the profile cannot drift from reality (today `agent-profile-init`
-infers those facts).
 
 #### 6. `[ ] alex l10n sync`
 
@@ -177,6 +199,9 @@ simple lock file inside `alex code gen` / `alex pubspec get`.
 
 1. ~~`alex code check` (#1)~~ — done.
 2. `--format=json` for `l10n check_translations` (#2).
+2b. Agent onboarding (#5) — `agents guide` done; `llms.txt` and `agents init` next.
+    Raised above the rest: without a delivery channel agents never notice the other
+    improvements.
 3. Non-interactive mode (#4).
 4. `alex lint` (#3) — largest, needs a decision on how configurable the rules are.
 5. Then Tier 2 in listed order.

@@ -859,6 +859,34 @@ This will show:
 
 See `alex_custom_commands.yaml.example` in the repository for more examples.
 
+### Agents
+
+Support of AI agents and scripts.
+
+#### Guide for an agent
+
+Print a short guide of alex: what it is, the rules (config discovery, machine readable
+output, exit codes, which commands are interactive) and all commands with their options
+and exit codes.
+
+```bash
+$ alex agents guide
+```
+
+The guide is generated from the commands tree of the installed version, so it always
+matches the tool and can't get outdated. Pass a command path to print the guide for one
+command or a group only, and `--format=json` to get a structured index instead of
+Markdown:
+
+```bash
+$ alex agents guide l10n
+$ alex agents guide code check --format=json
+```
+
+The recommended way to use it with an AI agent is to mention it in the `CLAUDE.md` /
+`AGENTS.md` of the project, so the agent runs `alex agents guide` instead of guessing
+the commands from a hand written and possibly outdated description.
+
 ## Problem solving
 
 ### Command not found

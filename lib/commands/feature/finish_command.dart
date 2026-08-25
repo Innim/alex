@@ -48,6 +48,9 @@ class FinishCommand extends FeatureCommandBase {
   }
 
   @override
+  bool get isInteractive => true;
+
+  @override
   Future<int> doRun() async {
     final args = argResults!;
 

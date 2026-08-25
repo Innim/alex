@@ -81,6 +81,13 @@ class CheckCommand extends CodeCommandBase {
       ..addVerboseFlutterCmdFlag();
   }
 
+  @override
+  Map<int, String> get exitCodes => const {
+        kExitCodeAnalyzeFailed: 'analyze failed',
+        kExitCodeTestFailed: 'tests failed',
+        kExitCodeBuildFailed: 'build failed',
+      };
+
   late OutputFilter _filter;
   late bool _isFlutterProject;
 

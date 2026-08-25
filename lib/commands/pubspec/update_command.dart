@@ -26,6 +26,9 @@ class UpdateCommand extends PubspecCommandBase {
   }
 
   @override
+  bool get isInteractive => true;
+
+  @override
   Future<int> doRun() async {
     final args = argResults!;
     var dependency = _getDepName(args[_argDependency] as String?);
