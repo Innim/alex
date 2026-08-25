@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:glob/glob.dart';
 import 'package:glob/list_local_fs.dart';
@@ -14,6 +15,10 @@ class Spec {
   static const fileName = "pubspec.yaml";
   static final _pubspecSearch = Glob("**$fileName");
   static final _logger = Logger('pubspec');
+
+  /// A top level `version` key with its value.
+  static final _versionDefinition =
+      RegExp(r'^(version:[ \t]*)(\S+)', multiLine: true);
 
   /// Returns specification of a project in current directory.
   static Future<Spec> pub(FileSystem fs) async {
@@ -126,9 +131,34 @@ class Spec {
   Version get version => Version.parse(
       _yamlMap.version.valueOr(() => throw StateError('Version not found')));
 
+  /// Returns version or `null` if there is no version in the pubspec.
+  Version? get versionOrNull {
+    final value = _yamlMap.version.valueOr(() => '');
+    return value.isEmpty ? null : Version.parse(value);
+  }
+
   /// Updates version.
   Spec setVersion(Version value) {
     return Spec(_yamlMap.copyWith(version: Optional.value("$value")));
+  }
+
+  /// Returns the [content] of a pubspec.yaml with the replaced version.
+  ///
+  /// Only the version value itself is replaced,
+  /// so the rest of the file is kept as is, including a trailing comment
+  /// of the version line.
+  ///
+  /// Throws a [RunException] if there is no version definition
+  /// in the [content].
+  static String replaceVersion(String content, Version value) {
+    final match = _versionDefinition.firstMatch(content);
+    if (match == null) {
+      throw const RunException.err(
+          'There is no version definition in $fileName. '
+          'Add a line like "version: 1.0.0+1" in the file.');
+    }
+
+    return content.replaceRange(match.start, match.end, '${match[1]}$value');
   }
 
   String getContent() {

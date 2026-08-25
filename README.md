@@ -103,6 +103,7 @@ _Note: You can change GIT branches, localization parameters, CI/CD and other set
 
 - `--check_locale=<LOCALE>` (`-l`) - Locale to check before release if translations exist for all strings. If not specified, "en" locale will be checked.
 - `--skip_l10n` (`-s`) - Skip translations check during release.
+- `--increment=<PART>` (`-i`) - Increment a part of the version **of this release** before it's started: `patch`, `minor` or `major`. Build number is kept as is. If not specified, the current version is released as is.
 - `--local` (`-b`) - Run local release build for Android and iOS platforms.
 - `--entry-point=<path>` (`-e`) - Entry point of the app (e.g., lib/main_test.dart). Only for local release builds.
 - `--platforms=<PLATFORMS>` (`-p`) - Target build platforms: ios, android. You can pass multiple platforms separated by commas. Defaults to "android,ios". Only for local release builds.
@@ -134,6 +135,33 @@ The target directory must be outside of the repository or must be ignored by git
 otherwise the artifacts would be added in the release commit by `git add -A`.
 This is checked before the release is started, along with the write access to the directory,
 so the release will not be published if an artifact can't be copied.
+
+**Version increment:**
+
+By default the version from `pubspec.yaml` is released as is,
+and after the release is finished a patch and a build number are incremented
+and committed in `develop` for the next release: `1.2.3+4` is released,
+and `develop` continues with `1.2.4+5`.
+
+If it turns out at the release time that the release should be a minor
+or a major one, pass `--increment` (`-i`).
+The version is incremented **before** the release is started,
+so the release branch, `CHANGELOG.md`, the tag and build artifacts
+all use the new version. A build number is kept as is —
+it's already prepared for this build:
+
+| `-i`      | Released version | Version in `develop` after the release |
+|-----------|------------------|----------------------------------------|
+| _not set_ | `1.2.3+4`        | `1.2.4+5`                              |
+| `patch`   | `1.2.4+4`        | `1.2.5+5`                              |
+| `minor`   | `1.3.0+4`        | `1.3.1+5`                              |
+| `major`   | `2.0.0+4`        | `2.0.1+5`                              |
+
+A pre-release suffix is kept as is.
+
+If the version was already raised during the work on the task
+(see [`alex pubspec version`](#version)), then nothing should be passed
+at the release time — the current version is released.
 
 **Pre-release scripts:**
 
@@ -171,6 +199,11 @@ $ alex release start --local --target-path=../builds/sundry
 Skip translations check:
 ```bash
 $ alex release start --skip_l10n
+```
+
+Release as a minor version (`1.2.3+4` is released as `1.3.0+4`):
+```bash
+$ alex release start --increment=minor
 ```
 
 ### Feature
@@ -392,6 +425,36 @@ or
 ```bash
 $ alex pub get
 ```
+
+#### Version
+
+Increment the version in `pubspec.yaml`.
+
+```bash
+$ alex pubspec version <part>
+```
+
+where `<part>` is `patch`, `minor` or `major`.
+
+**Only the version is changed, a build number is kept as is**, because usually
+it's already prepared for the next build. Pass `--build` (`-b`) to increment
+the build number (after `+`) too. A pre-release suffix is always kept as is.
+
+| Command                                | `1.2.3+4` becomes |
+|----------------------------------------|-------------------|
+| `alex pubspec version patch`           | `1.2.4+4`         |
+| `alex pubspec version minor`           | `1.3.0+4`         |
+| `alex pubspec version major`           | `2.0.0+4`         |
+| `alex pubspec version minor --build`   | `1.3.0+5`         |
+
+Use it when it becomes clear during the work on a task that the next release
+should be a minor or a major one — raise the version right away, and then
+release it as usual with `alex release start`.
+If you realize it only at the release time, use the `--increment` option
+of the [`release start`](#start-release) command instead.
+
+The command changes `pubspec.yaml` in the current directory
+and doesn't commit anything.
 
 ### Update
 
