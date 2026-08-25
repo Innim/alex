@@ -107,9 +107,12 @@ class GuideRenderer {
       'the update banner - goes to stderr. Parse stdout, ignore stderr.';
 
   static const _ruleExitCodes =
-      'Common exit codes: `0` - success, `2` - error, `64` - wrong usage. '
-      'Command specific codes are listed below. Always check the exit code, '
-      'do not parse the human readable output.';
+      'Exit code is the result: `0` - success, any other value - failure. '
+      'Generic codes are `1` - the command could not do its job (wrong '
+      'arguments, wrong state of the project, a file is missing), `2` - an '
+      'unexpected error, `64` - wrong usage of the command line. Command '
+      'specific codes are listed below. Always check the exit code, do not '
+      'parse the human readable output.';
 
   static const _ruleInteractive =
       'Commands marked `[INTERACTIVE]` can ask a question in stdin. Pass the '

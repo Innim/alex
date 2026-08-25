@@ -158,6 +158,18 @@ void main() {
       expect(res, contains('### alex finish [INTERACTIVE]'));
     });
 
+    test('should document the generic exit codes', () {
+      final index = CommandIndex.build(_runner([_Cmd('gen', 'Generate.')]));
+
+      final res = GuideRenderer.render(index, version: '1.0.0');
+
+      // All the codes a command can return without an own `exitCodes` entry.
+      expect(res, contains('`0` - success'));
+      expect(res, contains('`1` -'));
+      expect(res, contains('`2` -'));
+      expect(res, contains('`64` -'));
+    });
+
     test('should not render a group as a command', () {
       final index = CommandIndex.build(_runner([
         _Group('code', 'Work with code', [_Cmd('gen', 'Generate.')]),
