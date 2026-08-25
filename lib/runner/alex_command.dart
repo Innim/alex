@@ -222,6 +222,22 @@ extension CmdArgArgParserExtension on ArgParser {
   void addVerboseFlag() =>
       addFlag(kVerbose, help: 'Show additional diagnostic info');
 
+  /// Adds the `--format` option.
+  ///
+  /// In the [kFormatJson] mode a command prints a single JSON object
+  /// in the standard output, all other messages go to the error output.
+  void addFormatOption() => addOption(
+        kFormat,
+        help: 'Output format.',
+        allowed: const [kFormatText, kFormatJson],
+        allowedHelp: const {
+          kFormatText: 'Human readable output.',
+          kFormatJson: 'Single JSON object in stdout '
+              '(all other messages go to stderr).',
+        },
+        defaultsTo: kFormatText,
+      );
+
   void addVerboseFlutterCmdFlag() => addFlagArg(
         _kArgVerboseFlutterCmd,
         help: 'All flutter commands will be run with verbose flag',
@@ -233,6 +249,10 @@ extension CmdArgArgResultsExtension on ArgResults {
   bool getBool(CmdArg arg) => this[arg.name] as bool;
 
   bool isVerbose() => this[kVerbose] as bool;
+
+  /// Returns `true` if the machine readable output is requested.
+  bool isJsonFormat() =>
+      options.contains(kFormat) && this[kFormat] == kFormatJson;
 
   int? getInt(CmdArg arg) {
     final val = this[arg.name] as String?;

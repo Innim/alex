@@ -195,19 +195,58 @@ class CodeConfig {
   /// workspace root with the `--workspace` flag instead of per-package.
   final bool useWorkspace;
 
+  /// Configuration for the quality gates (`alex code check`).
+  final CodeCheckConfig check;
+
   const CodeConfig({
     this.useWorkspace = defaultUseWorkspace,
+    this.check = const CodeCheckConfig(),
   });
 
   factory CodeConfig.fromYaml(YamlMap data) {
+    final checkData = data['check'] as YamlMap?;
     return CodeConfig(
       useWorkspace: data['use_workspace'] as bool? ?? defaultUseWorkspace,
+      check: checkData != null
+          ? CodeCheckConfig.fromYaml(checkData)
+          : const CodeCheckConfig(),
     );
   }
 
   @override
   String toString() {
-    return 'CodeConfig{useWorkspace: $useWorkspace}';
+    return 'CodeConfig{useWorkspace: $useWorkspace, check: $check}';
+  }
+}
+
+/// Configuration for the quality gates (`alex code check`).
+class CodeCheckConfig {
+  /// Target of the build gate: `ios`, `apk`, `appbundle`, `web` or `macos`.
+  ///
+  /// If not defined - `ios` is used on macOS and `apk` on other platforms.
+  final String? buildTarget;
+
+  /// Additional patterns (regular expressions) of the output lines
+  /// that should be hidden as a noise.
+  final List<String> noise;
+
+  const CodeCheckConfig({
+    this.buildTarget,
+    this.noise = const [],
+  });
+
+  factory CodeCheckConfig.fromYaml(YamlMap data) {
+    final target = data['build_target'] as String?;
+    final noise = data['noise'] as YamlList?;
+    return CodeCheckConfig(
+      buildTarget: target != null && target.isNotEmpty ? target : null,
+      noise: noise?.whereType<String>().toList(growable: false) ?? const [],
+    );
+  }
+
+  @override
+  String toString() {
+    return 'CodeCheckConfig{buildTarget: $buildTarget, noise: $noise}';
   }
 }
 

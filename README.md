@@ -382,6 +382,63 @@ Generate `JsonSerializable` and other.
 $ alex code gen
 ```
 
+#### Check code quality
+
+Run the quality gates: analyze, tests and (optionally) a debug build of the platform target.
+Output of the commands is filtered from a noise (update banners, dependency resolution
+chatter, deprecation notices of third-party plugins), a short verdict is printed for each gate.
+
+```bash
+$ alex code check
+```
+
+```bash
+$ alex code check --analyze-only    # fast inner loop check
+$ alex code check --build           # also compile the platform target
+$ alex code check --fail-fast       # stop on the first failed gate
+$ alex code check -- test/some_test.dart   # args after `--` are passed to the test command
+```
+
+Exit code is `0` if all gates passed, `10` if analyze failed, `11` if tests failed,
+`12` if build failed. Other exit codes are used for errors.
+
+For a machine readable report (useful for CI and for AI agents) use `--format=json`:
+a single JSON object is printed in the standard output, all other messages go to the
+error output.
+
+```bash
+$ alex code check --format=json
+```
+
+```json
+{
+  "alex": "1.15.0",
+  "command": "code check",
+  "ok": false,
+  "exitCode": 11,
+  "summary": "analyze: no issues | test: 61 passed, 1 failed | build: skipped",
+  "gates": [
+    {"name": "analyze", "status": "passed", "summary": "no issues", "durationMs": 1109,
+     "count": 0, "errors": 0, "warnings": 0, "infos": 0, "issues": []},
+    {"name": "test", "status": "failed", "summary": "61 passed, 1 failed", "durationMs": 25350,
+     "passed": 61, "failed": 1, "skipped": 0, "total": 62, "completed": true,
+     "failures": [{"name": "should work", "suite": "test/a_test.dart", "message": "Expected: ..."}]},
+    {"name": "build", "status": "skipped", "summary": "skipped"}
+  ]
+}
+```
+
+Build target and additional noise patterns can be defined in the config:
+
+```yaml
+code:
+  check:
+    # ios (default on macOS) | apk (default on other platforms) | appbundle | web | macos
+    build_target: ios
+    # additional regular expressions of the output lines to hide
+    noise: [ 'some_noisy_plugin' ]
+```
+
 ### Pubspec
 
 Work with pubspec and dependencies.
