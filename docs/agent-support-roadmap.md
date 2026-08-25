@@ -89,7 +89,7 @@ Every `readLineSync` gets a corresponding flag:
 Plus a global `--non-interactive` that fails with an explicit message instead of
 blocking on stdin. Without this agents cannot use `feature` / `release` at all.
 
-#### 5. `[~] Agent onboarding: how an agent learns that alex exists`
+#### 5. `[x] Agent onboarding: how an agent learns that alex exists`
 
 The blocker before every other item: an agent working in a consumer project has no
 reason to call a CLI it doesn't know about. A static `llms.txt` in this repository does
@@ -119,9 +119,11 @@ One generator, three outputs:
   strongest channel: role agents read those files FIRST, before anything else. Only the
   content between the `<!-- alex:begin -->` / `<!-- alex:end -->` markers is touched;
   `--check` fails with exit code `10` for CI.
-- `[ ] alex info --format=json` — project facts in one call instead of reading five
-  files: locales, l10n paths (ARB/XML/source), current version, branch names, fvm
-  version, workspace packages, whether generated code is out of sync.
+- `[x] alex info --format=json` — project facts in one call instead of reading five
+  files: root and config path, package and version, Flutter vs Dart, packages of a
+  multi-package project, fvm version, locales (by the ARB files), l10n paths, branches.
+  Shares the `ProjectFacts` collector with `agents init`, so the two can't disagree.
+  Left for later: whether the generated code is out of sync (see #8).
 
 ### Tier 2 — meaningful simplification
 
@@ -201,7 +203,7 @@ simple lock file inside `alex code gen` / `alex pubspec get`.
 
 1. ~~`alex code check` (#1)~~ — done.
 2. `--format=json` for `l10n check_translations` (#2).
-2b. Agent onboarding (#5) — `agents guide` and `agents init` done; `alex info` left.
+2b. Agent onboarding (#5) — done: `agents guide`, `agents init`, `info`.
 3. Non-interactive mode (#4).
 4. `alex lint` (#3) — largest, needs a decision on how configurable the rules are.
 5. Then Tier 2 in listed order.

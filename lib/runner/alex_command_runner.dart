@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:alex/commands/agents/agents_command.dart';
 import 'package:alex/commands/changelog/changelog_command.dart';
+import 'package:alex/commands/info_command.dart';
 import 'package:alex/commands/code/code_command.dart';
 import 'package:alex/commands/custom/custom_command.dart';
 import 'package:alex/commands/custom/user_custom_command.dart';
@@ -45,6 +46,7 @@ class AlexCommandRunner extends CommandRunner<int> {
       UpdateCommand(),
       CustomCommand(),
       AgentsCommand(),
+      InfoCommand(),
     ].forEach(addCommand);
 
     // Load and register custom commands

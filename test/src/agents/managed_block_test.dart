@@ -1,5 +1,4 @@
 import 'package:alex/src/agents/managed_block.dart';
-import 'package:alex/src/agents/project_facts.dart';
 import 'package:test/test.dart';
 
 const _begin = ManagedBlock.beginMarker;
@@ -87,58 +86,6 @@ void main() {
 
     test('should return false if there is no block', () {
       expect(ManagedBlock.isUpToDate('Just text.', 'Body.'), false);
-    });
-  });
-
-  group('ProjectFacts.parseLocales()', () {
-    test('should return sorted locales of the matched files', () {
-      final res = ProjectFacts.parseLocales(
-        const ['intl_ru.arb', 'intl_en.arb', 'intl_pt_BR.arb'],
-        'intl_{locale}.arb',
-      );
-
-      expect(res, ['en', 'pt_BR', 'ru']);
-    });
-
-    test('should skip files that do not match the pattern', () {
-      final res = ProjectFacts.parseLocales(
-        const [
-          'intl_en.arb',
-          'messages_en.dart',
-          'intl_en.arb.bak',
-          'l10n.dart'
-        ],
-        'intl_{locale}.arb',
-      );
-
-      expect(res, ['en']);
-    });
-
-    test('should keep a locale with a numeric region', () {
-      final res = ProjectFacts.parseLocales(
-        const ['intl_es_419.arb', 'intl_en_001.arb', 'intl_en.arb'],
-        'intl_{locale}.arb',
-      );
-
-      expect(res, ['en', 'en_001', 'es_419']);
-    });
-
-    test('should skip the file with the extracted messages', () {
-      final res = ProjectFacts.parseLocales(
-        const ['intl_messages.arb', 'intl_en.arb', 'intl_ru.arb'],
-        'intl_{locale}.arb',
-      );
-
-      expect(res, ['en', 'ru']);
-    });
-
-    test('should support a custom pattern', () {
-      final res = ProjectFacts.parseLocales(
-        const ['app_en.arb', 'app_ru.arb'],
-        'app_{locale}.arb',
-      );
-
-      expect(res, ['en', 'ru']);
     });
   });
 }

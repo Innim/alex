@@ -859,6 +859,23 @@ This will show:
 
 See `alex_custom_commands.yaml.example` in the repository for more examples.
 
+### Info
+
+Print the facts about the project: package and version, path to the alex config,
+packages of a multi-package project, Flutter version pinned with FVM, locales and
+localization paths, git branches.
+
+```bash
+$ alex info
+```
+
+Everything is taken from the alex config and the project files, so a script or an AI
+agent can get all of it with a single call instead of reading several files:
+
+```bash
+$ alex info --format=json
+```
+
 ### Agents
 
 Support of AI agents and scripts.

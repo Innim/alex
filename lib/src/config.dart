@@ -164,6 +164,9 @@ class AlexConfig {
         : const AlexAgentsConfig();
   }
 
+  /// Path to the file with the configuration.
+  String get configPath => _path;
+
   String get rootPath => p.dirname(_path);
 }
 
