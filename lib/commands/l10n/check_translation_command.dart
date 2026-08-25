@@ -64,6 +64,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
             'if some files were changed after pub get. '
             'By default only a warning is printed.',
       )
+      ..addFormatOption()
       ..addVerboseFlutterCmdFlag();
   }
 
@@ -88,7 +89,10 @@ class CheckTranslationsCommand extends L10nCommandBase {
 
     git.ensureCleanStatus(printChanges: true);
 
-    final reports = <_CheckReport>[];
+    final outcomes = <_CheckOutcome>[];
+    // Kept for the result: even if it's just a warning, a script should be
+    // able to see that the dependencies are not in sync.
+    var changedAfterPubGet = const <String>[];
     try {
       printInfo('Get dependencies...');
       await flutter.pubGetOrFail(
@@ -96,7 +100,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
         immediatePrint: printFlutterOut,
       );
 
-      final changedAfterPubGet = git.getModifiedFiles();
+      changedAfterPubGet = git.getModifiedFiles();
       if (changedAfterPubGet.isNotEmpty) {
         // Only file paths are listed here, without a diff,
         // so the log is not flooded with the content of the changes.
@@ -112,7 +116,12 @@ class CheckTranslationsCommand extends L10nCommandBase {
         final message = sb.toString();
 
         if (failOnChangedFiles) {
-          return error(_kExitCodeChangedAfterPubGet, message: '🚨 $message');
+          error(_kExitCodeChangedAfterPubGet, message: '🚨 $message');
+          return _result(
+            _kExitCodeChangedAfterPubGet,
+            summary: 'some files were changed after pub get',
+            data: <String, dynamic>{'changedFiles': changedAfterPubGet},
+          );
         }
 
         printInfo('⚠️ $message');
@@ -136,6 +145,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
       final checks = <Future<void> Function()>[];
 
       Future<void> Function() check({
+        required String id,
         required String successMessage,
         required String failMessage,
         required Future<_CheckReport> Function() check,
@@ -143,7 +153,7 @@ class CheckTranslationsCommand extends L10nCommandBase {
       }) =>
           () async {
             final report = await check();
-            final checkNum = reports.length + 1;
+            final checkNum = outcomes.length + 1;
             final checksTotal = checks.length;
 
             if (report.isOk) {
@@ -158,21 +168,29 @@ class CheckTranslationsCommand extends L10nCommandBase {
               );
             }
 
-            reports.add(report);
+            outcomes.add(_CheckOutcome(
+              id: id,
+              title: successMessage,
+              failMessage: failMessage,
+              report: report,
+            ));
           };
 
       checks.addAll([
         check(
+          id: 'arb_untranslated',
           successMessage: 'All strings have translation in ARB',
           failMessage: 'Untranslated strings found in ARB',
           check: () => _checkForUntranslated(l10nConfig, locale).report(),
         ),
         check(
+          id: 'not_sent_for_translation',
           successMessage: 'All strings were sent for translation',
           failMessage: 'Some strings probably were not sent for translation',
           check: () => _checkForUnsent(l10nConfig).report(),
         ),
         check(
+          id: 'xml_untranslated',
           successMessage: 'All strings have translation in XML',
           failMessage: 'Untranslated or redundant strings found in XML',
           check: () => _checkForUntranslatedXml(l10nConfig, locale).report(),
@@ -181,16 +199,19 @@ class CheckTranslationsCommand extends L10nCommandBase {
               'Before do anything about it, check that all required strings are present in the base XML file.',
         ),
         check(
+          id: 'xml_duplicates',
           successMessage: 'No duplicated keys in XML',
           failMessage: 'Duplicated keys found in XML',
           check: () => _checkXmlForDuplicates(l10nConfig, locale).report(),
         ),
         check(
+          id: 'not_imported_to_arb',
           successMessage: 'All strings are imported to ARB',
           failMessage: 'Some strings are not imported to ARB from XML',
           check: () => _checkForNotImportedToArb(l10nConfig, locale).report(),
         ),
         check(
+          id: 'code_not_generated',
           successMessage: 'Generated localization code is up to date',
           failMessage:
               'Localization code probably is not generated after last changes',
@@ -217,22 +238,46 @@ class CheckTranslationsCommand extends L10nCommandBase {
 
     printInfo('');
 
-    final total = reports.length;
+    final total = outcomes.length;
+    final data = <String, dynamic>{
+      if (locale != null) 'locale': locale.value,
+      if (changedAfterPubGet.isNotEmpty) 'changedFiles': changedAfterPubGet,
+      'checks': outcomes.map((e) => e.toJson()).toList(),
+    };
+
     if (total == 0) {
-      return error(
-        2,
-        message: 'No checks were performed. This is probably a bug.',
-      );
-    } else if (reports.every((e) => e.isOk)) {
-      return success(message: '🏆 All checks passed [$total/$total].');
-    } else {
-      final failed = reports.countWhere((e) => !e.isOk);
-      return error(
-        _kExitCodeCheckFailed,
-        message: '🚨 $failed of $total checks failed. See details above',
-      );
+      const message = 'No checks were performed. This is probably a bug.';
+      error(2, message: message);
+      return _result(2, summary: message, data: data);
     }
+
+    if (outcomes.every((e) => e.report.isOk)) {
+      success(message: '🏆 All checks passed [$total/$total].');
+      return _result(0, summary: 'all $total checks passed', data: data);
+    }
+
+    final failed = outcomes.countWhere((e) => !e.report.isOk);
+    error(
+      _kExitCodeCheckFailed,
+      message: '🚨 $failed of $total checks failed. See details above',
+    );
+    return _result(
+      _kExitCodeCheckFailed,
+      summary: '$failed of $total checks failed',
+      data: data,
+    );
   }
+
+  /// Returns the [exitCode], printing the machine readable result before it,
+  /// if it was requested.
+  int _result(
+    int exitCode, {
+    String? summary,
+    Map<String, dynamic> data = const {},
+  }) =>
+      isJsonFormat
+          ? jsonResult(exitCode: exitCode, summary: summary, data: data)
+          : exitCode;
 
   /// Checks for not translated strings in ARB.
   ///
@@ -843,6 +888,53 @@ class _CheckResult {
 
   bool get isOk =>
       notPresentedKeys.isEmpty && notExpectedKeys.isEmpty && error == null;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        if (locale != null) 'locale': locale!.value,
+        if (notPresentedKeys.isNotEmpty)
+          'missedKeys': notPresentedKeys.toList(),
+        if (notExpectedKeys.isNotEmpty)
+          'unexpectedKeys': notExpectedKeys.toList(),
+        if (notExpectedKeys.isNotEmpty && notExpectedKeysLabel != null)
+          'unexpectedKeysLabel': notExpectedKeysLabel,
+        if (error != null) 'error': error,
+      };
+}
+
+/// Result of a single check with its description.
+class _CheckOutcome {
+  /// Stable identifier of the check for a machine readable report.
+  final String id;
+
+  /// What the check expects, for example
+  /// `All strings have translation in ARB`.
+  final String title;
+
+  /// What is wrong if the check has failed.
+  final String failMessage;
+
+  final _CheckReport report;
+
+  const _CheckOutcome({
+    required this.id,
+    required this.title,
+    required this.failMessage,
+    required this.report,
+  });
+
+  Map<String, dynamic> toJson() {
+    final problems = report.results.where((e) => !e.isOk);
+
+    return <String, dynamic>{
+      'id': id,
+      'title': title,
+      'ok': report.isOk,
+      if (!report.isOk) ...<String, dynamic>{
+        'message': failMessage,
+        'problems': problems.map((e) => e.toJson()).toList(),
+      },
+    };
+  }
 }
 
 extension _CheckResultListFutureExt on Future<List<_CheckResult>> {

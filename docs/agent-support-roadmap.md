@@ -56,11 +56,15 @@ gates per package in a pub workspace (now only the root is checked).
 
 #### 2. `[~] --format=json` for everything agents read
 
-Done for `code check` (JSON-native from day one) — the option, the stdout/stderr
-contract and the envelope are in place (`--format` in `AlexCommand`, messages routed to
-stderr in `alex_command_runner`).
+Done: `code check`, `info`, `agents guide`, `agents init`, `l10n check_translations`.
 
-Remaining: `l10n check_translations`, `changelog`, `pubspec`.
+The contract lives in `AlexCommand` now: `addFormatOption()` on the parser,
+`jsonResult()` builds the common envelope (alex version, the full command name from the
+commands tree, `ok`, `exitCode`, `summary`) so no command repeats it, and a command that
+fails with an error before printing a result still prints an error object — a script
+always has JSON to parse. Messages are routed to stderr in `alex_command_runner`.
+
+Remaining: `changelog`, `pubspec`.
 
 #### 3. `[ ] alex lint` — house conventions as code
 

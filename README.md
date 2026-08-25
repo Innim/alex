@@ -323,6 +323,34 @@ $ alex l10n check --print-changed-files --fail-on-changed-files
 * `--fail-on-changed-files` — exit with code `11` instead of printing a warning,
   so CI can rely on the exit code instead of parsing the output.
 
+For a machine readable report (for CI or an AI agent) use `--format=json`: a single JSON
+object with the result of every check is printed in the standard output, all other
+messages go to the error output.
+
+```bash
+$ alex l10n check_translations --format=json
+```
+
+```json
+{
+  "alex": "1.15.0",
+  "command": "l10n check_translations",
+  "ok": false,
+  "exitCode": 10,
+  "summary": "1 of 6 checks failed",
+  "checks": [
+    {"id": "arb_untranslated", "title": "All strings have translation in ARB", "ok": true},
+    {"id": "xml_duplicates", "title": "No duplicated keys in XML", "ok": false,
+     "message": "Duplicated keys found in XML",
+     "problems": [{"locale": "ru", "unexpectedKeys": ["some_key"]}]}
+  ]
+}
+```
+
+Every check has a stable `id`, so a script can react to a particular problem
+without parsing the human readable output. If some files were changed after `pub get`,
+then they are listed in the `changedFiles` field - even when it's only a warning.
+
 #### Import translations from XML
 
 It's for working with translations from Google Play.
