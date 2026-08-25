@@ -887,6 +887,45 @@ The recommended way to use it with an AI agent is to mention it in the `CLAUDE.m
 `AGENTS.md` of the project, so the agent runs `alex agents guide` instead of guessing
 the commands from a hand written and possibly outdated description.
 
+#### Init agent instructions
+
+Add or update the alex section in the agent instructions of the project
+(`CLAUDE.md`, `AGENTS.md` and alike), so an agent learns about alex from the file it
+reads first:
+
+```bash
+$ alex agents init
+```
+
+The section describes the project - package and version, FVM, locales and l10n paths,
+git branches - and the commands an agent should use with their exit codes. Everything is
+taken from the alex config, `pubspec.yaml` and the commands tree, so the section can be
+regenerated at any time.
+
+The section is wrapped in the `<!-- alex:begin -->` / `<!-- alex:end -->` markers and
+nothing outside of them is changed, so the command is safe to run on a file written by
+a human, and safe to run again after the project has changed.
+
+By default the files are taken from the `agents.files` config option, or `CLAUDE.md` and
+`AGENTS.md` if they exist (a symlink between them is resolved, so the section is not
+written twice), otherwise `AGENTS.md` is created. You can pass the files explicitly:
+
+```bash
+$ alex agents init -f CLAUDE.md -f .claude/profile/shared.md
+```
+
+```yaml
+agents:
+  files: [ 'CLAUDE.md', '.claude/profile/shared.md' ]
+```
+
+For CI: `--check` changes nothing and fails with exit code `10` if some file is missing
+or its section is outdated.
+
+```bash
+$ alex agents init --check
+```
+
 ## Problem solving
 
 ### Command not found

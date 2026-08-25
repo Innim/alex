@@ -99,6 +99,7 @@ class AlexConfig {
   AlexScriptsConfig? _scripts;
   CodeConfig? _code;
   AlexBuildConfig? _build;
+  AlexAgentsConfig? _agents;
 
   AlexConfig._(this._path, this._data);
 
@@ -155,7 +156,37 @@ class AlexConfig {
         data != null ? AlexBuildConfig.fromYaml(data) : const AlexBuildConfig();
   }
 
+  AlexAgentsConfig get agents {
+    const key = 'agents';
+    final data = _data[key] as YamlMap?;
+    return _agents ??= data != null
+        ? AlexAgentsConfig.fromYaml(data)
+        : const AlexAgentsConfig();
+  }
+
   String get rootPath => p.dirname(_path);
+}
+
+/// Configuration of the AI agents support (`alex agents`).
+class AlexAgentsConfig {
+  /// Files with the agent instructions to update by `alex agents init`.
+  ///
+  /// If not defined - `CLAUDE.md` and `AGENTS.md` are used if they exist.
+  final List<String> files;
+
+  const AlexAgentsConfig({this.files = const []});
+
+  factory AlexAgentsConfig.fromYaml(YamlMap data) {
+    final files = data['files'] as YamlList?;
+    return AlexAgentsConfig(
+      files: files?.whereType<String>().toList(growable: false) ?? const [],
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AlexAgentsConfig{files: $files}';
+  }
 }
 
 /// Configuration for application builds (`alex release start --local`).

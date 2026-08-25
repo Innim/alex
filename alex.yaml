@@ -53,6 +53,12 @@ scripts:
 ci:
   enabled: true
 
+# AI agents support (alex agents)
+agents:
+  # Files with the agent instructions to update by `alex agents init`.
+  # If not defined - CLAUDE.md and AGENTS.md are used, if they exist.
+  files: []
+
 # GIT settings
 git:
   branches:

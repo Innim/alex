@@ -109,14 +109,16 @@ One generator, three outputs:
   codes. `--format=json` for a structured index; a command path argument
   (`alex agents guide l10n`) narrows it. Must stay short — an agent's context is a
   resource.
-- `[ ] llms.txt` in the repository — the same digest written to a file, for web-capable
-  agents and for humans copying it into their project. Generated (like
-  `lib/src/version.dart`), with a CI check that it's up to date.
-- `[ ] alex agents init` — writes the alex section into the consumer project's
-  `CLAUDE.md` / `AGENTS.md` and the project facts into `.claude/profile/shared.md`
-  (locales, l10n paths, gate command, branches) from `alex.yaml` instead of the guesses
-  `agent-profile-init` makes today. This is the strongest channel: role agents read
-  those files FIRST, before anything else.
+- `[-] llms.txt` in the repository — dropped: the canonical `llms.txt` is for
+  web-capable agents fetching a docs site, while `agents guide` (local) and
+  `agents init` (in the consumer project) already cover the agents that matter here.
+- `[x] alex agents init` — writes the alex section into the consumer project's
+  `CLAUDE.md` / `AGENTS.md` (or any files listed in `agents.files` / `--file`, e.g.
+  `.claude/profile/shared.md`) with the project facts from `alex.yaml` and
+  `pubspec.yaml` instead of the guesses `agent-profile-init` makes today. This is the
+  strongest channel: role agents read those files FIRST, before anything else. Only the
+  content between the `<!-- alex:begin -->` / `<!-- alex:end -->` markers is touched;
+  `--check` fails with exit code `10` for CI.
 - `[ ] alex info --format=json` — project facts in one call instead of reading five
   files: locales, l10n paths (ARB/XML/source), current version, branch names, fvm
   version, workspace packages, whether generated code is out of sync.
@@ -199,9 +201,7 @@ simple lock file inside `alex code gen` / `alex pubspec get`.
 
 1. ~~`alex code check` (#1)~~ — done.
 2. `--format=json` for `l10n check_translations` (#2).
-2b. Agent onboarding (#5) — `agents guide` done; `llms.txt` and `agents init` next.
-    Raised above the rest: without a delivery channel agents never notice the other
-    improvements.
+2b. Agent onboarding (#5) — `agents guide` and `agents init` done; `alex info` left.
 3. Non-interactive mode (#4).
 4. `alex lint` (#3) — largest, needs a decision on how configurable the rules are.
 5. Then Tier 2 in listed order.
