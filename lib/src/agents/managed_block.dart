@@ -63,9 +63,10 @@ class ManagedBlock {
           'The closing marker of the alex block is before the opening one');
     }
 
-    if (content.indexOf(beginMarker, start + beginMarker.length) != -1) {
+    if (content.indexOf(beginMarker, start + beginMarker.length) != -1 ||
+        content.indexOf(endMarker, end + endMarker.length) != -1) {
       throw const FormatException(
-          'There is more than one alex block in the file');
+          'There is more than one alex marker of the same type in the file');
     }
 
     return _BlockRange(

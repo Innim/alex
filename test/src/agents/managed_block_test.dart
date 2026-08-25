@@ -57,6 +57,12 @@ void main() {
 
       expect(() => ManagedBlock.apply(content, 'Body.'), throwsFormatException);
     });
+
+    test('should throw if there is an extra closing marker', () {
+      const content = '$_begin\nOne.\n$_end\n\nText.\n$_end\n';
+
+      expect(() => ManagedBlock.apply(content, 'Body.'), throwsFormatException);
+    });
   });
 
   group('extract()', () {
@@ -106,6 +112,24 @@ void main() {
       );
 
       expect(res, ['en']);
+    });
+
+    test('should keep a locale with a numeric region', () {
+      final res = ProjectFacts.parseLocales(
+        const ['intl_es_419.arb', 'intl_en_001.arb', 'intl_en.arb'],
+        'intl_{locale}.arb',
+      );
+
+      expect(res, ['en', 'en_001', 'es_419']);
+    });
+
+    test('should skip the file with the extracted messages', () {
+      final res = ProjectFacts.parseLocales(
+        const ['intl_messages.arb', 'intl_en.arb', 'intl_ru.arb'],
+        'intl_{locale}.arb',
+      );
+
+      expect(res, ['en', 'ru']);
     });
 
     test('should support a custom pattern', () {

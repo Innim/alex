@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:alex/src/config.dart';
 import 'package:alex/src/fs/fs.dart';
+import 'package:alex/src/l10n/l10n_utils.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:path/path.dart' as p;
 
@@ -137,15 +138,25 @@ class ProjectFacts {
 
   /// Returns locales of the [fileNames] that match the ARB files [pattern]
   /// (`intl_{locale}.arb` and alike), sorted.
+  ///
+  /// The file with the extracted messages (`intl_messages.arb`) matches the
+  /// pattern too, but it's not a locale, so it's skipped.
   static List<String> parseLocales(Iterable<String> fileNames, String pattern) {
+    // A locale can have a numeric region (es_419, en_001)
+    // and can be written through a dash.
     final escaped = RegExp.escape(pattern)
-        .replaceFirst(RegExp.escape('{locale}'), '([a-zA-Z_]+)');
+        .replaceFirst(RegExp.escape('{locale}'), '([a-zA-Z0-9_-]+)');
     final regExp = RegExp('^$escaped\$');
 
     final res = <String>[];
     for (final name in fileNames) {
       final match = regExp.firstMatch(name);
-      if (match != null) res.add(match.group(1)!);
+      if (match == null) continue;
+
+      final locale = match.group(1)!;
+      if (locale == L10nUtils.arbMessagesSuffix) continue;
+
+      res.add(locale);
     }
 
     res.sort();
