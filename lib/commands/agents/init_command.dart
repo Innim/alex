@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:alex/internal/print.dart' as print;
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/agents/command_index.dart';
 import 'package:alex/src/agents/managed_block.dart';
@@ -138,18 +136,18 @@ class InitCommand extends AlexCommand {
     final hasProblems = results.values.any((s) => s.isProblem);
 
     if (isJson) {
-      print.result(jsonEncode(<String, dynamic>{
-        'alex': packageVersion,
-        'command': 'agents init',
-        'ok': !hasProblems,
-        'exitCode': hasProblems ? _kExitCodeOutdated : 0,
-        'summary':
+      return jsonResult(
+        exitCode: hasProblems ? _kExitCodeOutdated : 0,
+        summary:
             results.entries.map((e) => '${e.key}: ${e.value.key}').join(' | '),
-        'files': results.entries
-            .map((e) => <String, dynamic>{'path': e.key, 'status': e.value.key})
-            .toList(),
-        'facts': facts.toJson(),
-      }));
+        data: <String, dynamic>{
+          'files': results.entries
+              .map((e) =>
+                  <String, dynamic>{'path': e.key, 'status': e.value.key})
+              .toList(),
+          'facts': facts.toJson(),
+        },
+      );
     } else {
       results.forEach((path, status) {
         printInfo('$path: ${status.key}');

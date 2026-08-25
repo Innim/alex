@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:alex/internal/print.dart' as print;
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/agents/project_facts.dart';
 import 'package:alex/src/version.dart';
@@ -27,14 +24,12 @@ class InfoCommand extends AlexCommand {
     final config = findConfigAndSetWorkingDir();
     final facts = await ProjectFacts.collect(config);
 
-    if (argResults!.isJsonFormat()) {
-      print.result(jsonEncode(<String, dynamic>{
-        'alex': packageVersion,
-        'command': 'info',
-        'ok': true,
-        'summary': _summary(facts),
-        ...facts.toJson(),
-      }));
+    if (isJsonFormat) {
+      return jsonResult(
+        exitCode: 0,
+        summary: _summary(facts),
+        data: facts.toJson(),
+      );
     } else {
       printInfo('alex $packageVersion');
       for (final line in facts.lines) {

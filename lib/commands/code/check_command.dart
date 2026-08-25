@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:alex/internal/print.dart' as print;
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/check/analyze_output_parser.dart';
 import 'package:alex/src/check/check_report.dart';
@@ -11,7 +9,6 @@ import 'package:alex/src/check/test_run_result.dart';
 import 'package:alex/src/config.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/pub_spec.dart';
-import 'package:alex/src/version.dart';
 
 import 'src/code_command_base.dart';
 
@@ -145,10 +142,14 @@ class CheckCommand extends CodeCommandBase {
       need: needBuild,
     );
 
-    final report = CheckReport(alexVersion: packageVersion, gates: gates);
+    final report = CheckReport(gates: gates);
 
     if (isJson) {
-      print.result(jsonEncode(report.toJson()));
+      return jsonResult(
+        exitCode: report.exitCode,
+        summary: report.summary,
+        data: report.toJson(),
+      );
     } else {
       printInfo('');
       printInfo('=== alex code check: ${report.ok ? 'PASS' : 'FAIL'} ===');

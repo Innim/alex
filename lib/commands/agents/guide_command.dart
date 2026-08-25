@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:alex/internal/print.dart' as print;
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/agents/command_index.dart';
@@ -48,18 +46,15 @@ class GuideCommand extends AlexCommand {
               'Run "alex agents guide" to see all commands.');
     }
 
-    if (args.isJsonFormat()) {
-      print.result(jsonEncode(<String, dynamic>{
-        'alex': packageVersion,
-        'command': 'agents guide',
-        'ok': true,
-        'summary': '${index.runnable.length} command(s)',
-        'commands': index.toJson(),
-      }));
-    } else {
-      print.info(GuideRenderer.render(index, version: packageVersion));
+    if (isJsonFormat) {
+      return jsonResult(
+        exitCode: 0,
+        summary: '${index.runnable.length} command(s)',
+        data: <String, dynamic>{'commands': index.toJson()},
+      );
     }
 
+    print.info(GuideRenderer.render(index, version: packageVersion));
     return 0;
   }
 }

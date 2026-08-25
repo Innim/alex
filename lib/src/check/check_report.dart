@@ -78,16 +78,10 @@ class CheckGateResult {
 
 /// Report of the `alex code check` run.
 class CheckReport {
-  /// Version of alex.
-  final String alexVersion;
-
   /// Results of the gates in the order of the run.
   final List<CheckGateResult> gates;
 
-  const CheckReport({
-    required this.alexVersion,
-    required this.gates,
-  });
+  const CheckReport({required this.gates});
 
   /// `true` if no gate failed.
   bool get ok => gates.every((g) => !g.isFailed);
@@ -106,11 +100,6 @@ class CheckReport {
       gates.map((g) => '${g.gate.key}: ${g.summary}').join(' | ');
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'alex': alexVersion,
-        'command': 'code check',
-        'ok': ok,
-        'exitCode': exitCode,
-        'summary': summary,
         'gates': gates.map((g) => g.toJson()).toList(),
       };
 }
