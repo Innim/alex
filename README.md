@@ -431,7 +431,7 @@ $ alex code gen
 #### Check code quality
 
 Run the quality gates: analyze, tests and (optionally) a debug build of the platform target.
-Output of the commands is filtered from a noise (update banners, dependency resolution
+Output of the commands is filtered from noise (update banners, dependency resolution
 chatter, deprecation notices of third-party plugins), a short verdict is printed for each gate.
 
 ```bash

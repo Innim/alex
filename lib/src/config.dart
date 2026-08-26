@@ -261,7 +261,7 @@ class CodeCheckConfig {
   final String? buildTarget;
 
   /// Additional patterns (regular expressions) of the output lines
-  /// that should be hidden as a noise.
+  /// that should be hidden as noise.
   final List<String> noise;
 
   const CodeCheckConfig({

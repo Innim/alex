@@ -37,9 +37,11 @@ class CommandOptionInfo {
 
   factory CommandOptionInfo.fromOption(Option option) {
     final defaultValue = option.defaultsTo;
-    // `false` for a flag is the obvious default, no need to mention it.
-    final hasDefault =
-        defaultValue != null && !(option.isFlag && defaultValue == false);
+    // `false` for a flag and an empty list for a multi option
+    // are the obvious defaults, there is nothing to report about them.
+    final hasDefault = defaultValue != null &&
+        !(option.isFlag && defaultValue == false) &&
+        !(defaultValue is Iterable && defaultValue.isEmpty);
     return CommandOptionInfo(
       name: option.name,
       abbr: option.abbr,

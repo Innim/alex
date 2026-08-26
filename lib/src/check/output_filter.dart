@@ -4,7 +4,7 @@
 /// update banners, box-drawing borders, dependency resolution chatter,
 /// deprecation notices of third-party plugins, progress indicators.
 class OutputFilter {
-  /// Patterns of the lines that are considered as a noise by default.
+  /// Patterns of the lines that are considered noise by default.
   static const defaultNoisePatterns = <String>[
     // Box drawing borders of flutter banners.
     r'^\s*[╔╚║╭╰│┌└├┤┬┴┼─═╞╡]',

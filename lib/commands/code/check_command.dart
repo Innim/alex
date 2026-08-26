@@ -35,7 +35,7 @@ class CheckCommand extends CodeCommandBase {
       : super(
           'check',
           'Run quality gates: analyze, tests and (optionally) a debug build.\n\n'
-              'Output of the commands is filtered from a noise, '
+              'Output of the commands is filtered from noise, '
               'a short verdict is printed for each gate.\n\n'
               'Exit code is 0 if all gates passed, '
               '$kExitCodeAnalyzeFailed if analyze failed, '

@@ -77,6 +77,19 @@ void main() {
       expect(command.exitCodes, const {10: 'no issue id'});
     });
 
+    test('should not report an empty list as a default of a multi option', () {
+      final command = _Cmd('init', 'Init.');
+      command.argParser
+        ..addMultiOption('file', help: 'Files.')
+        ..addMultiOption('locale', help: 'Locales.', defaultsTo: const ['en']);
+
+      final index = CommandIndex.build(_runner([command]));
+      final options = index.commands.single.options;
+
+      expect(options.first.defaultValue, isNull);
+      expect(options.last.defaultValue, '[en]');
+    });
+
     test('should not report false as a default value of a flag', () {
       final command = _Cmd('gen', 'Generate.');
       command.argParser
