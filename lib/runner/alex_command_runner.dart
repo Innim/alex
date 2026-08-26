@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:alex/commands/agents/agents_command.dart';
 import 'package:alex/commands/changelog/changelog_command.dart';
+import 'package:alex/commands/info_command.dart';
 import 'package:alex/commands/code/code_command.dart';
 import 'package:alex/commands/custom/custom_command.dart';
 import 'package:alex/commands/custom/user_custom_command.dart';
@@ -43,6 +45,8 @@ class AlexCommandRunner extends CommandRunner<int> {
       SettingsCommand(),
       UpdateCommand(),
       CustomCommand(),
+      AgentsCommand(),
+      InfoCommand(),
     ].forEach(addCommand);
 
     // Load and register custom commands
@@ -96,6 +100,10 @@ class AlexCommandRunner extends CommandRunner<int> {
     final version = topLevelResults[_argVersion] as bool;
     final isVerbose = _hasVerbose(topLevelResults);
 
+    // In the machine readable mode stdout is reserved for the result,
+    // so all messages - including the update banner - go to stderr.
+    if (_hasJsonFormat(topLevelResults)) print.setMessagesOutputToStdErr();
+
     print.setupRootLogger(isVerbose: isVerbose);
 
     // do not execute check for "update" command and its subcommands
@@ -131,5 +139,10 @@ class AlexCommandRunner extends CommandRunner<int> {
   bool _hasVerbose(ArgResults? results) {
     return results != null &&
         (results.isVerbose() || _hasVerbose(results.command));
+  }
+
+  bool _hasJsonFormat(ArgResults? results) {
+    return results != null &&
+        (results.isJsonFormat() || _hasJsonFormat(results.command));
   }
 }

@@ -255,6 +255,24 @@ $ alex f f -i{issueId} -c"Some new feature"
 
 It's important to use double quote (`"`) on Windows, but on macOS or Linux you can also use a single quote (`'`).
 
+The section of `CHANGELOG.md` can be passed with `--section` (`added` by default,
+also `fixed` and `pre-release`), so nothing has to be answered interactively:
+
+```bash
+$ alex f f -i{issueId} -c"Some new feature" --section=fixed
+```
+
+For scripts and CI add `--non-interactive`: the command checks that everything it would
+ask about is provided and fails with an explanation **before** it changes anything,
+instead of waiting for an answer that will never come.
+
+```bash
+$ alex f f --non-interactive -i{issueId} -c"Some new feature"
+```
+
+The flag is supported by every command that can ask a question - they are marked
+`[INTERACTIVE]` in `alex agents guide`.
+
 ### l10n
 
 Work with localization files.
@@ -323,6 +341,34 @@ $ alex l10n check --print-changed-files --fail-on-changed-files
 * `--fail-on-changed-files` — exit with code `11` instead of printing a warning,
   so CI can rely on the exit code instead of parsing the output.
 
+For a machine readable report (for CI or an AI agent) use `--format=json`: a single JSON
+object with the result of every check is printed in the standard output, all other
+messages go to the error output.
+
+```bash
+$ alex l10n check_translations --format=json
+```
+
+```json
+{
+  "alex": "1.15.0",
+  "command": "l10n check_translations",
+  "ok": false,
+  "exitCode": 10,
+  "summary": "1 of 6 checks failed",
+  "checks": [
+    {"id": "arb_untranslated", "title": "All strings have translation in ARB", "ok": true},
+    {"id": "xml_duplicates", "title": "No duplicated keys in XML", "ok": false,
+     "message": "Duplicated keys found in XML",
+     "problems": [{"locale": "ru", "unexpectedKeys": ["some_key"]}]}
+  ]
+}
+```
+
+Every check has a stable `id`, so a script can react to a particular problem
+without parsing the human readable output. If some files were changed after `pub get`,
+then they are listed in the `changedFiles` field - even when it's only a warning.
+
 #### Import translations from XML
 
 It's for working with translations from Google Play.
@@ -380,6 +426,63 @@ Generate `JsonSerializable` and other.
 
 ```bash
 $ alex code gen
+```
+
+#### Check code quality
+
+Run the quality gates: analyze, tests and (optionally) a debug build of the platform target.
+Output of the commands is filtered from noise (update banners, dependency resolution
+chatter, deprecation notices of third-party plugins), a short verdict is printed for each gate.
+
+```bash
+$ alex code check
+```
+
+```bash
+$ alex code check --analyze-only    # fast inner loop check
+$ alex code check --build           # also compile the platform target
+$ alex code check --fail-fast       # stop on the first failed gate
+$ alex code check -- test/some_test.dart   # args after `--` are passed to the test command
+```
+
+Exit code is `0` if all gates passed, `10` if analyze failed, `11` if tests failed,
+`12` if build failed. Other exit codes are used for errors.
+
+For a machine readable report (useful for CI and for AI agents) use `--format=json`:
+a single JSON object is printed in the standard output, all other messages go to the
+error output.
+
+```bash
+$ alex code check --format=json
+```
+
+```json
+{
+  "alex": "1.15.0",
+  "command": "code check",
+  "ok": false,
+  "exitCode": 11,
+  "summary": "analyze: no issues | test: 61 passed, 1 failed | build: skipped",
+  "gates": [
+    {"name": "analyze", "status": "passed", "summary": "no issues", "durationMs": 1109,
+     "count": 0, "errors": 0, "warnings": 0, "infos": 0, "issues": []},
+    {"name": "test", "status": "failed", "summary": "61 passed, 1 failed", "durationMs": 25350,
+     "passed": 61, "failed": 1, "skipped": 0, "total": 62, "completed": true,
+     "failures": [{"name": "should work", "suite": "test/a_test.dart", "message": "Expected: ..."}]},
+    {"name": "build", "status": "skipped", "summary": "skipped"}
+  ]
+}
+```
+
+Build target and additional noise patterns can be defined in the config:
+
+```yaml
+code:
+  check:
+    # ios (default on macOS) | apk (default on other platforms) | appbundle | web | macos
+    build_target: ios
+    # additional regular expressions of the output lines to hide
+    noise: [ 'some_noisy_plugin' ]
 ```
 
 ### Pubspec
@@ -801,6 +904,90 @@ This will show:
 - Git operations details
 
 See `alex_custom_commands.yaml.example` in the repository for more examples.
+
+### Info
+
+Print the facts about the project: package and version, path to the alex config,
+packages of a multi-package project, Flutter version pinned with FVM, locales and
+localization paths, git branches.
+
+```bash
+$ alex info
+```
+
+Everything is taken from the alex config and the project files, so a script or an AI
+agent can get all of it with a single call instead of reading several files:
+
+```bash
+$ alex info --format=json
+```
+
+### Agents
+
+Support of AI agents and scripts.
+
+#### Guide for an agent
+
+Print a short guide of alex: what it is, the rules (config discovery, machine readable
+output, exit codes, which commands are interactive) and all commands with their options
+and exit codes.
+
+```bash
+$ alex agents guide
+```
+
+The guide is generated from the commands tree of the installed version, so it always
+matches the tool and can't get outdated. Pass a command path to print the guide for one
+command or a group only, and `--format=json` to get a structured index instead of
+Markdown:
+
+```bash
+$ alex agents guide l10n
+$ alex agents guide code check --format=json
+```
+
+The recommended way to use it with an AI agent is to mention it in the `CLAUDE.md` /
+`AGENTS.md` of the project, so the agent runs `alex agents guide` instead of guessing
+the commands from a hand written and possibly outdated description.
+
+#### Init agent instructions
+
+Add or update the alex section in the agent instructions of the project
+(`CLAUDE.md`, `AGENTS.md` and alike), so an agent learns about alex from the file it
+reads first:
+
+```bash
+$ alex agents init
+```
+
+The section describes the project - package and version, FVM, locales and l10n paths,
+git branches - and the commands an agent should use with their exit codes. Everything is
+taken from the alex config, `pubspec.yaml` and the commands tree, so the section can be
+regenerated at any time.
+
+The section is wrapped in the `<!-- alex:begin -->` / `<!-- alex:end -->` markers and
+nothing outside of them is changed, so the command is safe to run on a file written by
+a human, and safe to run again after the project has changed.
+
+By default the files are taken from the `agents.files` config option, or `CLAUDE.md` and
+`AGENTS.md` if they exist (a symlink between them is resolved, so the section is not
+written twice), otherwise `AGENTS.md` is created. You can pass the files explicitly:
+
+```bash
+$ alex agents init -f CLAUDE.md -f .claude/profile/shared.md
+```
+
+```yaml
+agents:
+  files: [ 'CLAUDE.md', '.claude/profile/shared.md' ]
+```
+
+For CI: `--check` changes nothing and fails with exit code `10` if some file is missing
+or its section is outdated.
+
+```bash
+$ alex agents init --check
+```
 
 ## Problem solving
 

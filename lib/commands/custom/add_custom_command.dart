@@ -14,7 +14,21 @@ class AddCustomCommand extends AlexCommand {
   AddCustomCommand() : super('add', 'Add a new custom command.');
 
   @override
+  bool get isInteractive => true;
+
+  @override
   Future<int> doRun() async {
+    if (isNonInteractive) {
+      final config = CustomCommandsConfig.instance;
+      return error(
+        1,
+        message: 'Adding a command is an interactive wizard, '
+            'it can not be used in the non-interactive mode. '
+            'Edit the config file directly: '
+            '${config.configPath ?? config.getOrCreateConfigPath()}',
+      );
+    }
+
     final config = CustomCommandsConfig.instance;
 
     printInfo('Add new custom command');

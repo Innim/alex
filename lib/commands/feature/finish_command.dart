@@ -14,6 +14,11 @@ class FinishCommand extends FeatureCommandBase {
   static const _argIssue = CmdArg('issue', abbr: 'i');
   static const _argChangelog = CmdArg('changelog', abbr: 'c');
   static const _argSquash = CmdArg('squash', abbr: 's');
+  static const _argSection = CmdArg('section');
+
+  static const _sectionAdded = 'added';
+  static const _sectionFixed = 'fixed';
+  static const _sectionPreRelease = 'pre-release';
 
   FinishCommand()
       : super(
@@ -44,8 +49,19 @@ class FinishCommand extends FeatureCommandBase {
         abbr: _argSquash.abbr,
         help: 'Squash all feature commits into a single commit when merging '
             'into develop. Useful for tasks like golden tests updates.',
+      )
+      ..addArg(
+        _argSection,
+        help: 'Section of CHANGELOG.md to add the line in. '
+            'Optional, you can provide it in interactive mode. '
+            'Default is $_sectionAdded.',
+        allowed: const [_sectionAdded, _sectionFixed, _sectionPreRelease],
+        valueHelp: 'SECTION',
       );
   }
+
+  @override
+  bool get isInteractive => true;
 
   @override
   Future<int> doRun() async {
@@ -55,6 +71,21 @@ class FinishCommand extends FeatureCommandBase {
     var issueId = args.getInt(_argIssue);
     final changelog = args.getString(_argChangelog);
     final squash = args.getBool(_argSquash);
+
+    // Everything that would be asked should be provided upfront,
+    // so the command fails before it has changed anything.
+    if (isNonInteractive) {
+      if (issueId == null) {
+        return errorNoAnswer('issue id', '--${_argIssue.name}=NUMBER');
+      }
+
+      if (changelog == null) {
+        return errorNoAnswer(
+            'changelog line',
+            '--${_argChangelog.name}="Some line" '
+                '(pass an empty value to skip the changelog)');
+      }
+    }
 
     final console = this.console;
     final gitConfig = config.git;
@@ -91,14 +122,17 @@ class FinishCommand extends FeatureCommandBase {
 
       printInfo('Enter issue id:');
 
-      do {
+      while (issueId == null) {
         final issueIdStr = console.readLineSync();
 
-        if (issueIdStr != null && issueIdStr.isNotEmpty) {
-          issueId = int.tryParse(issueIdStr);
+        // No input at all - there is nobody to answer,
+        // so it makes no sense to ask again.
+        if (issueIdStr == null) {
+          return error(1, message: 'Issue id is not provided.');
         }
-        // ignore: invariant_booleans
-      } while (issueId == null);
+
+        if (issueIdStr.isNotEmpty) issueId = int.tryParse(issueIdStr);
+      }
     }
 
     final branch = await _getBranch(branches, issueId);
@@ -124,8 +158,8 @@ class FinishCommand extends FeatureCommandBase {
     );
 
     printVerbose('Add entry in changelog');
-    final changed = await _updateChangelog(
-        console, fs, issueId, changelog, config.issueUrl);
+    final changed = await _updateChangelog(console, fs, issueId, changelog,
+        args.getString(_argSection), config.issueUrl);
 
     if (changed) {
       printVerbose('Commit changelog');
@@ -203,8 +237,42 @@ class FinishCommand extends FeatureCommandBase {
     return res.first;
   }
 
+  /// Asks which section of CHANGELOG.md to add the line in.
+  ///
+  /// In the non-interactive mode the default section is used,
+  /// as it is for an empty answer.
+  Future<String> _getSection(Console console) async {
+    if (isNonInteractive) return _sectionAdded;
+
+    while (true) {
+      printInfo('''
+Which section to add:
+[1]: Added (Default)
+[2]: Fixed
+[3]: Pre-release
+?''');
+
+      final input = console.readLineSync();
+      if (input == null || input.trim().isEmpty) {
+        printInfo('Use default Added');
+        return _sectionAdded;
+      }
+
+      switch (int.tryParse(input)) {
+        case 1:
+          return _sectionAdded;
+        case 2:
+          return _sectionFixed;
+        case 3:
+          return _sectionPreRelease;
+        default:
+          printVerbose('Invalid value <$input>');
+      }
+    }
+  }
+
   Future<bool> _updateChangelog(Console console, FileSystem fs, int issueId,
-      String? changelogLine, String? issueUrl) async {
+      String? changelogLine, String? section, String? issueUrl) async {
     final changelog = Changelog(fs);
 
     if (!(await changelog.exists)) {
@@ -221,6 +289,14 @@ class FinishCommand extends FeatureCommandBase {
     // TODO: get changelog entry candidate from task
     final String? line;
     if (changelogLine == null || changelogLine.isEmpty) {
+      // An empty value is the documented way to skip the changelog,
+      // and there is nobody to ask anyway.
+      if (isNonInteractive) {
+        printInfo('No changelog record - an empty '
+            '--${_argChangelog.name} was passed');
+        return false;
+      }
+
       printInfo('Enter changelog line:');
       line = console.readLineSync();
     } else {
@@ -234,39 +310,19 @@ class FinishCommand extends FeatureCommandBase {
     }
 
     // Can be in section Added, Fixed or even Pre-release.
-    int? section;
-    do {
-      printInfo('''
-Which section to add:
-[1]: Added (Default)
-[2]: Fixed
-[3]: Pre-release
-?''');
+    final target = section ?? await _getSection(console);
 
-      final sectionInput = console.readLineSync();
-      if (sectionInput == null || sectionInput.trim().isEmpty) {
-        printInfo('Use default Added');
-        section = 1;
-      } else {
-        final intValue = int.tryParse(sectionInput);
-        if (![1, 2, 3].contains(intValue)) {
-          printVerbose('Invalid value <$sectionInput>');
-        } else {
-          section = intValue;
-        }
-      }
-    } while (section == null);
-
-    printVerbose('Write to changelog: $line');
-    switch (section) {
-      case 1:
-        await changelog.addAddedEntry(line, issueId, issueUrl);
-        break;
-      case 2:
+    printVerbose('Write to changelog: $line ($target)');
+    switch (target) {
+      case _sectionFixed:
         await changelog.addFixedEntry(line, issueId, issueUrl);
         break;
-      case 3:
+      case _sectionPreRelease:
         await changelog.addPreReleaseEntry(line, issueId, issueUrl);
+        break;
+      case _sectionAdded:
+      default:
+        await changelog.addAddedEntry(line, issueId, issueUrl);
         break;
     }
     await changelog.save();

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:alex/commands/release/demo.dart';
@@ -10,6 +11,7 @@ import 'package:alex/src/git/git.dart';
 import 'package:alex/src/run/cmd.dart';
 import 'package:alex/src/run/flutter_cmd.dart';
 import 'package:alex/src/settings.dart';
+import 'package:alex/src/version.dart';
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:logging/logging.dart';
@@ -27,6 +29,8 @@ abstract class AlexCommand extends Command<int> {
   Console? _console;
   Cmd? _cmd;
   FlutterCmd? _flutter;
+  bool _isResultPrinted = false;
+  String? _lastErrorMessage;
 
   // TODO: as an argument in constructor
   final _logger = Logger('alex');
@@ -35,7 +39,11 @@ abstract class AlexCommand extends Command<int> {
     allowTrailingOptions: true,
   )..addVerboseFlag();
 
-  AlexCommand(this._name, this._description, [this._aliases = const []]);
+  AlexCommand(this._name, this._description, [this._aliases = const []]) {
+    // A command that can ask a question should be able to run
+    // in a script too, so it always has a way to forbid the questions.
+    if (isInteractive) _argParser.addNonInteractiveFlag();
+  }
 
   @override
   String get name => _name;
@@ -48,6 +56,36 @@ abstract class AlexCommand extends Command<int> {
 
   @override
   List<String> get aliases => _aliases;
+
+  /// Full name of the command with all the parent commands,
+  /// for example `code check`.
+  String get fullName {
+    final parts = <String>[name];
+
+    var parent = this.parent;
+    while (parent != null) {
+      parts.insert(0, parent.name);
+      parent = parent.parent;
+    }
+
+    return parts.join(' ');
+  }
+
+  /// Exit codes of the command with their meaning,
+  /// except the common ones (`0` - success, `2` - error).
+  ///
+  /// Used in a machine readable index of the commands
+  /// (see `alex agents guide`).
+  Map<int, String> get exitCodes => const {};
+
+  /// Whether the command can ask a question in the standard input.
+  ///
+  /// Such a command can't be used by a script or an agent
+  /// without the options that provide all the answers.
+  ///
+  /// Used in a machine readable index of the commands
+  /// (see `alex agents guide`).
+  bool get isInteractive => false;
 
   @protected
   Console get console => _console ??= const StdConsole();
@@ -64,6 +102,54 @@ abstract class AlexCommand extends Command<int> {
 
   @protected
   bool get isVerbose => argResults!.isVerbose();
+
+  /// Whether the command is forbidden to ask questions
+  /// in the standard input (`--non-interactive`).
+  ///
+  /// Instead of waiting for an answer that will never come, the command
+  /// should fail with a message about the option that provides it.
+  @protected
+  bool get isNonInteractive =>
+      argResults?.options.contains(kNonInteractive) == true &&
+      argResults![kNonInteractive] == true;
+
+  /// Returns an error code and prints a message about the [option]
+  /// that should be passed instead of the answer to a question.
+  @protected
+  int errorNoAnswer(String question, String option) => error(
+        1,
+        message: 'Can not ask "$question" in the non-interactive mode. '
+            'Pass $option or run without --$kNonInteractive.',
+      );
+
+  /// Whether a machine readable result is requested (`--format=json`).
+  @protected
+  bool get isJsonFormat => argResults?.isJsonFormat() ?? false;
+
+  /// Prints the result of the command in the standard output
+  /// as a single JSON object and returns the [exitCode].
+  ///
+  /// Should be called only if [isJsonFormat] is `true`.
+  /// Common fields of the envelope are filled here, so they are the same
+  /// for every command; [data] is a command specific payload.
+  @protected
+  int jsonResult({
+    required int exitCode,
+    String? summary,
+    Map<String, dynamic> data = const {},
+  }) {
+    print.result(jsonEncode(<String, dynamic>{
+      'alex': packageVersion,
+      'command': fullName,
+      'ok': exitCode == 0,
+      'exitCode': exitCode,
+      if (summary != null) 'summary': summary,
+      ...data,
+    }));
+
+    _isResultPrinted = true;
+    return exitCode;
+  }
 
   @protected
   bool get isVerboseFlutterCmd =>
@@ -89,17 +175,39 @@ abstract class AlexCommand extends Command<int> {
     print.setRootLoggerLevel(isVerbose: isVerbose);
 
     try {
-      return await doRun();
+      return _jsonResultIfNeeded(await doRun());
     } on RunException catch (e) {
-      return errorBy(e);
+      return _jsonResultIfNeeded(errorBy(e));
     } catch (e, st) {
       printVerbose('Exception: $e\nStackTrace: $st');
-      return error(2, message: 'Failed by: $e');
+      return _jsonResultIfNeeded(error(2, message: 'Failed by: $e'));
     }
   }
 
   @protected
   Future<int> doRun();
+
+  /// Prints the result in the machine readable mode, if the command
+  /// has finished without printing it itself.
+  ///
+  /// It happens when the command has failed - by an exception or just by
+  /// returning an error code - before it got to the result. So a script
+  /// always gets a JSON object in the standard output.
+  int _jsonResultIfNeeded(int exitCode) {
+    if (!isJsonFormat || _isResultPrinted) return exitCode;
+
+    final message = _lastErrorMessage;
+    // Summary is a single line, the whole message is in the `error` field.
+    final summary = message?.split('\n').first.trim();
+
+    return jsonResult(
+      exitCode: exitCode,
+      summary: summary?.isNotEmpty == true
+          ? summary
+          : (exitCode == 0 ? 'done' : 'failed'),
+      data: <String, dynamic>{if (message != null) 'error': message},
+    );
+  }
 
   @protected
   AlexConfig findConfigAndSetWorkingDir() {
@@ -147,7 +255,12 @@ abstract class AlexCommand extends Command<int> {
   /// Returns error code and prints a error message if provided.
   @protected
   int error(int code, {String? message}) {
-    if (message != null) printError(message);
+    if (message != null) {
+      printError(message);
+      // Kept for the machine readable result, if the command has failed
+      // before it printed one.
+      _lastErrorMessage = message;
+    }
     return code;
   }
 
@@ -222,6 +335,34 @@ extension CmdArgArgParserExtension on ArgParser {
   void addVerboseFlag() =>
       addFlag(kVerbose, help: 'Show additional diagnostic info');
 
+  /// Adds the `--non-interactive` flag.
+  ///
+  /// Added automatically for a command that can ask a question,
+  /// see [AlexCommand.isInteractive].
+  void addNonInteractiveFlag() => addFlag(
+        kNonInteractive,
+        help: 'Do not ask anything in the standard input: '
+            'fail with an explanation instead of waiting for an answer. '
+            'For scripts and CI.',
+        negatable: false,
+      );
+
+  /// Adds the `--format` option.
+  ///
+  /// In the [kFormatJson] mode a command prints a single JSON object
+  /// in the standard output, all other messages go to the error output.
+  void addFormatOption() => addOption(
+        kFormat,
+        help: 'Output format.',
+        allowed: const [kFormatText, kFormatJson],
+        allowedHelp: const {
+          kFormatText: 'Human readable output.',
+          kFormatJson: 'Single JSON object in stdout '
+              '(all other messages go to stderr).',
+        },
+        defaultsTo: kFormatText,
+      );
+
   void addVerboseFlutterCmdFlag() => addFlagArg(
         _kArgVerboseFlutterCmd,
         help: 'All flutter commands will be run with verbose flag',
@@ -233,6 +374,10 @@ extension CmdArgArgResultsExtension on ArgResults {
   bool getBool(CmdArg arg) => this[arg.name] as bool;
 
   bool isVerbose() => this[kVerbose] as bool;
+
+  /// Returns `true` if the machine readable output is requested.
+  bool isJsonFormat() =>
+      options.contains(kFormat) && this[kFormat] == kFormatJson;
 
   int? getInt(CmdArg arg) {
     final val = this[arg.name] as String?;

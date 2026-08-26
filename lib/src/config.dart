@@ -99,6 +99,7 @@ class AlexConfig {
   AlexScriptsConfig? _scripts;
   CodeConfig? _code;
   AlexBuildConfig? _build;
+  AlexAgentsConfig? _agents;
 
   AlexConfig._(this._path, this._data);
 
@@ -155,7 +156,40 @@ class AlexConfig {
         data != null ? AlexBuildConfig.fromYaml(data) : const AlexBuildConfig();
   }
 
+  AlexAgentsConfig get agents {
+    const key = 'agents';
+    final data = _data[key] as YamlMap?;
+    return _agents ??= data != null
+        ? AlexAgentsConfig.fromYaml(data)
+        : const AlexAgentsConfig();
+  }
+
+  /// Path to the file with the configuration.
+  String get configPath => _path;
+
   String get rootPath => p.dirname(_path);
+}
+
+/// Configuration of the AI agents support (`alex agents`).
+class AlexAgentsConfig {
+  /// Files with the agent instructions to update by `alex agents init`.
+  ///
+  /// If not defined - `CLAUDE.md` and `AGENTS.md` are used if they exist.
+  final List<String> files;
+
+  const AlexAgentsConfig({this.files = const []});
+
+  factory AlexAgentsConfig.fromYaml(YamlMap data) {
+    final files = data['files'] as YamlList?;
+    return AlexAgentsConfig(
+      files: files?.whereType<String>().toList(growable: false) ?? const [],
+    );
+  }
+
+  @override
+  String toString() {
+    return 'AlexAgentsConfig{files: $files}';
+  }
 }
 
 /// Configuration for application builds (`alex release start --local`).
@@ -195,19 +229,58 @@ class CodeConfig {
   /// workspace root with the `--workspace` flag instead of per-package.
   final bool useWorkspace;
 
+  /// Configuration for the quality gates (`alex code check`).
+  final CodeCheckConfig check;
+
   const CodeConfig({
     this.useWorkspace = defaultUseWorkspace,
+    this.check = const CodeCheckConfig(),
   });
 
   factory CodeConfig.fromYaml(YamlMap data) {
+    final checkData = data['check'] as YamlMap?;
     return CodeConfig(
       useWorkspace: data['use_workspace'] as bool? ?? defaultUseWorkspace,
+      check: checkData != null
+          ? CodeCheckConfig.fromYaml(checkData)
+          : const CodeCheckConfig(),
     );
   }
 
   @override
   String toString() {
-    return 'CodeConfig{useWorkspace: $useWorkspace}';
+    return 'CodeConfig{useWorkspace: $useWorkspace, check: $check}';
+  }
+}
+
+/// Configuration for the quality gates (`alex code check`).
+class CodeCheckConfig {
+  /// Target of the build gate: `ios`, `apk`, `appbundle`, `web` or `macos`.
+  ///
+  /// If not defined - `ios` is used on macOS and `apk` on other platforms.
+  final String? buildTarget;
+
+  /// Additional patterns (regular expressions) of the output lines
+  /// that should be hidden as noise.
+  final List<String> noise;
+
+  const CodeCheckConfig({
+    this.buildTarget,
+    this.noise = const [],
+  });
+
+  factory CodeCheckConfig.fromYaml(YamlMap data) {
+    final target = data['build_target'] as String?;
+    final noise = data['noise'] as YamlList?;
+    return CodeCheckConfig(
+      buildTarget: target != null && target.isNotEmpty ? target : null,
+      noise: noise?.whereType<String>().toList(growable: false) ?? const [],
+    );
+  }
+
+  @override
+  String toString() {
+    return 'CodeCheckConfig{buildTarget: $buildTarget, noise: $noise}';
   }
 }
 

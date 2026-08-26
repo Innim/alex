@@ -27,6 +27,16 @@ code:
   # `--workspace` flag instead of per-package. Set to false to disable.
   use_workspace: true
 
+  # Quality gates (alex code check)
+  check:
+    # Target of the build gate (used with the --build flag):
+    # ios | apk | appbundle | web | macos.
+    # If not defined - ios is used on macOS and apk on other platforms.
+    build_target:
+    # Additional patterns (regular expressions) of the output lines
+    # that should be hidden as noise.
+    noise: []
+
 # Application build settings (alex release start --local)
 build:
   # Name for build artifact files.
@@ -42,6 +52,12 @@ scripts:
 # CI settings
 ci:
   enabled: true
+
+# AI agents support (alex agents)
+agents:
+  # Files with the agent instructions to update by `alex agents init`.
+  # If not defined - CLAUDE.md and AGENTS.md are used, if they exist.
+  files: []
 
 # GIT settings
 git:
