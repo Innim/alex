@@ -1,4 +1,4 @@
-## Next
+## 1.15.0
 
 * New command `alex pubspec version <patch|minor|major>` (alias `alex pub version`) — increments the version in `pubspec.yaml`. By default only the version is changed and a build number is kept as is (usually it's already prepared for the next build); pass `--build` (`-b`) to increment the build number too (#12).
 * [Release] `start`: new `--increment` (`-i`) option (`patch`, `minor` or `major`) to increment the version **of this release** before it's started, keeping the build number: `1.2.3+4` is released as `1.3.0+4` with `-i minor`. The release branch, `CHANGELOG.md`, the tag and build artifacts use the new version. Without the option nothing changes — the current version is released as is. After the release a patch and a build number are incremented in `develop` as always, and the new version is printed in the end (#12).
