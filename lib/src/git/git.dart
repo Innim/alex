@@ -401,11 +401,16 @@ class GitCommands {
     git("clean -fd", "remove untracked files");
   }
 
-  Iterable<String> getBranches({bool all = false, bool merged = false}) {
+  Iterable<String> getBranches({
+    bool all = false,
+    bool merged = false,
+    bool printIfError = true,
+  }) {
     final cmd = StringBuffer('branch');
     if (all) cmd.write(' -a');
     if (merged) cmd.write(' --merged');
-    final res = git(cmd.toString(), 'Get branches list');
+    final res =
+        git(cmd.toString(), 'Get branches list', printIfError: printIfError);
     return res.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty);
   }
 

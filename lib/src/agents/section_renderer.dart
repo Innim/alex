@@ -1,4 +1,5 @@
 import 'package:alex/src/agents/command_index.dart';
+import 'package:path/path.dart' as p;
 import 'package:alex/src/agents/project_facts.dart';
 
 /// Commands that are recommended for an agent or a script,
@@ -38,7 +39,7 @@ class SectionRenderer {
       ..writeln('### Project')
       ..writeln();
 
-    for (final line in facts.lines) {
+    for (final line in _projectLines(facts)) {
       sb.writeln('- $line');
     }
 
@@ -67,6 +68,65 @@ class SectionRenderer {
       ..writeln(_outro);
 
     return sb.toString().trim();
+  }
+
+  /// Facts about the project for a file that is committed in the repository.
+  ///
+  /// Only what is stable: no local paths (the file is shared by the whole
+  /// team) and no values that change with every build (the file should not
+  /// be regenerated more often than the project really changes).
+  static List<String> _projectLines(ProjectFacts facts) {
+    final res = <String>[];
+    final branches = facts.git.branches;
+    final l10n = facts.l10n;
+
+    final name = facts.packageName;
+    if (name != null) {
+      res.add('Package: `$name` (${facts.isFlutter ? 'Flutter' : 'Dart'})');
+    }
+
+    if (facts.fvmVersion != null) {
+      res.add('Flutter SDK is pinned with FVM - '
+          'run `flutter` and `dart` through `fvm`');
+    }
+
+    if (facts.packages.length > 1) {
+      res.add('Packages (${facts.packages.length}): '
+          '${facts.packages.map((p) => '`${p.name}` (`${p.path}`)').join(', ')}');
+    }
+
+    if (facts.hasL10n) {
+      if (facts.locales.isNotEmpty) {
+        res.add('Locales (${facts.locales.length}): '
+            '${facts.locales.map((l) => '`$l`').join(', ')}');
+      }
+
+      res.add('ARB: `${p.join(l10n.outputDir, l10n.translationFilesPattern)}`, '
+          'strings source: `${l10n.sourceFile}`');
+
+      res.add('XML for translation: `${l10n.xmlOutputDir}`, '
+          'base locale for XML: `${l10n.baseLocaleForXml.value}`, '
+          'for ARB: `${l10n.baseLocaleForArb.value}`');
+    }
+
+    // Every branch has a default value in the config, but a project can
+    // have no such branch at all - only the ones that really exist are
+    // reported. If it can't be checked (no repository), all are listed.
+    final existing = facts.existingBranches;
+    bool exists(String name) => existing == null || existing.contains(name);
+
+    final named = <String>[
+      if (exists(branches.master)) 'master `${branches.master}`',
+      if (exists(branches.develop)) 'develop `${branches.develop}`',
+      if (exists(branches.test)) 'test `${branches.test}`',
+    ];
+
+    res.add('Branches: ${[
+      ...named,
+      'feature prefix `${branches.featurePrefix}`',
+    ].join(', ')}');
+
+    return res;
   }
 
   static const _intro =

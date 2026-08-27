@@ -3,9 +3,13 @@ import 'dart:io';
 
 import 'package:alex/src/config.dart';
 import 'package:alex/src/fs/fs.dart';
+import 'package:alex/src/git/git.dart';
 import 'package:alex/src/l10n/l10n_utils.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:path/path.dart' as p;
+
+/// Prefix of a remote branch in the `git branch -a` output.
+const _remoteBranchPrefix = 'remotes/';
 
 /// Facts about the project that an AI agent or a script needs to know.
 ///
@@ -21,6 +25,13 @@ class ProjectFacts {
 
   /// Whether the project has the localization managed by alex.
   final bool hasL10n;
+
+  /// Names of the configured branches that really exist
+  /// in the repository - locally or on a remote.
+  ///
+  /// `null` if it can't be checked: there is no repository,
+  /// or git is not available.
+  final Set<String>? existingBranches;
 
   final String? packageName;
   final String? packageVersion;
@@ -48,6 +59,7 @@ class ProjectFacts {
     this.rootPath = '',
     this.configPath = '',
     this.hasL10n = false,
+    this.existingBranches,
     this.packageName,
     this.packageVersion,
     this.isFlutter = false,
@@ -79,6 +91,7 @@ class ProjectFacts {
       rootPath: config.rootPath,
       configPath: p.relative(config.configPath, from: config.rootPath),
       hasL10n: Directory(config.l10n.outputDir).existsSync(),
+      existingBranches: _existingBranches(config.git),
       packageName: name,
       packageVersion: version,
       isFlutter: isFlutter,
@@ -114,6 +127,7 @@ class ProjectFacts {
           'test': git.branches.test,
           'featurePrefix': git.branches.featurePrefix,
           'remote': git.remote,
+          if (existingBranches != null) 'existing': existingBranches!.toList(),
         },
       };
 
@@ -157,12 +171,59 @@ class ProjectFacts {
           '${packages.map((p) => '`${p.name}` (`${p.path}`)').join(', ')}');
     }
 
-    res.add('Branches: master `${branches.master}`, '
-        'develop `${branches.develop}`, test `${branches.test}`, '
+    final existing = existingBranches;
+    String branch(String name) => existing == null || existing.contains(name)
+        ? '`$name`'
+        : '`$name` (not found)';
+
+    res.add('Branches: master ${branch(branches.master)}, '
+        'develop ${branch(branches.develop)}, '
+        'test ${branch(branches.test)}, '
         'feature prefix `${branches.featurePrefix}`, '
         'remote `${git.remote}`');
 
     return res;
+  }
+
+  /// Returns the branches from [branches] that exist in the repository.
+  ///
+  /// Both local and remote branches are checked, without a network request:
+  /// what git already knows is enough to tell a branch the project really
+  /// has from a default value of the config.
+  static Set<String>? _existingBranches(AlexGitConfig config) {
+    final branches = config.branches;
+
+    final Iterable<String> all;
+    try {
+      // A project without a repository is a normal case here,
+      // so the error of git should not be printed.
+      all = GitCommands(GitClient(), config)
+          .getBranches(all: true, printIfError: false);
+    } on Object catch (_) {
+      // Not a repository, or git is not available - nothing can be said.
+      return null;
+    }
+
+    final names = <String>{};
+    for (final line in all) {
+      // The current branch is marked with an asterisk.
+      var name = line.startsWith('* ') ? line.substring(2).trim() : line;
+
+      // A remote branch is `remotes/<remote>/<name>`.
+      if (name.startsWith(_remoteBranchPrefix)) {
+        final parts = name.substring(_remoteBranchPrefix.length).split('/');
+        if (parts.length < 2) continue;
+        name = parts.sublist(1).join('/');
+      }
+
+      if (name.isNotEmpty) names.add(name);
+    }
+
+    return <String>{
+      branches.master,
+      branches.develop,
+      branches.test,
+    }.where(names.contains).toSet();
   }
 
   static Future<List<ProjectPackage>> _packages() async {
