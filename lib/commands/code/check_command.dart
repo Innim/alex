@@ -3,14 +3,19 @@ import 'dart:io';
 import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/check/analyze_output_parser.dart';
 import 'package:alex/src/check/check_report.dart';
+import 'package:alex/src/check/content_hash.dart';
 import 'package:alex/src/check/output_filter.dart';
 import 'package:alex/src/check/test_output_parser.dart';
 import 'package:alex/src/check/test_run_result.dart';
 import 'package:alex/src/config.dart';
+import 'package:alex/src/exception/run_exception.dart';
+import 'package:alex/src/git/git.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/pub_spec.dart';
+import 'package:path/path.dart' as p;
 
 import 'src/code_command_base.dart';
+import 'src/code_generation.dart';
 
 const _kBuildTargets = <String>['ios', 'apk', 'appbundle', 'web', 'macos'];
 
@@ -24,9 +29,10 @@ const _kMaxPrintedFailures = 20;
 const _kMaxPrintedFailureMessageLines = 12;
 
 /// Command to run quality gates: analyze, tests and (optionally) build.
-class CheckCommand extends CodeCommandBase {
+class CheckCommand extends CodeCommandBase with CodeGenerationMixin {
   static const _argAnalyzeOnly = 'analyze-only';
   static const _argTestOnly = 'test-only';
+  static const _argGen = 'gen';
   static const _argBuild = 'build';
   static const _argBuildTarget = 'build-target';
   static const _argFailFast = 'fail-fast';
@@ -38,6 +44,7 @@ class CheckCommand extends CodeCommandBase {
               'Output of the commands is filtered from noise, '
               'a short verdict is printed for each gate.\n\n'
               'Exit code is 0 if all gates passed, '
+              '$kExitCodeGenFailed if the generated code is out of date, '
               '$kExitCodeAnalyzeFailed if analyze failed, '
               '$kExitCodeTestFailed if tests failed, '
               '$kExitCodeBuildFailed if build failed. '
@@ -54,6 +61,12 @@ class CheckCommand extends CodeCommandBase {
       ..addFlag(
         _argTestOnly,
         help: 'Run the test gate only.',
+        negatable: false,
+      )
+      ..addFlag(
+        _argGen,
+        help: 'Also check that the generated code is up to date: '
+            'run the code generation and fail if it has changed anything.',
         negatable: false,
       )
       ..addFlag(
@@ -80,6 +93,7 @@ class CheckCommand extends CodeCommandBase {
 
   @override
   Map<int, String> get exitCodes => const {
+        kExitCodeGenFailed: 'generated code is out of date',
         kExitCodeAnalyzeFailed: 'analyze failed',
         kExitCodeTestFailed: 'tests failed',
         kExitCodeBuildFailed: 'build failed',
@@ -106,6 +120,7 @@ class CheckCommand extends CodeCommandBase {
 
     final needAnalyze = !testOnly;
     final needTest = !analyzeOnly;
+    final needGen = (args[_argGen] as bool) && !analyzeOnly && !testOnly;
     final needBuild = (args[_argBuild] as bool) && !analyzeOnly && !testOnly;
     final failFast = args[_argFailFast] as bool;
 
@@ -132,6 +147,9 @@ class CheckCommand extends CodeCommandBase {
       gates.add(result);
     }
 
+    // Generation goes first: everything else should be checked
+    // on the up to date code.
+    await runGate(CheckGate.gen, _runGen, need: needGen);
     await runGate(CheckGate.analyze, _runAnalyze, need: needAnalyze);
     await runGate(CheckGate.test, _runTest, need: needTest);
     await runGate(
@@ -160,6 +178,88 @@ class CheckCommand extends CodeCommandBase {
   }
 
   // region Gates
+
+  /// Checks that the generated code is up to date.
+  ///
+  /// Runs the code generation and compares the changes in the repository
+  /// before and after it: if the generation has changed anything,
+  /// then the committed generated code doesn't match its sources.
+  Future<CheckGateResult> _runGen() async {
+    final git = getGit(config);
+
+    final String repoRoot;
+    final Map<String, String> before;
+    try {
+      repoRoot = git.getRootPath(printIfError: false);
+      before = _changesSnapshot(git, repoRoot);
+    } on Object catch (e) {
+      printVerbose('Changes are not available: $e');
+      return const CheckGateResult.skipped(CheckGate.gen,
+          summary: 'skipped (not a git repository)');
+    }
+
+    final stopwatch = Stopwatch()..start();
+
+    try {
+      final targets = await generateCode();
+      stopwatch.stop();
+
+      if (targets == 0) {
+        return const CheckGateResult.skipped(CheckGate.gen,
+            summary: 'skipped (nothing to generate)');
+      }
+    } on RunException catch (e) {
+      stopwatch.stop();
+      return CheckGateResult(
+        gate: CheckGate.gen,
+        status: CheckGateStatus.failed,
+        durationMs: stopwatch.elapsedMilliseconds,
+        summary: 'generation failed',
+        output: e.message != null ? _filter.filterTail(e.message!) : null,
+      );
+    }
+
+    final after = _changesSnapshot(git, repoRoot);
+    // Both sets are checked: the generation can not only change a file,
+    // but also revert a change that was made by hand.
+    final changed = <String>{...before.keys, ...after.keys}
+        .where((path) => before[path] != after[path])
+        .toList()
+      ..sort();
+
+    return CheckGateResult(
+      gate: CheckGate.gen,
+      status: changed.isEmpty ? CheckGateStatus.passed : CheckGateStatus.failed,
+      durationMs: stopwatch.elapsedMilliseconds,
+      summary: changed.isEmpty
+          ? 'up to date'
+          : '${changed.length} file(s) changed by the generation',
+      details: <String, dynamic>{'changedFiles': changed},
+    );
+  }
+
+  /// Returns the state of the changes in the repository: a path of a changed
+  /// file to a mark of its content.
+  ///
+  /// The content is used, not the list of the changed files: a file that was
+  /// already changed before the generation stays in the list, so only its
+  /// content can tell that the generation has rewritten it. A working copy
+  /// with uncommitted changes is the usual case for this check.
+  Map<String, String> _changesSnapshot(GitCommands git, String repoRoot) {
+    final res = <String, String>{};
+
+    // Every untracked file is needed, not just a directory that contains
+    // them: the generated code can be in a directory that is not committed.
+    final paths = git.getModifiedFiles(printIfError: false, allUntracked: true);
+
+    for (final path in paths) {
+      final file = File(p.join(repoRoot, path));
+      res[path] =
+          file.existsSync() ? contentHash(file.readAsBytesSync()) : 'not found';
+    }
+
+    return res;
+  }
 
   Future<CheckGateResult> _runAnalyze() async {
     final stopwatch = Stopwatch()..start();
@@ -346,6 +446,9 @@ class CheckCommand extends CodeCommandBase {
       case CheckGate.test:
         _printTestFailures(gate);
         break;
+      case CheckGate.gen:
+        _printChangedFiles(gate);
+        break;
       case CheckGate.build:
         break;
     }
@@ -363,6 +466,17 @@ class CheckCommand extends CodeCommandBase {
       case CheckGateStatus.skipped:
         return 'SKIPPED';
     }
+  }
+
+  void _printChangedFiles(CheckGateResult gate) {
+    final files = gate.details?['changedFiles'] as List<dynamic>? ?? const [];
+
+    for (final file in files.take(_kMaxPrintedIssues)) {
+      printInfo('  $file');
+    }
+
+    final rest = files.length - _kMaxPrintedIssues;
+    if (rest > 0) printInfo('  ... and $rest more file(s)');
   }
 
   void _printAnalyzeIssues(CheckGateResult gate) {

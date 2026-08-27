@@ -148,11 +148,15 @@ validator asserting every locale has all CLDR plural forms it requires (RU `few`
 SL dual `two`) — a hard rule repeated in three agent prompts today. Wire it into
 `check_translations`.
 
-#### 8. `[ ] Codegen sync gate` (`alex code check --gen`)
+#### 8. `[x] Codegen sync gate` (`alex code check --gen`)
 
-"Is generated code in sync with sources?" — run build_runner and assert the diff stays
-clean. Closes the classic failure: model changed, regeneration forgotten, tester hits a
-confusing error. Fits as a fourth gate of `alex code check` (exit code `13`).
+Runs build_runner as the first gate and fails (exit code `13`) if it changed anything.
+Closes the classic failure: model changed, regeneration forgotten, tester hits a
+confusing error. The generation logic is shared with `alex code gen` through
+`CodeGenerationMixin`, so subprojects and pub workspaces are handled the same way.
+Works on a dirty tree: the changed files are compared by the hash of their content,
+not by the list of the changed files - a file that was already modified stays in the
+list, so only its content can tell that the generation has rewritten it.
 
 #### 9. `[ ] alex changelog add "…" --section=Added`
 

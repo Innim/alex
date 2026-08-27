@@ -1,3 +1,7 @@
+## Next
+
+* [Code] `check`: new `--gen` flag - the code generation is run before the other gates, and the gate fails with exit code `13` if it has changed anything. It's the classic failure: a model or a bloc event was changed, `build_runner` was not run, and the error shows up somewhere else. Uncommitted changes don't break the check: the content of the changes is compared, not just the list of the changed files, so it works in the middle of the work, not only on a clean tree. The generation itself is the same as in `alex code gen` - with subprojects and pub workspaces.
+
 ## 1.15.1
 
 * [Agents] `init`: the section written in `CLAUDE.md` / `AGENTS.md` contains only what is stable, because the file is committed and shared by the whole team: no local paths (the project root was written as an absolute path of the machine where the command was run), no path to the alex config, no package version and no exact Flutter version (the file would have to be regenerated after every build and every SDK update - the fact that the project uses FVM is what matters). Only the branches that really exist in the repository are reported: every branch has a default value in the config, so a project can have no such branch at all (`pipe/test` is the usual case). Both local and remote branches are checked, without a network request; if there is no repository, then all the configured branches are listed as before. `alex info` still reports all of it - it's a live query, not a file to commit - and marks the configured branches that are not found.

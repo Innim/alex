@@ -197,8 +197,23 @@ class GitCommands {
         "get last common commit for $branchA and $branchB");
   }
 
-  List<String> getModifiedFiles() {
-    final res = status('get modified files', porcelain: true);
+  /// Returns the path of the root directory of the repository.
+  String getRootPath({bool printIfError = true}) =>
+      git('rev-parse --show-toplevel', 'get repository root',
+          printIfError: printIfError);
+
+  /// Returns the paths of the changed files, including the untracked ones.
+  ///
+  /// If [allUntracked] is set, then every file of an untracked directory is
+  /// listed, not the directory itself.
+  List<String> getModifiedFiles({
+    bool printIfError = true,
+    bool allUntracked = false,
+  }) {
+    final res = status('get modified files',
+        porcelain: true,
+        printIfError: printIfError,
+        allUntracked: allUntracked);
     if (res.isEmpty) {
       return const [];
     } else {
@@ -362,9 +377,24 @@ class GitCommands {
     _git(["commit", "-m", message], "committing changes");
   }
 
-  String status(String desc, {bool porcelain = false, String? errorMsg}) {
+  String status(
+    String desc, {
+    bool porcelain = false,
+    String? errorMsg,
+    bool printIfError = true,
+    bool allUntracked = false,
+  }) {
     // TODO: join -> split((
-    return git(["status", if (porcelain) "--porcelain"].join(" "), desc);
+    return git(
+        [
+          "status",
+          if (porcelain) "--porcelain",
+          // By default git collapses an untracked directory into a single
+          // entry, so the files in it are not listed.
+          if (allUntracked) "--untracked-files=all",
+        ].join(" "),
+        desc,
+        printIfError: printIfError);
   }
 
   String checkout(String branch) {

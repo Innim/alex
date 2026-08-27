@@ -1,3 +1,6 @@
+/// Exit code if the code generation gate failed.
+const kExitCodeGenFailed = 13;
+
 /// Exit code if the analyze gate failed.
 const kExitCodeAnalyzeFailed = 10;
 
@@ -9,6 +12,7 @@ const kExitCodeBuildFailed = 12;
 
 /// Quality gate of the `alex code check` command.
 enum CheckGate {
+  gen('gen', kExitCodeGenFailed),
   analyze('analyze', kExitCodeAnalyzeFailed),
   test('test', kExitCodeTestFailed),
   build('build', kExitCodeBuildFailed);

@@ -444,13 +444,20 @@ $ alex code check
 
 ```bash
 $ alex code check --analyze-only    # fast inner loop check
+$ alex code check --gen             # also check that the generated code is up to date
 $ alex code check --build           # also compile the platform target
 $ alex code check --fail-fast       # stop on the first failed gate
 $ alex code check -- test/some_test.dart   # args after `--` are passed to the test command
 ```
 
-Exit code is `0` if all gates passed, `10` if analyze failed, `11` if tests failed,
-`12` if build failed. Other exit codes are used for errors.
+With `--gen` the code generation is run before the other gates, and the gate fails if it
+has changed anything - the classic "the model was changed, but `build_runner` was not
+run". It works with uncommitted changes too: the content of the changes is compared, not
+just the list of the changed files.
+
+Exit code is `0` if all gates passed, `13` if the generated code is out of date,
+`10` if analyze failed, `11` if tests failed, `12` if build failed. Other exit codes are
+used for errors.
 
 For a machine readable report (useful for CI and for AI agents) use `--format=json`:
 a single JSON object is printed in the standard output, all other messages go to the
