@@ -420,6 +420,43 @@ unused strings from XML files for all locales.
 $ alex l10n cleanup_xml
 ```
 
+### Changelog
+
+Work with `CHANGELOG.md`.
+
+#### Add an entry
+
+```bash
+$ alex changelog add "Some new feature" -s added -i 42
+```
+
+The entry is added in the section of the changes that are not released yet. If the
+changelog starts with a released version, then the section for the next release is
+created at the top - an entry must never get into a version that is already out. That's
+the main reason to use the command instead of editing the file by hand, especially for
+a script or an AI agent.
+
+Sections: `added` (default), `fixed`, `pre-release`. With `-i` (`--issue`) the entry
+references the issue; if `issue_url` is set in the [configuration](#configuration), then
+a markdown link is used. `--format=json` reports what was added and whether the section
+was created.
+
+The command works with the changelog format that alex creates and maintains during a
+release, the same one `alex feature finish` and `alex release start` rely on:
+
+```markdown
+## Next release
+
+### Added
+
+- Some new feature.
+
+## v1.2.3 - 2026-01-01
+```
+
+A changelog written in another format is reported with an explanation instead of being
+rewritten in a format the project doesn't use.
+
 ### Code 
 
 Work with code.

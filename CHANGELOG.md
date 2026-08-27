@@ -1,5 +1,7 @@
 ## Next
 
+* [Changelog] New command `alex changelog add "Some new feature"` (alias `alex cl a`): adds an entry in `CHANGELOG.md`. The section is chosen with `--section` (`added` by default, also `fixed` and `pre-release`), an issue is referenced with `--issue` - as a markdown link, if `issue_url` is set in the config. If the changelog starts with a released version, then the section for the changes that are not released yet is created at the top, so an entry can't get into a version that is already out. Supports `--format=json`.
+* [Changelog] A changelog with an unexpected structure is reported with an explanation of what is expected, instead of `Failed by: Exception: CHANGELOG.md has unknown structure`.
 * [Code] `check`: new `--gen` flag - the code generation is run before the other gates, and the gate fails with exit code `13` if it has changed anything. It's the classic failure: a model or a bloc event was changed, `build_runner` was not run, and the error shows up somewhere else. Uncommitted changes don't break the check: the content of the changes is compared, not just the list of the changed files, so it works in the middle of the work, not only on a clean tree. The generation itself is the same as in `alex code gen` - with subprojects and pub workspaces.
 
 ## 1.15.1

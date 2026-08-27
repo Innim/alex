@@ -1,4 +1,5 @@
 import 'package:alex/src/changelog/changelog.dart';
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
@@ -183,6 +184,71 @@ void main() {
       expect(
         await changelog.content,
         addAddedWithIssueIdResultWithAddedAndFixed,
+      );
+    });
+  });
+
+  group('ensureNextReleaseSection()', () {
+    test('should do nothing if the section is already there', () async {
+      final changelog = Changelog(_FileSystemMock(nextReleaseWithAdded));
+
+      final res = await changelog.ensureNextReleaseSection();
+
+      expect(res, false);
+      expect(await changelog.content, nextReleaseWithAdded);
+    });
+
+    test('should add the section if the changelog starts with a version',
+        () async {
+      // Right after a release: a new entry must not get into a version
+      // that is already out.
+      final changelog = Changelog(_FileSystemMock(releasedOnlyChangelog));
+
+      final res = await changelog.ensureNextReleaseSection();
+
+      expect(res, true);
+      expect(await changelog.content, '''
+## Next release
+
+## v1.0.0 - 2026-01-01
+
+### Added
+
+- Something old.
+''');
+    });
+
+    test('should add an entry in the created section', () async {
+      final changelog = Changelog(_FileSystemMock(releasedOnlyChangelog));
+
+      await changelog.ensureNextReleaseSection();
+      await changelog.addAddedEntry('Some new feature');
+
+      expect(await changelog.content, '''
+## Next release
+
+### Added
+
+- Some new feature.
+
+## v1.0.0 - 2026-01-01
+
+### Added
+
+- Something old.
+''');
+    });
+
+    test('should fail with an explanation for an unknown structure', () async {
+      final changelog = Changelog(_FileSystemMock(unknownStructureChangelog));
+
+      expect(
+        changelog.ensureNextReleaseSection(),
+        throwsA(isA<RunException>().having(
+          (e) => e.message,
+          'message',
+          allOf(contains('unexpected structure'), contains('## Next release')),
+        )),
       );
     });
   });

@@ -255,3 +255,17 @@ const changelogWithNoIssueReferences = '''
 - Feature 1.
 - Feature 2.
 ''';
+
+const releasedOnlyChangelog = '''
+## v1.0.0 - 2026-01-01
+
+### Added
+
+- Something old.
+''';
+
+const unknownStructureChangelog = '''
+# Changelog
+
+Some text without any section.
+''';

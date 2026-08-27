@@ -158,10 +158,12 @@ Works on a dirty tree: the changed files are compared by the hash of their conte
 not by the list of the changed files - a file that was already modified stays in the
 list, so only its content can tell that the generation has rewritten it.
 
-#### 9. `[ ] alex changelog add "…" --section=Added`
+#### 9. `[x] alex changelog add "…" --section=added`
 
 Agents edit `CHANGELOG.md` by hand and put entries in the wrong place; the "new entry
-goes into the top `## Next` section" rule lives only as prose in `CLAUDE.md`.
+goes into the unreleased section" rule lived only as prose in `CLAUDE.md`. The command
+creates that section itself when the changelog starts with a released version — which is
+exactly the moment the rule is broken. `--format=json` included.
 
 ### Tier 3 — to discuss
 

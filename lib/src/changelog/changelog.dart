@@ -1,3 +1,4 @@
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:intl/intl.dart';
 import 'package:version/version.dart';
@@ -59,6 +60,23 @@ class Changelog {
 
     final res = StringBuffer()..writeln(str);
     return res.toString();
+  }
+
+  /// Adds the section for the next release at the top of the changelog,
+  /// if there is none.
+  ///
+  /// After a release the changelog starts with the released version, and a new
+  /// entry must not get into it - it's already released. Returns `true` if the
+  /// section was added.
+  Future<bool> ensureNextReleaseSection() async {
+    final raw = await fs.readString(_filepath);
+    if (_validate(raw)) return false;
+
+    final trimmed = raw.trimLeft();
+    if (!trimmed.startsWith(_versionHeaderPrefix)) throw _structureException();
+
+    _update('$_nextVersionHeader\n\n$trimmed');
+    return true;
   }
 
   Future<void> setNextReleaseChangelog(String value) async {
@@ -243,12 +261,17 @@ class Changelog {
 
   Future<String> _load() async {
     final res = await fs.readString(_filepath);
-    if (!_validate(res)) {
-      throw Exception("CHANGELOG.md has unknown structure");
-    }
+    if (!_validate(res)) throw _structureException();
 
     return res;
   }
+
+  RunException _structureException() => const RunException.warn(
+        '$_filename has an unexpected structure: it should start with '
+        '"$_nextVersionHeader" for the changes that are not released yet, '
+        'or with a version section like "${_versionHeaderPrefix}1.2.3" '
+        'right after a release.',
+      );
 
   bool _validate(String content) {
     return content.startsWith(_nextVersionHeader);
