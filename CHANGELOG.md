@@ -1,3 +1,7 @@
+## Next
+
+* [Common] A command run in a project without the alex configuration fails with a handled error and exit code `3` instead of an unhandled exception: the message says that the project is not configured and what to create. If the config is found, but can't be loaded (a broken YAML, an empty `alex` section), then the message contains the file and the reason - it's not reported as a missing config anymore. A `pubspec.yaml` without the `alex` section is not treated as a broken config, it's just a project that doesn't use alex. A broken config is not silently replaced by another one anymore: if `alex.yaml` can't be loaded, then the `alex` section of `pubspec.yaml` is not used instead of it - the file the user edits is the file alex must run with.
+
 ## 1.15.0
 
 * New command `alex pubspec version <patch|minor|major>` (alias `alex pub version`) — increments the version in `pubspec.yaml`. By default only the version is changed and a build number is kept as is (usually it's already prepared for the next build); pass `--build` (`-b`) to increment the build number too (#12).

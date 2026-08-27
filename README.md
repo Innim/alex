@@ -69,6 +69,10 @@ or in separate file `alex.yaml`.
 
 You can see all configuration options and it's default values in the example config [`/alex.yaml`](./alex.yaml).
 
+If a command is run in a project without the configuration, it fails with exit code `3`
+and an explanation of what to create. The same code is used when the config is found,
+but can't be loaded - the message contains the reason in that case.
+
 More about specified configuration parameters - in modules descriptions in the [Commands](#commands) section.
 
 ## Commands

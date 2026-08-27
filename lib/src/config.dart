@@ -1,11 +1,26 @@
 import 'dart:io';
 
+import 'package:alex/src/const.dart';
+import 'package:alex/src/exception/run_exception.dart';
 import 'package:alex/src/l10n/locale/locales.dart';
 import 'package:logging/logging.dart';
+import 'package:meta/meta.dart';
 import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
 
 import 'pub_spec.dart';
+
+/// Result of an attempt to load a configuration file.
+enum _LoadResult {
+  /// The configuration is loaded.
+  loaded,
+
+  /// There is no such file or it has no configuration section.
+  absent,
+
+  /// The file is there, but the configuration can't be loaded from it.
+  failed,
+}
 
 /// Run configuration.
 class AlexConfig {
@@ -27,46 +42,115 @@ class AlexConfig {
 
   static bool get hasInstance => _instance != null;
 
+  /// Resets the loaded configuration.
+  @visibleForTesting
+  static void reset() {
+    _instance = null;
+    _loadError = null;
+  }
+
   /// Load configuration.
+  ///
+  /// Throws [RunException] with the [kExitCodeNoConfig] code
+  /// if there is no configuration for the project.
   static void load({String? path, bool recursive = false}) {
     assert(_instance == null);
 
+    _loadError = null;
+
     if (path != null) {
-      _tryLoadConfigFile(path);
-    } else {
-      final dirs = recursive
-          ? Spec.getPubspecsSync().map((e) => p.dirname(e.path))
-          : const ['./'];
+      if (_tryLoadConfigFile(path) != _LoadResult.loaded) {
+        throw _noConfigException(path);
+      }
+      return;
+    }
 
-      for (final dir in dirs) {
-        if (_tryLoadConfigFile(p.join(dir, _defaultConfigFile)) ||
-            _tryLoadConfigFile(p.join(dir, _mainConfigFile), _configSection)) {
-          return;
-        }
+    final dirs = recursive
+        ? Spec.getPubspecsSync().map((e) => p.dirname(e.path))
+        : const ['./'];
+
+    for (final dir in dirs) {
+      final res = _tryLoadConfigFile(p.join(dir, _defaultConfigFile));
+      if (res == _LoadResult.loaded) return;
+
+      // A broken config must not be silently replaced by another one:
+      // the user edited it and expects it to be in use.
+      if (res == _LoadResult.failed) throw _noConfigException(null);
+
+      if (_tryLoadConfigFile(p.join(dir, _mainConfigFile), _configSection) ==
+          _LoadResult.loaded) {
+        return;
       }
 
-      throw Exception(
-          'Config file or section alex in pubspec.yaml are not found');
+      if (_loadError != null) throw _noConfigException(null);
     }
+
+    throw _noConfigException(null);
   }
 
-  static bool _tryLoadConfigFile(String path, [String? section]) {
+  /// Path and the reason of the last config file that was found,
+  /// but was not loaded.
+  static MapEntry<String, Object>? _loadError;
+
+  static RunException _noConfigException(String? path) {
+    final sb = StringBuffer();
+
+    final error = _loadError;
+    if (error != null) {
+      sb
+        ..writeln('Config ${error.key} is found, '
+            'but it can not be loaded: ${error.value}')
+        ..writeln()
+        ..write('Fix the config or ');
+    } else {
+      sb
+        ..writeln(path != null
+            ? 'Config $path is not found.'
+            : 'This project is not configured for alex: there is no '
+                '$_defaultConfigFile and no `$_configSection` section '
+                'in $_mainConfigFile.')
+        ..writeln()
+        ..write('Run the command in the project directory, or ');
+    }
+
+    sb
+      ..writeln('create $_defaultConfigFile in the project root '
+          '(the `$_configSection` section of $_mainConfigFile works too).')
+      ..writeln()
+      ..write('An example with all the options: '
+          'https://github.com/Innim/alex/blob/master/alex.yaml');
+
+    return RunException.withCode(kExitCodeNoConfig, sb.toString());
+  }
+
+  static _LoadResult _tryLoadConfigFile(String path, [String? section]) {
     final file = File(path);
-    if (file.existsSync()) {
-      try {
-        final config = _loadConfigFile(file, section);
-        _instance = config;
-      } catch (e) {
-        _logger.fine('Config was not loaded due $e');
-        return false;
-      }
-      return true;
-    } else {
-      return false;
+    if (!file.existsSync()) return _LoadResult.absent;
+
+    try {
+      final config = _loadConfigFile(file, section);
+      if (config == null) return _LoadResult.absent;
+      _instance = config;
+    } catch (e) {
+      _logger.fine('Config was not loaded due $e');
+      // The config is there, but it's broken - it's a different problem
+      // than a project without a config at all. The first error is kept:
+      // alex.yaml is checked before pubspec.yaml, so it's the relevant one.
+      _loadError ??= MapEntry(path, e);
+      return _LoadResult.failed;
     }
+
+    return _LoadResult.loaded;
   }
 
-  static AlexConfig _loadConfigFile(File file, String? section) {
+  /// Loads the configuration from the [file].
+  ///
+  /// Returns `null` if the file has no [section] with the configuration -
+  /// it's a normal case for `pubspec.yaml` of a project that doesn't use alex,
+  /// not a broken config.
+  ///
+  /// Throws if the file can't be parsed or the configuration is empty.
+  static AlexConfig? _loadConfigFile(File file, String? section) {
     final yamlString = file.readAsStringSync();
     var yamlMap = loadYaml(yamlString) as YamlMap?;
     if (yamlMap == null) {
@@ -74,10 +158,7 @@ class AlexConfig {
     }
 
     if (section != null) {
-      if (!yamlMap.containsKey(section)) {
-        throw Exception(
-            "Can't find section $section in config file ${file.path}");
-      }
+      if (!yamlMap.containsKey(section)) return null;
 
       yamlMap = yamlMap[section] as YamlMap?;
 

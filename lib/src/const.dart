@@ -5,6 +5,9 @@ const packageName = 'alex';
 
 const kVerbose = 'verbose';
 
+/// Exit code if the project is not configured for alex.
+const kExitCodeNoConfig = 3;
+
 /// Name of the flag to forbid a command to ask questions in the standard input.
 const kNonInteractive = 'non-interactive';
 

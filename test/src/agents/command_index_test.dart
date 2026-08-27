@@ -180,6 +180,7 @@ void main() {
       expect(res, contains('`0` - success'));
       expect(res, contains('`1` -'));
       expect(res, contains('`2` -'));
+      expect(res, contains('`3` -'));
       expect(res, contains('`64` -'));
     });
 
