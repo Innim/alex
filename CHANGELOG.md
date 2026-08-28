@@ -1,4 +1,4 @@
-## Next
+## 1.16.0
 
 * [Common] `--format=json` is supported by `changelog update-issue-links`, `pubspec get`, `pubspec update` and `pubspec version` too: the number of updated references, the list of the packages the dependencies were got for, the files where the dependency was updated, and the previous and the new version.
 * [Changelog] New command `alex changelog add "Some new feature"` (alias `alex cl a`): adds an entry in `CHANGELOG.md`. The section is chosen with `--section` (`added` by default, also `fixed` and `pre-release`), an issue is referenced with `--issue` - as a markdown link, if `issue_url` is set in the config. If the changelog starts with a released version, then the section for the changes that are not released yet is created at the top, so an entry can't get into a version that is already out. Supports `--format=json`.
