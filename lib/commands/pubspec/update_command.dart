@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:alex/commands/pubspec/src/pubspec_command_base.dart';
+import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:path/path.dart' as p;
 import 'package:list_ext/list_ext.dart';
@@ -22,7 +23,8 @@ class UpdateCommand extends PubspecCommandBase {
         abbr: _argDependencyAbbr,
         help: 'Name of the dependency to update.',
         valueHelp: 'PACKAGE_NAME',
-      );
+      )
+      ..addFormatOption();
   }
 
   @override
@@ -59,20 +61,31 @@ class UpdateCommand extends PubspecCommandBase {
       _sortPubspecs(pubspecFiles);
 
       printVerbose('Update pubspec files');
-      var updated = 0;
+      final updatedFiles = <String>[];
       for (final file in pubspecFiles) {
         if (await _updatePubspec(file, dependency)) {
           printInfo('Dependency updated for ${file.path}');
-          updated++;
+          updatedFiles.add(p.relative(file.path));
         }
       }
 
-      if (updated == 0) {
+      if (updatedFiles.isEmpty) {
         return error(1,
             message:
                 'Dependency <$dependency> is not found in any of pubspec files.');
-      } else {
-        printInfo('Updated $updated pubspec files.');
+      }
+
+      printInfo('Updated ${updatedFiles.length} pubspec files.');
+
+      if (isJsonFormat) {
+        return jsonResult(
+          exitCode: 0,
+          summary: '$dependency updated in ${updatedFiles.length} file(s)',
+          data: <String, dynamic>{
+            'dependency': dependency,
+            'updatedFiles': updatedFiles,
+          },
+        );
       }
     }
 

@@ -54,7 +54,7 @@ Replaces the global `gates.sh` skill script. **Done** (see `CHANGELOG.md`).
 Left for later: `--changed` (only tests affected by the working-tree diff); running the
 gates per package in a pub workspace (now only the root is checked).
 
-#### 2. `[~] --format=json` for everything agents read
+#### 2. `[x] --format=json` for everything agents read
 
 Done: `code check`, `info`, `agents guide`, `agents init`, `l10n check_translations`.
 
@@ -64,7 +64,10 @@ commands tree, `ok`, `exitCode`, `summary`) so no command repeats it, and a comm
 fails with an error before printing a result still prints an error object — a script
 always has JSON to parse. Messages are routed to stderr in `alex_command_runner`.
 
-Remaining: `changelog`, `pubspec`.
+Done for every command that has something to report: `code check`, `info`,
+`agents guide`, `agents init`, `l10n check_translations`, `changelog add`,
+`changelog update-issue-links`, `pubspec get`, `pubspec update`, `pubspec version`.
+The rest are groups and interactive wizards, which have no result to give to a script.
 
 #### 3. `[ ] alex lint` — house conventions as code
 

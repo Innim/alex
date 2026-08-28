@@ -12,7 +12,9 @@ class UpdateIssueLinksCommand extends AlexCommand {
           'Replace plain (#N) issue references in CHANGELOG.md '
               'with markdown links using issue_url from config.',
           const ['uil'],
-        );
+        ) {
+    argParser.addFormatOption();
+  }
 
   @override
   Future<int> doRun() async {
@@ -38,11 +40,20 @@ class UpdateIssueLinksCommand extends AlexCommand {
     }
 
     final count = await changelog.linkIssueReferences(issueUrl);
-    if (count == 0) {
-      return success(message: 'No plain issue references to update.');
+    if (count != 0) await changelog.save();
+
+    if (isJsonFormat) {
+      return jsonResult(
+        exitCode: 0,
+        summary: '$count reference(s) updated',
+        data: <String, dynamic>{'updated': count},
+      );
     }
 
-    await changelog.save();
-    return success(message: 'Updated $count issue reference(s).');
+    return success(
+      message: count == 0
+          ? 'No plain issue references to update.'
+          : 'Updated $count issue reference(s).',
+    );
   }
 }

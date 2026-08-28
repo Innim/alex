@@ -1,4 +1,5 @@
 import 'package:alex/commands/pubspec/src/pubspec_command_base.dart';
+import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:path/path.dart' as p;
 
@@ -8,7 +9,9 @@ class GetCommand extends PubspecCommandBase {
           'get',
           'Get dependencies (execute "pub get" command) '
               'for all projects and packages in folder (recursively).',
-        );
+        ) {
+    argParser.addFormatOption();
+  }
 
   @override
   Future<int> doRun() async {
@@ -76,6 +79,7 @@ class GetCommand extends PubspecCommandBase {
 
         await flutter.initFvm();
 
+        final processed = <String>[];
         var done = 0;
 
         for (final file in filtered) {
@@ -90,19 +94,45 @@ class GetCommand extends PubspecCommandBase {
             printStdOut: printOutput,
             immediatePrint: printOutput,
           );
+          processed.add(relativePath);
           done++;
         }
 
         printInfo('Got dependencies for $done pubspec ${_files(done)}.');
 
-        return success(message: 'Done ✅');
+        return _result(
+          summary: 'dependencies for $done pubspec ${_files(done)}',
+          packages: processed,
+          message: 'Done ✅',
+        );
       } else {
-        return success(message: 'No valid pubspec files found.');
+        return _result(
+          summary: 'no valid pubspec files found',
+          packages: const [],
+          message: 'No valid pubspec files found.',
+        );
       }
     } else {
-      return success(message: 'No pubspec files found.');
+      return _result(
+        summary: 'no pubspec files found',
+        packages: const [],
+        message: 'No pubspec files found.',
+      );
     }
   }
+
+  int _result({
+    required String summary,
+    required List<String> packages,
+    required String message,
+  }) =>
+      isJsonFormat
+          ? jsonResult(
+              exitCode: 0,
+              summary: summary,
+              data: <String, dynamic>{'packages': packages},
+            )
+          : success(message: message);
 }
 
 String _files(int count) => count == 1 ? 'file' : 'files';

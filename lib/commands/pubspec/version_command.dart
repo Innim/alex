@@ -1,4 +1,5 @@
 import 'package:alex/commands/pubspec/src/pubspec_command_base.dart';
+import 'package:alex/runner/alex_command.dart';
 import 'package:alex/src/fs/fs.dart';
 import 'package:alex/src/pub_spec.dart';
 import 'package:alex/src/version_increment.dart';
@@ -15,14 +16,16 @@ class VersionCommand extends PubspecCommandBase {
               'A build number is kept as is, '
               'if the --$_argBuild flag is not passed.',
         ) {
-    argParser.addFlag(
-      _argBuild,
-      abbr: 'b',
-      help: 'Increment a build number (after +) too. '
-          'By default only a version is changed, '
-          "because usually a build number is already prepared "
-          'for the next build.',
-    );
+    argParser
+      ..addFlag(
+        _argBuild,
+        abbr: 'b',
+        help: 'Increment a build number (after +) too. '
+            'By default only a version is changed, '
+            "because usually a build number is already prepared "
+            'for the next build.',
+      )
+      ..addFormatOption();
   }
 
   @override
@@ -75,6 +78,19 @@ class VersionCommand extends PubspecCommandBase {
     final content = await fs.readString(Spec.fileName);
     await fs.writeString(
         Spec.fileName, Spec.replaceVersion(content, newVersion));
+
+    if (isJsonFormat) {
+      return jsonResult(
+        exitCode: 0,
+        summary: '$version -> $newVersion',
+        data: <String, dynamic>{
+          'part': increment.name,
+          'previous': '$version',
+          'current': '$newVersion',
+          'buildIncremented': incrementBuild,
+        },
+      );
+    }
 
     return success(message: 'Version updated: $version -> $newVersion');
   }

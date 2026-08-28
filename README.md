@@ -498,7 +498,9 @@ used for errors.
 
 For a machine readable report (useful for CI and for AI agents) use `--format=json`:
 a single JSON object is printed in the standard output, all other messages go to the
-error output.
+error output. The option is supported by `code check`, `info`, `agents guide`,
+`agents init`, `l10n check_translations`, `changelog add`,
+`changelog update-issue-links`, `pubspec get`, `pubspec update` and `pubspec version`.
 
 ```bash
 $ alex code check --format=json
